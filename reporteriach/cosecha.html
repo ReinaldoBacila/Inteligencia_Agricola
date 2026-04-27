@@ -330,37 +330,37 @@
     <canvas id="chart-frescura-semana" height="60"></canvas>
   </div>
 
-  <!-- FILA 4: 3 tablas en grid -->
-  <div class="grid-3" style="margin-bottom:16px;">
+  <!-- FILA 4: 3 tablas + distancia en grid 2x2 -->
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:16px;margin-bottom:16px;">
     <div>
       <div class="seccion-titulo">POR TIPO DE QUEMA</div>
       <div class="tabla-wrap"><table id="tbl-fresc-quema">
-        <thead><tr><th>Tipo Quema</th><th>Peso Ton</th><th>Frescura Pond. (hrs)</th></tr></thead>
+        <thead><tr><th>Tipo Quema</th><th>TM</th><th>Fresc. (hrs)</th></tr></thead>
         <tbody><tr><td colspan="3" class="loading">Cargando...</td></tr></tbody>
       </table></div>
     </div>
     <div>
       <div class="seccion-titulo">POR TIPO DE CORTE</div>
       <div class="tabla-wrap"><table id="tbl-fresc-tipo-corte">
-        <thead><tr><th>Tipo Corte</th><th>Peso Ton</th><th>Frescura Pond. (hrs)</th></tr></thead>
+        <thead><tr><th>Tipo Corte</th><th>TM</th><th>Fresc. (hrs)</th></tr></thead>
         <tbody><tr><td colspan="3" class="loading">Cargando...</td></tr></tbody>
       </table></div>
     </div>
     <div>
       <div class="seccion-titulo">POR ORIGEN DE CAÑA</div>
       <div class="tabla-wrap"><table id="tbl-fresc-origen">
-        <thead><tr><th>Origen</th><th>Peso Ton</th><th>Frescura Pond. (hrs)</th></tr></thead>
+        <thead><tr><th>Origen</th><th>TM</th><th>Fresc. (hrs)</th></tr></thead>
         <tbody><tr><td colspan="3" class="loading">Cargando...</td></tr></tbody>
       </table></div>
     </div>
+    <div>
+      <div class="seccion-titulo">RANGO DE DISTANCIA</div>
+      <div class="tabla-wrap"><table id="tbl-fresc-dist-rango">
+        <thead><tr><th>Rango KM</th><th>TM</th><th>Fresc. (hrs)</th><th>%</th></tr></thead>
+        <tbody><tr><td colspan="4" class="loading">Cargando...</td></tr></tbody>
+      </table></div>
+    </div>
   </div>
-
-  <!-- FILA 5: Rangos distancia -->
-  <div class="seccion-titulo">FRESCURA POR RANGO DE DISTANCIA</div>
-  <div class="tabla-wrap" style="margin-bottom:16px;"><table id="tbl-fresc-dist-rango">
-    <thead><tr><th>Rango Distancia (KM)</th><th>Peso Ton</th><th>Frescura Pond. (hrs)</th><th>% del Total</th></tr></thead>
-    <tbody><tr><td colspan="4" class="loading">Cargando...</td></tr></tbody>
-  </table></div>
 
   <p class="pie-pagina">Depto. de Estadística Agrícola | Zafra 2025-2026</p>
 </div>
