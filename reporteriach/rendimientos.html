@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rendimientos Agrícolas | Chumbagua</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --azul: #1a3a6b;
+    --azul-medio: #2a5298;
+    --azul-claro: #3d7abf;
+    --verde: #2d7a3a;
+    --verde-claro: #3a9e4a;
+    --naranja: #d4521a;
+    --rojo: #c0392b;
+    --gris: #f4f4f2;
+    --blanco: #ffffff;
+    --texto: #1a1a2e;
+    --positivo-bg: #2d7a3a;
+    --negativo-bg: #c0392b;
+    --neutro-bg: #f0a500;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Barlow', sans-serif;
+    background: var(--gris);
+    color: var(--texto);
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: var(--blanco);
+    border-bottom: 3px solid var(--azul);
+    padding: 12px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .header-logo {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .logo-img {
+    height: 52px;
+  }
+
+  .header-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--azul);
+    line-height: 1.2;
+  }
+
+  .header-title span {
+    display: block;
+    font-size: 14px;
+    font-weight: 400;
+    color: #666;
+  }
+
+  .header-right {
+    text-align: right;
+    font-size: 12px;
+    color: #888;
+  }
+
+  .header-right strong {
+    display: block;
+    font-size: 16px;
+    color: var(--azul);
+    font-weight: 600;
+  }
+
+  /* ── PÁGINA ── */
+  .page { display: none; padding: 24px 32px; }
+  .page.active { display: block; }
+
+  /* ── MENÚ PRINCIPAL ── */
+  .menu-page {
+    max-width: 800px;
+    margin: 40px auto;
+    text-align: center;
+  }
+
+  .menu-logo {
+    margin-bottom: 24px;
+  }
+
+  .menu-logo img {
+    height: 90px;
+  }
+
+  .menu-banner {
+    background: var(--azul);
+    color: white;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 14px;
+    border-radius: 4px;
+    margin-bottom: 32px;
+  }
+
+  .menu-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .menu-btn {
+    padding: 18px 24px;
+    border: none;
+    border-radius: 6px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: white;
+  }
+
+  .menu-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+  .menu-btn.azul { background: var(--azul-medio); }
+  .menu-btn.verde { background: var(--verde); }
+  .menu-btn.naranja { background: var(--naranja); }
+
+  .menu-footer {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-start;
+    margin-top: 16px;
+  }
+
+  .menu-footer-btn {
+    background: #888;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  /* ── VOLVER ── */
+  .back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--naranja);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 18px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-bottom: 20px;
+  }
+
+  .back-btn:hover { filter: brightness(1.1); }
+
+  /* ── FILTROS ── */
+  .filtros {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+    background: var(--blanco);
+    padding: 16px 20px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+  }
+
+  .filtro-grupo {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .filtro-grupo label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .filtro-grupo select {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-size: 13px;
+    min-width: 140px;
+    background: white;
+  }
+
+  /* ── TABLA ── */
+  .seccion-titulo {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--azul);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid var(--azul-claro);
+  }
+
+  .tabla-wrap {
+    overflow-x: auto;
+    margin-bottom: 28px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    background: white;
+  }
+
+  thead tr {
+    background: var(--azul);
+    color: white;
+  }
+
+  thead th {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 10px 12px;
+    text-align: center;
+    letter-spacing: 0.3px;
+    border-right: 1px solid rgba(255,255,255,0.15);
+  }
+
+  tbody tr { border-bottom: 1px solid #e8e8e8; }
+  tbody tr:hover { background: #f0f4ff; }
+
+  tbody td {
+    padding: 8px 12px;
+    text-align: center;
+  }
+
+  tbody tr.total-row {
+    background: var(--azul) !important;
+    color: white;
+    font-weight: 700;
+  }
+
+  tbody tr.total-row td { color: white; }
+
+  .cel-positivo {
+    background: var(--positivo-bg);
+    color: white;
+    font-weight: 700;
+    border-radius: 3px;
+    padding: 4px 8px;
+  }
+
+  .cel-negativo {
+    background: var(--negativo-bg);
+    color: white;
+    font-weight: 700;
+    border-radius: 3px;
+    padding: 4px 8px;
+  }
+
+  .cel-neutro {
+    background: var(--neutro-bg);
+    color: white;
+    font-weight: 700;
+    border-radius: 3px;
+    padding: 4px 8px;
+  }
+
+  /* ── KPIs ── */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .kpi-card {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 14px 18px;
+    border-left: 4px solid var(--azul-medio);
+  }
+
+  .kpi-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+
+  .kpi-valor {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--azul);
+  }
+
+  .kpi-sub {
+    font-size: 11px;
+    color: #aaa;
+    margin-top: 2px;
+  }
+
+  /* ── LOADING ── */
+  .loading {
+    text-align: center;
+    padding: 40px;
+    color: #888;
+    font-size: 14px;
+  }
+
+  .pie-pagina {
+    text-align: right;
+    font-size: 12px;
+    color: #888;
+    font-style: italic;
+    margin-top: 16px;
+  }
+
+  /* ── LOGIN ── */
+  #pag-login {
+    position: fixed;
+    inset: 0;
+    background: var(--azul);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+  }
+  #pag-login.oculto { display: none; }
+  .login-box {
+    background: white;
+    border-radius: 12px;
+    padding: 40px 48px;
+    width: 100%;
+    max-width: 380px;
+    text-align: center;
+  }
+  .login-logo {
+    font-family: "Barlow Condensed", sans-serif;
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--azul);
+    margin-bottom: 4px;
+  }
+  .login-sub { font-size: 11px; color: #888; margin-bottom: 28px; letter-spacing: 1px; }
+  .login-titulo { font-family: "Barlow Condensed",sans-serif; font-size:17px; font-weight:700; color:var(--azul); margin-bottom:20px; }
+  .login-input { width:100%; padding:11px 14px; border:1.5px solid #ddd; border-radius:6px; font-size:14px; margin-bottom:10px; outline:none; font-family:"Barlow",sans-serif; box-sizing:border-box; }
+  .login-input:focus { border-color: var(--azul-medio); }
+  .login-btn { width:100%; padding:12px; background:var(--azul); color:white; border:none; border-radius:6px; font-family:"Barlow Condensed",sans-serif; font-size:16px; font-weight:700; cursor:pointer; margin-top:6px; letter-spacing:0.5px; }
+  .login-btn:hover { background: var(--azul-medio); }
+  .login-btn:disabled { background:#aaa; cursor:not-allowed; }
+  .login-error { color:var(--rojo); font-size:13px; margin-top:10px; min-height:18px; }
+  .logout-btn { background:none; border:1px solid #ccc; border-radius:4px; padding:4px 12px; font-size:12px; cursor:pointer; color:#666; }
+  .logout-btn:hover { background:#f0f0f0; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="pag-login">
+  <div class="login-box">
+    <div class="login-logo">CHUMBAGUA</div>
+    <div class="login-sub">AZÚCAR · ENERGÍA · HONDURAS</div>
+    <div class="login-titulo">Acceso al Sistema</div>
+    <input class="login-input" type="email" id="login-email" placeholder="Correo electrónico" />
+    <input class="login-input" type="password" id="login-pass" placeholder="Contraseña" onkeydown="if(event.key==='Enter')doLogin()" />
+    <button class="login-btn" id="login-btn" onclick="doLogin()">INGRESAR</button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-logo">
+    <div>
+      <div class="header-title">
+        CHUMBAGUA
+        <span>Azúcar · Energía · Honduras</span>
+      </div>
+    </div>
+  </div>
+  <div class="header-right">
+    <strong id="fecha-header">—</strong>
+    Depto. de Estadística Agrícola<br>
+    <button class="logout-btn" onclick="doLogout()">Cerrar sesión</button>
+  </div>
+</div>
+
+<!-- MENÚ PRINCIPAL -->
+<div id="pag-menu" class="page active">
+  <div class="menu-page">
+    <div class="menu-banner">RENDIMIENTOS AGRÍCOLAS</div>
+    <div class="menu-grid">
+      <button class="menu-btn azul" onclick="irA('pag-resumen')">RESUMEN RENDIMIENTOS</button>
+      <button class="menu-btn azul" onclick="irA('pag-fincas')">RENDIMIENTO POR FINCA</button>
+      <button class="menu-btn verde" onclick="irA('pag-distrito')">DISTRITOS & PROPIETARIO</button>
+      <button class="menu-btn verde" onclick="irA('pag-lotes')">RENDIMIENTO POR LOTE</button>
+      <button class="menu-btn naranja" onclick="irA('pag-variedades')">COMPORTAMIENTO VARIEDADES</button>
+      <button class="menu-btn naranja" onclick="irA('pag-avance')">AVANCE DE COSECHA</button>
+    </div>
+    <p class="pie-pagina">Depto. de Estadística Agrícola | Zafra 2025-2026</p>
+  </div>
+</div>
+
+<!-- DISTRITOS & PROPIETARIO -->
+<div id="pag-distrito" class="page">
+  <button class="back-btn" onclick="irA('pag-menu')">← IR AL MENÚ</button>
+  <h2 style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--azul);margin-bottom:4px;">
+    RENDIMIENTOS AGRÍCOLAS ZAFRA 2025-2026
+  </h2>
+  <p style="font-size:13px;color:#666;margin-bottom:20px;">DISTRITOS DE PRODUCCIÓN & PROPIETARIO</p>
+
+  <div class="filtros">
+    <div class="filtro-grupo">
+      <label>Semana</label>
+      <select id="filtro-semana" onchange="cargarDistrito()">
+        <option value="">Todas</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="seccion-titulo">COMPARATIVO POR PROPIETARIO</div>
+  <div class="tabla-wrap">
+    <table id="tabla-tenencia">
+      <thead><tr>
+        <th>TENENCIA</th>
+        <th>ÁREA (HAS)</th>
+        <th>TCH EST.</th>
+        <th>TCH</th>
+        <th>DIF. TCH</th>
+        <th>TCH 2024</th>
+        <th>DIF. TCH 2024</th>
+        <th>TM COSECHADAS</th>
+      </tr></thead>
+      <tbody><tr><td colspan="8" class="loading">Cargando datos...</td></tr></tbody>
+    </table>
+  </div>
+
+  <div class="seccion-titulo">COMPARATIVO POR DISTRITO</div>
+  <div class="tabla-wrap">
+    <table id="tabla-distrito">
+      <thead><tr>
+        <th>DISTRITO</th>
+        <th>ÁREA (HAS)</th>
+        <th>TCH EST.</th>
+        <th>TCH</th>
+        <th>DIF. TCH</th>
+        <th>EDAD</th>
+        <th>CICLO</th>
+        <th>TCH 2024</th>
+        <th>DIF. TCH 2024</th>
+        <th>EDAD 2024</th>
+        <th>TM COSECHADAS</th>
+      </tr></thead>
+      <tbody><tr><td colspan="11" class="loading">Cargando datos...</td></tr></tbody>
+    </table>
+  </div>
+  <p class="pie-pagina">Depto. de Estadística Agrícola | Zafra 2025-2026</p>
+</div>
+
+<!-- FINCAS -->
+<div id="pag-fincas" class="page">
+  <button class="back-btn" onclick="irA('pag-menu')">← IR AL MENÚ</button>
+  <h2 style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--azul);margin-bottom:20px;">
+    RENDIMIENTOS POR FINCA
+  </h2>
+
+  <div class="filtros">
+    <div class="filtro-grupo">
+      <label>Distrito</label>
+      <select id="filtro-finca-distrito" onchange="cargarFincas()">
+        <option value="">Todos</option>
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+      </select>
+    </div>
+    <div class="filtro-grupo">
+      <label>Tenencia</label>
+      <select id="filtro-finca-tenencia" onchange="cargarFincas()">
+        <option value="">Todas</option>
+        <option value="A">ALQUILADO</option>
+        <option value="P">PROPIO</option>
+        <option value="I">INDEPENDIENTE</option>
+      </select>
+    </div>
+    <div class="filtro-grupo">
+      <label>Riego</label>
+      <select id="filtro-finca-riego" onchange="cargarFincas()">
+        <option value="">Todos</option>
+        <option value="Aspersión">Aspersión</option>
+        <option value="Goteo">Goteo</option>
+        <option value="Gravedad">Gravedad</option>
+        <option value="Secano">Secano</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="tabla-wrap">
+    <table id="tabla-fincas">
+      <thead><tr>
+        <th>D</th>
+        <th>FINCA ID</th>
+        <th>FINCA</th>
+        <th>ÁREA HA</th>
+        <th>TM COSECH.</th>
+        <th>TCH EST.</th>
+        <th>TCH</th>
+        <th>DIF TCH</th>
+        <th>TCH 2024</th>
+        <th>DIF TCH 2024</th>
+        <th>POL</th>
+        <th>BRIX</th>
+        <th>PUREZA</th>
+        <th>HUMEDAD</th>
+        <th>CICLO</th>
+        <th>EDAD</th>
+        <th>FIN COSECHA</th>
+      </tr></thead>
+      <tbody><tr><td colspan="17" class="loading">Cargando datos...</td></tr></tbody>
+    </table>
+  </div>
+  <p class="pie-pagina">Depto. de Estadística Agrícola | Zafra 2025-2026</p>
+</div>
+
+<!-- RESUMEN -->
+<div id="pag-resumen" class="page">
+  <button class="back-btn" onclick="irA('pag-menu')">← IR AL MENÚ</button>
+  <h2 style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--azul);margin-bottom:20px;">
+    RESUMEN RENDIMIENTOS ZAFRA 2025-2026
+  </h2>
+  <div class="kpi-grid" id="kpi-resumen">
+    <div class="loading">Cargando...</div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-bottom:24px;">
+    <div style="background:white;border-radius:8px;border:1px solid #ddd;padding:16px;">
+      <div class="seccion-titulo" style="font-size:13px;margin-bottom:10px;">RENDIMIENTO POR RIEGO</div>
+      <canvas id="chart-riego" height="200"></canvas>
+    </div>
+    <div style="background:white;border-radius:8px;border:1px solid #ddd;padding:16px;">
+      <div class="seccion-titulo" style="font-size:13px;margin-bottom:10px;">% TIPO DE CORTE</div>
+      <canvas id="chart-tipo-corte" height="200"></canvas>
+    </div>
+    <div style="background:white;border-radius:8px;border:1px solid #ddd;padding:16px;">
+      <div class="seccion-titulo" style="font-size:13px;margin-bottom:10px;">% TIPO DE CAÑA</div>
+      <canvas id="chart-tipo-cana" height="200"></canvas>
+    </div>
+  </div>
+
+  <div style="background:white;border-radius:8px;border:1px solid #ddd;padding:16px;margin-bottom:24px;">
+    <div class="seccion-titulo" style="font-size:13px;margin-bottom:10px;">RENDIMIENTO TCH POR SEMANA</div>
+    <canvas id="chart-semana" height="80"></canvas>
+  </div>
+
+  <div style="background:white;border-radius:8px;border:1px solid #ddd;padding:16px;margin-bottom:24px;">
+    <div class="seccion-titulo" style="font-size:13px;margin-bottom:10px;">TCH POR VARIEDAD</div>
+    <canvas id="chart-variedad" height="120"></canvas>
+  </div>
+
+  <p class="pie-pagina">Depto. de Estadística Agrícola | Zafra 2025-2026</p>
+</div>
+
+<!-- LOTES -->
+<div id="pag-lotes" class="page">
+  <button class="back-btn" onclick="irA('pag-menu')">← IR AL MENÚ</button>
+  <h2 style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--azul);margin-bottom:20px;">
+    RENDIMIENTO POR LOTE
+  </h2>
+  <div class="filtros">
+    <div class="filtro-grupo">
+      <label>Finca</label>
+      <select id="filtro-lote-finca" onchange="cargarLotes()">
+        <option value="">Todas</option>
+      </select>
+    </div>
+  </div>
+  <div class="tabla-wrap">
+    <table id="tabla-lotes">
+      <thead><tr>
+        <th>FINCA</th><th>LOTE</th><th>ÁREA</th><th>TCH EST.</th>
+        <th>TCH</th><th>DIF TCH</th><th>TCH 2024</th><th>DIF TCH 2024</th>
+        <th>POL</th><th>BRIX</th>
+        <th>PUREZA</th><th>EDAD</th><th>CICLO</th><th>FIN COSECHA</th>
+      </tr></thead>
+      <tbody><tr><td colspan="14" class="loading">Cargando datos...</td></tr></tbody>
+    </table>
+  </div>
+  <p class="pie-pagina">Depto. de Estadística Agrícola | Zafra 2025-2026</p>
+</div>
+
+<!-- VARIEDADES -->
+<div id="pag-variedades" class="page">
+  <button class="back-btn" onclick="irA('pag-menu')">← IR AL MENÚ</button>
+  <h2 style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--azul);margin-bottom:20px;">
+    COMPORTAMIENTO DE VARIEDADES TCH POR CICLO
+  </h2>
+  <div class="tabla-wrap">
+    <table id="tabla-variedades">
+      <thead><tr id="thead-variedades"></tr></thead>
+      <tbody id="tbody-variedades"><tr><td class="loading">Cargando...</td></tr></tbody>
+    </table>
+  </div>
+  <p class="pie-pagina">Depto. de Estadística Agrícola | Zafra 2025-2026</p>
+</div>
+
+<!-- AVANCE -->
+<div id="pag-avance" class="page">
+  <button class="back-btn" onclick="irA('pag-menu')">← IR AL MENÚ</button>
+  <h2 style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--azul);margin-bottom:20px;">
+    AVANCE DE COSECHA
+  </h2>
+  <div class="kpi-grid" id="kpi-avance">
+    <div class="loading">Cargando...</div>
+  </div>
+  <div class="tabla-wrap">
+    <table id="tabla-avance">
+      <thead><tr>
+        <th>DISTRITO</th><th>ÁREA TOTAL</th><th>ÁREA COSECH.</th>
+        <th>% AVANCE</th><th>TM ESTIMADAS</th><th>TM COSECHADAS</th><th>% TM</th>
+      </tr></thead>
+      <tbody><tr><td colspan="7" class="loading">Cargando...</td></tr></tbody>
+    </table>
+  </div>
+  <p class="pie-pagina">Depto. de Estadística Agrícola | Zafra 2025-2026</p>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://dhbyjqmdcezdiucxeqpp.supabase.co'
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRoYnlqcW1kY2V6ZGl1Y3hlcXBwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMzI2NjEsImV4cCI6MjA5MjcwODY2MX0.TwRDctpOab02EsGo6q6-Zx0vtdLPlxn_mhowxu93EF0'
+const sb = supabase.createClient ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+const fmt = (n, dec=2) => n == null ? '—' : Number(n).toLocaleString('es-HN', {minimumFractionDigits:dec, maximumFractionDigits:dec})
+const fmtFecha = d => d ? new Date(d+'T00:00:00').toLocaleDateString('es-HN') : '—'
+
+function celDif(val) {
+  if (val == null) return '—'
+  const v = Number(val)
+  const cls = v > 0.1 ? 'cel-positivo' : v < -0.1 ? 'cel-negativo' : 'cel-neutro'
+  return `<span class="${cls}">${v > 0 ? '+' : ''}${fmt(v)}</span>`
+}
+
+function irA(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'))
+  document.getElementById(id).classList.add('active')
+  if (id === 'pag-distrito') cargarDistrito()
+  if (id === 'pag-fincas') cargarFincas()
+  if (id === 'pag-resumen') cargarResumen()
+  if (id === 'pag-lotes') cargarLotes()
+  if (id === 'pag-variedades') cargarVariedades()
+  if (id === 'pag-avance') cargarAvance()
+}
+
+async function cargarSemanas() {
+  const { data } = await sb.from('zag225_lotes').select('semana').not('semana','is',null).order('semana')
+  const semanas = [...new Set(data.map(r => r.semana))].sort((a,b)=>a-b)
+  const sel = document.getElementById('filtro-semana')
+  semanas.forEach(s => {
+    const o = document.createElement('option')
+    o.value = s; o.textContent = 'SEM-' + s
+    sel.appendChild(o)
+  })
+}
+
+async function cargarFincasSelect() {
+  const { data } = await sb.from('zag225_lotes').select('finca').order('finca')
+  const fincas = [...new Set(data.map(r => r.finca))].sort()
+  const sel = document.getElementById('filtro-lote-finca')
+  fincas.forEach(f => {
+    const o = document.createElement('option')
+    o.value = f; o.textContent = f
+    sel.appendChild(o)
+  })
+}
+
+async function cargarDistrito() {
+  const semana = document.getElementById('filtro-semana').value
+
+  // Cargar año anterior
+  const { data: histTen } = await sb.from('v_hist_tenencia').select('*')
+  const { data: histDist } = await sb.from('v_hist_distrito').select('*')
+  const tenAnterior = {}
+  ;(histTen||[]).forEach(r => { tenAnterior[r.Tenencia] = parseFloat(r.tch)||0 })
+  const distAnterior = {}
+  ;(histDist||[]).forEach(r => {
+    distAnterior[r.Distrito] = { tch: parseFloat(r.tch)||0, edad: parseFloat(r.edad)||0 }
+  })
+
+  let q1 = sb.from('zag225_lotes').select('tenencia,area_cosechada,area_total,tm_cosechadas,tm_estimadas,tch_real,tch_estimado').in('tenencia',['A','P','I'])
+  if (semana) q1 = q1.eq('semana', semana)
+  const { data: dt } = await q1
+
+  const tenMap = { A: 'ALQUILADO', P: 'PROPIO', I: 'INDEPENDIENTE' }
+  const tenMapRev = { ALQUILADO:'A', PROPIO:'P', INDEPENDIENTE:'I' }
+  const grupos = {}
+  dt.forEach(r => {
+    const k = r.tenencia
+    if (!grupos[k]) grupos[k] = {area:0,tmC:0,tmE:0,areaT:0}
+    grupos[k].area  += r.area_cosechada || 0
+    grupos[k].tmC   += r.tm_cosechadas || 0
+    grupos[k].tmE   += r.tm_estimadas || 0
+    grupos[k].areaT += r.area_total || 0
+  })
+
+  let totArea=0,totTmC=0,totTmE=0,totAreaT=0
+  let html = ''
+  ;['A','P','I'].forEach(k => {
+    if (!grupos[k]) return
+    const g = grupos[k]
+    const tch = g.area > 0 ? g.tmC/g.area : 0
+    const tche = g.areaT > 0 ? g.tmE/g.areaT : 0
+    const dif = tch - tche
+    const tchAnt = tenAnterior[tenMap[k]]||0
+    const difAnt = tch - tchAnt
+    totArea+=g.area; totTmC+=g.tmC; totTmE+=g.tmE; totAreaT+=g.areaT
+    html += `<tr>
+      <td style="font-weight:600;text-align:left">${tenMap[k]}</td>
+      <td>${fmt(g.area)}</td>
+      <td>${fmt(tche)}</td>
+      <td style="font-weight:700">${fmt(tch)}</td>
+      <td>${celDif(dif)}</td>
+      <td style="font-weight:600">${tchAnt>0?fmt(tchAnt):'—'}</td>
+      <td>${tchAnt>0?celDif(difAnt):'—'}</td>
+      <td>${fmt(g.tmC)}</td>
+    </tr>`
+  })
+  const totTch = totArea > 0 ? totTmC/totArea : 0
+  const totTche = totAreaT > 0 ? totTmE/totAreaT : 0
+  const totTchAnt = Object.values(tenAnterior).reduce((s,v)=>s+v,0)/Math.max(Object.values(tenAnterior).filter(v=>v>0).length,1)
+  html += `<tr class="total-row"><td>Total</td><td>${fmt(totArea)}</td><td>${fmt(totTche)}</td><td>${fmt(totTch)}</td><td>${fmt(totTch-totTche,2)}</td><td>${fmt(totTchAnt)}</td><td>${fmt(totTch-totTchAnt,2)}</td><td>${fmt(totTmC)}</td></tr>`
+  document.querySelector('#tabla-tenencia tbody').innerHTML = html
+
+  let q2 = sb.from('zag225_lotes').select('distrito,area_cosechada,area_total,tm_cosechadas,tm_estimadas,edad,ciclo').not('distrito','is',null)
+  if (semana) q2 = q2.eq('semana', semana)
+  const { data: dd } = await q2
+
+  const dist = {}
+  dd.forEach(r => {
+    const k = r.distrito
+    if (!dist[k]) dist[k] = {area:0,tmC:0,tmE:0,areaT:0,edadTm:0,cicloTm:0}
+    dist[k].area   += r.area_cosechada || 0
+    dist[k].tmC    += r.tm_cosechadas || 0
+    dist[k].tmE    += r.tm_estimadas || 0
+    dist[k].areaT  += r.area_total || 0
+    dist[k].edadTm += (r.edad||0) * (r.tm_cosechadas||0)
+    dist[k].cicloTm+= (r.ciclo||0) * (r.tm_cosechadas||0)
+  })
+
+  let html2 = ''
+  let tA=0,tTmC=0,tTmE=0,tAT=0,tEdTm=0,tCiTm=0
+  Object.keys(dist).sort((a,b)=>a-b).forEach(k => {
+    const g = dist[k]
+    const tch = g.area > 0 ? g.tmC/g.area : 0
+    const tche = g.areaT > 0 ? g.tmE/g.areaT : 0
+    const edad = g.tmC > 0 ? g.edadTm/g.tmC : 0
+    const ciclo = g.tmC > 0 ? g.cicloTm/g.tmC : 0
+    const ant = distAnterior[parseInt(k)]||{}
+    const tchAnt = ant.tch||0
+    const edadAnt = ant.edad||0
+    tA+=g.area;tTmC+=g.tmC;tTmE+=g.tmE;tAT+=g.areaT;tEdTm+=g.edadTm;tCiTm+=g.cicloTm
+    html2 += `<tr>
+      <td style="font-weight:700">${k}</td>
+      <td>${fmt(g.area)}</td>
+      <td>${fmt(tche)}</td>
+      <td style="font-weight:700">${fmt(tch)}</td>
+      <td>${celDif(tch-tche)}</td>
+      <td>${fmt(edad)}</td>
+      <td>${fmt(ciclo)}</td>
+      <td style="font-weight:600">${tchAnt>0?fmt(tchAnt):'—'}</td>
+      <td>${tchAnt>0?celDif(tch-tchAnt):'—'}</td>
+      <td>${edadAnt>0?fmt(edadAnt):'—'}</td>
+      <td>${fmt(g.tmC)}</td>
+    </tr>`
+  })
+  const tTch=tA>0?tTmC/tA:0, tTche=tAT>0?tTmE/tAT:0
+  const tEdad=tTmC>0?tEdTm/tTmC:0, tCiclo=tTmC>0?tCiTm/tTmC:0
+  html2 += `<tr class="total-row"><td>Total</td><td>${fmt(tA)}</td><td>${fmt(tTche)}</td><td>${fmt(tTch)}</td><td>${fmt(tTch-tTche,2)}</td><td>${fmt(tEdad)}</td><td>${fmt(tCiclo)}</td><td>—</td><td>—</td><td>—</td><td>${fmt(tTmC)}</td></tr>`
+  document.querySelector('#tabla-distrito tbody').innerHTML = html2
+}
+
+async function cargarFincas() {
+  const dist = document.getElementById('filtro-finca-distrito').value
+  const ten  = document.getElementById('filtro-finca-tenencia').value
+  const riego= document.getElementById('filtro-finca-riego').value
+
+  // Año anterior
+  const { data: histF } = await sb.from('v_hist_finca').select('*')
+  const fincaAnt = {}
+  ;(histF||[]).forEach(r => { fincaAnt[r['Cod finca']] = parseFloat(r.tch)||0 })
+
+  let q = sb.from('zag225_lotes').select('distrito,finca_id,finca,area_cosechada,area_total,tm_cosechadas,tm_estimadas,tch_real,tch_estimado,pol,brix,pureza,humedad,ciclo,edad,fin_cosecha').order('tch_real',{ascending:false})
+  if (dist)  q = q.eq('distrito', dist)
+  if (ten)   q = q.eq('tenencia', ten)
+  if (riego) q = q.eq('tipo_riego', riego)
+
+  const { data } = await q
+  const fincas = {}
+  data.forEach(r => {
+    const k = r.finca_id
+    if (!fincas[k]) fincas[k] = {dist:r.distrito,id:r.finca_id,nombre:r.finca,area:0,tmC:0,tmE:0,areaT:0,polTm:0,brixTm:0,purTm:0,humTm:0,cicloTm:0,edadTm:0,finCos:r.fin_cosecha}
+    fincas[k].area   += r.area_cosechada||0
+    fincas[k].tmC    += r.tm_cosechadas||0
+    fincas[k].tmE    += r.tm_estimadas||0
+    fincas[k].areaT  += r.area_total||0
+    fincas[k].polTm  += (r.pol||0)*(r.tm_cosechadas||0)
+    fincas[k].brixTm += (r.brix||0)*(r.tm_cosechadas||0)
+    fincas[k].purTm  += (r.pureza||0)*(r.tm_cosechadas||0)
+    fincas[k].humTm  += (r.humedad||0)*(r.tm_cosechadas||0)
+    fincas[k].cicloTm+= (r.ciclo||0)*(r.tm_cosechadas||0)
+    fincas[k].edadTm += (r.edad||0)*(r.tm_cosechadas||0)
+  })
+
+  let html = ''
+  Object.values(fincas).sort((a,b) => (b.tmC/b.area||0)-(a.tmC/a.area||0)).forEach(g => {
+    const tch = g.area>0?g.tmC/g.area:0
+    const tche= g.areaT>0?g.tmE/g.areaT:0
+    const pol  = g.tmC>0?g.polTm/g.tmC:0
+    const brix = g.tmC>0?g.brixTm/g.tmC:0
+    const pur  = g.tmC>0?g.purTm/g.tmC:0
+    const hum  = g.tmC>0?g.humTm/g.tmC:0
+    const cic  = g.tmC>0?g.cicloTm/g.tmC:0
+    const edad = g.tmC>0?g.edadTm/g.tmC:0
+    const tchAnt = fincaAnt[g.id]||0
+    html += `<tr>
+      <td>${g.dist}</td><td style="font-weight:600">${g.id}</td>
+      <td style="text-align:left;font-weight:600">${g.nombre}</td>
+      <td>${fmt(g.area)}</td><td>${fmt(g.tmC)}</td>
+      <td>${fmt(tche)}</td>
+      <td style="font-weight:700">${fmt(tch)}</td>
+      <td>${celDif(tch-tche)}</td>
+      <td style="font-weight:600">${tchAnt>0?fmt(tchAnt):'—'}</td>
+      <td>${tchAnt>0?celDif(tch-tchAnt):'—'}</td>
+      <td>${fmt(pol)}</td><td>${fmt(brix)}</td><td>${fmt(pur)}</td>
+      <td>${fmt(hum)}</td><td>${fmt(cic,1)}</td><td>${fmt(edad)}</td>
+      <td>${fmtFecha(g.finCos)}</td>
+    </tr>`
+  })
+  document.querySelector('#tabla-fincas tbody').innerHTML = html || '<tr><td colspan="17">Sin datos</td></tr>'
+}
+
+async function cargarLotes() {
+  const finca = document.getElementById('filtro-lote-finca').value
+  const { data: histL } = await sb.from('v_hist_lote').select('*')
+  const loteAnt = {}
+  ;(histL||[]).forEach(r => { loteAnt[r['Finca-Lote']] = parseFloat(r.tch)||0 })
+
+  let q = sb.from('zag225_lotes').select('finca,finca_id,lote,area_cosechada,area_total,tm_cosechadas,tm_estimadas,pol,brix,pureza,edad,ciclo,fin_cosecha').order('tch_real',{ascending:false}).limit(200)
+  if (finca) q = q.eq('finca', finca)
+  const { data } = await q
+  let html = ''
+  data.forEach(r => {
+    const tch = r.area_cosechada>0?r.tm_cosechadas/r.area_cosechada:0
+    const tche= r.area_total>0?r.tm_estimadas/r.area_total:0
+    const key = (r.finca_id||'') + String(r.lote||'')
+    const tchAnt = loteAnt[key]||0
+    html += `<tr>
+      <td style="text-align:left">${r.finca}</td><td>${r.lote}</td>
+      <td>${fmt(r.area_cosechada)}</td><td>${fmt(tche)}</td>
+      <td style="font-weight:700">${fmt(tch)}</td><td>${celDif(tch-tche)}</td>
+      <td style="font-weight:600">${tchAnt>0?fmt(tchAnt):'—'}</td>
+      <td>${tchAnt>0?celDif(tch-tchAnt):'—'}</td>
+      <td>${fmt(r.pol)}</td><td>${fmt(r.brix)}</td><td>${fmt(r.pureza)}</td>
+      <td>${fmt(r.edad)}</td><td>${fmt(r.ciclo,1)}</td><td>${fmtFecha(r.fin_cosecha)}</td>
+    </tr>`
+  })
+  document.querySelector('#tabla-lotes tbody').innerHTML = html || '<tr><td colspan="14">Sin datos</td></tr>'
+}
+
+async function cargarResumen() {
+  const { data } = await sb.from('zag225_lotes').select('area_cosechada,area_total,tm_cosechadas,tm_estimadas,tch_real,edad,pol,brix,tipo_riego,semana,variedad')
+  let area=0,areaT=0,tmC=0,tmE=0,edTm=0,polTm=0,brixTm=0
+  const riegoMap={}, semMap={}, varMap={}
+  data.forEach(r => {
+    area  += r.area_cosechada||0; areaT += r.area_total||0
+    tmC   += r.tm_cosechadas||0; tmE   += r.tm_estimadas||0
+    edTm  += (r.edad||0)*(r.tm_cosechadas||0)
+    polTm += (r.pol||0)*(r.tm_cosechadas||0)
+    brixTm+= (r.brix||0)*(r.tm_cosechadas||0)
+    if(r.tipo_riego){if(!riegoMap[r.tipo_riego])riegoMap[r.tipo_riego]={area:0,tm:0};riegoMap[r.tipo_riego].area+=r.area_cosechada||0;riegoMap[r.tipo_riego].tm+=r.tm_cosechadas||0}
+    if(r.semana){if(!semMap[r.semana])semMap[r.semana]={area:0,tm:0};semMap[r.semana].area+=r.area_cosechada||0;semMap[r.semana].tm+=r.tm_cosechadas||0}
+    if(r.variedad){if(!varMap[r.variedad])varMap[r.variedad]={area:0,tm:0};varMap[r.variedad].area+=r.area_cosechada||0;varMap[r.variedad].tm+=r.tm_cosechadas||0}
+  })
+
+  // Tipo corte desde v_cosecha_resumen
+  const { data: z212 } = await sb.from('v_cosecha_resumen').select('fte_corte,tm_cosechado')
+  const corteMap={MANUAL:0,MECANIZADO:0}
+  ;(z212||[]).forEach(r => {
+    const t = (r.fte_corte<=3||r.fte_corte===6)?'MANUAL':'MECANIZADO'
+    corteMap[t]=(corteMap[t]||0)+(parseFloat(r.tm_cosechado)||0)
+  })
+  // Tipo caña: quemada vs cruda via origen_cosecha de zag212
+  const { data: z212b } = await sb.from('v_cosecha_resumen').select('origen_corte,tm_cosechado')
+  const canaMap={}
+  ;(z212b||[]).forEach(r => {
+    const k=r.origen_corte||'N/D'
+    canaMap[k]=(canaMap[k]||0)+(parseFloat(r.tm_cosechado)||0)
+  })
+
+  const tch=area>0?tmC/area:0, tche=areaT>0?tmE/areaT:0
+  const edad=tmC>0?edTm/tmC:0, pol=tmC>0?polTm/tmC:0, brix=tmC>0?brixTm/tmC:0
+  const avance=areaT>0?area/areaT*100:0
+
+  document.getElementById('kpi-resumen').innerHTML = `
+    <div class="kpi-card"><div class="kpi-label">TM Cosechadas</div><div class="kpi-valor">${fmt(tmC,0)}</div></div>
+    <div class="kpi-card"><div class="kpi-label">TM Estimadas</div><div class="kpi-valor">${fmt(tmE,0)}</div></div>
+    <div class="kpi-card"><div class="kpi-label">TCH Real</div><div class="kpi-valor">${fmt(tch)}</div></div>
+    <div class="kpi-card"><div class="kpi-label">TCH Estimado</div><div class="kpi-valor">${fmt(tche)}</div></div>
+    <div class="kpi-card"><div class="kpi-label">Área Cosechada</div><div class="kpi-valor">${fmt(area,0)}<span style="font-size:14px"> ha</span></div></div>
+    <div class="kpi-card"><div class="kpi-label">Avance</div><div class="kpi-valor">${fmt(avance,1)}<span style="font-size:14px">%</span></div></div>
+    <div class="kpi-card"><div class="kpi-label">Edad Ponderada</div><div class="kpi-valor">${fmt(edad)}</div></div>
+    <div class="kpi-card"><div class="kpi-label">POL Ponderado</div><div class="kpi-valor">${fmt(pol)}</div></div>
+  `
+
+  let chartRiego=null,chartTipoCorte=null,chartTipoCana=null,chartSemana=null,chartVariedad=null
+
+  // Riego
+  const rL=Object.keys(riegoMap), rA=rL.map(k=>riegoMap[k].area), rT=rL.map(k=>riegoMap[k].area>0?riegoMap[k].tm/riegoMap[k].area:0)
+  if(window._chartRiego)window._chartRiego.destroy()
+  window._chartRiego=new Chart(document.getElementById('chart-riego').getContext('2d'),{type:'bar',data:{labels:rL,datasets:[
+    {label:'Has Cosechadas',data:rA,backgroundColor:'#3d7abf',yAxisID:'y'},
+    {label:'TCH',data:rT.map(v=>v.toFixed(2)),type:'line',borderColor:'#d4521a',backgroundColor:'transparent',yAxisID:'y1',tension:0.3,pointRadius:4}
+  ]},options:{responsive:true,plugins:{legend:{position:'bottom'}},scales:{y:{beginAtZero:true},y1:{position:'right',grid:{display:false}}}}})
+
+  // Tipo Corte
+  if(window._chartCorte)window._chartCorte.destroy()
+  window._chartCorte=new Chart(document.getElementById('chart-tipo-corte').getContext('2d'),{type:'doughnut',data:{labels:Object.keys(corteMap),datasets:[{data:Object.values(corteMap),backgroundColor:['#2a5298','#2d7a3a']}]},options:{responsive:true,plugins:{legend:{position:'bottom'}}}})
+
+  // Tipo Caña
+  if(window._chartCana)window._chartCana.destroy()
+  window._chartCana=new Chart(document.getElementById('chart-tipo-cana').getContext('2d'),{type:'doughnut',data:{labels:Object.keys(canaMap),datasets:[{data:Object.values(canaMap),backgroundColor:['#f0a500','#2d7a3a','#3d7abf']}]},options:{responsive:true,plugins:{legend:{position:'bottom'}}}})
+
+  // Semana
+  const sems=Object.keys(semMap).map(Number).sort((a,b)=>b-a)
+  if(window._chartSem)window._chartSem.destroy()
+  window._chartSem=new Chart(document.getElementById('chart-semana').getContext('2d'),{type:'bar',data:{labels:sems.map(s=>'SEM-'+s),datasets:[
+    {label:'Has Cosechadas',data:sems.map(s=>semMap[s].area),backgroundColor:'#3d7abf',yAxisID:'y'},
+    {label:'TCH',data:sems.map(s=>(semMap[s].area>0?semMap[s].tm/semMap[s].area:0).toFixed(2)),type:'line',borderColor:'#d4521a',backgroundColor:'transparent',yAxisID:'y1',tension:0.3,pointRadius:3}
+  ]},options:{responsive:true,plugins:{legend:{position:'top'}},scales:{y:{beginAtZero:true},y1:{position:'right',grid:{display:false}}}}})
+
+  // Variedades top 15
+  const varTop=Object.entries(varMap).filter(([,g])=>g.area>0).map(([v,g])=>({v,tch:g.tm/g.area})).sort((a,b)=>b.tch-a.tch).slice(0,15)
+  if(window._chartVar)window._chartVar.destroy()
+  window._chartVar=new Chart(document.getElementById('chart-variedad').getContext('2d'),{type:'bar',data:{labels:varTop.map(x=>x.v),datasets:[{label:'TCH',data:varTop.map(x=>x.tch.toFixed(2)),backgroundColor:'#2d7a3a',borderRadius:3}]},options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true}}}})
+}
+
+async function cargarVariedades() {
+  const { data } = await sb.from('zag225_lotes').select('variedad,ciclo,area_cosechada,tm_cosechadas').not('variedad','is',null)
+  const ciclos = [...new Set(data.map(r=>r.ciclo))].filter(Boolean).sort((a,b)=>a-b)
+  const vars = {}
+  data.forEach(r => {
+    if (!r.variedad) return
+    if (!vars[r.variedad]) vars[r.variedad] = {tmTot:0,areaTot:0,ciclos:{}}
+    vars[r.variedad].tmTot += r.tm_cosechadas||0
+    vars[r.variedad].areaTot += r.area_cosechada||0
+    const k = r.ciclo
+    if (k) {
+      if (!vars[r.variedad].ciclos[k]) vars[r.variedad].ciclos[k]={tm:0,area:0}
+      vars[r.variedad].ciclos[k].tm   += r.tm_cosechadas||0
+      vars[r.variedad].ciclos[k].area += r.area_cosechada||0
+    }
+  })
+  const th = document.getElementById('thead-variedades')
+  th.innerHTML = `<th style="background:var(--azul);color:white;padding:8px 12px;text-align:left">VARIEDAD</th>`
+    + ciclos.map(c=>`<th style="background:var(--azul);color:white;padding:8px 12px">${c.toString().padStart(2,'0')}</th>`).join('')
+    + `<th style="background:var(--azul);color:white;padding:8px 12px">TOTAL</th>`
+
+  let html = ''
+  Object.entries(vars).sort((a,b)=>b[1].tmTot-a[1].tmTot).forEach(([v,g]) => {
+    const total = g.areaTot>0?g.tmTot/g.areaTot:0
+    html += `<tr><td style="text-align:left;font-weight:600;padding:7px 12px">${v}</td>`
+      + ciclos.map(c => {
+          const cx = g.ciclos[c]
+          if (!cx||cx.area===0) return `<td style="padding:7px 12px;color:#ccc">—</td>`
+          return `<td style="padding:7px 12px;font-weight:600">${fmt(cx.tm/cx.area)}</td>`
+        }).join('')
+      + `<td style="padding:7px 12px;font-weight:700;background:#f0f4ff">${fmt(total)}</td></tr>`
+  })
+  document.getElementById('tbody-variedades').innerHTML = html
+}
+
+async function cargarAvance() {
+  const { data } = await sb.from('zag225_lotes').select('distrito,area_cosechada,area_total,tm_cosechadas,tm_estimadas').not('distrito','is',null)
+  const dist={}
+  let tA=0,tAT=0,tTmC=0,tTmE=0
+  data.forEach(r=>{
+    const k=r.distrito
+    if(!dist[k])dist[k]={area:0,areaT:0,tmC:0,tmE:0}
+    dist[k].area+=r.area_cosechada||0
+    dist[k].areaT+=r.area_total||0
+    dist[k].tmC+=r.tm_cosechadas||0
+    dist[k].tmE+=r.tm_estimadas||0
+    tA+=r.area_cosechada||0;tAT+=r.area_total||0;tTmC+=r.tm_cosechadas||0;tTmE+=r.tm_estimadas||0
+  })
+
+  document.getElementById('kpi-avance').innerHTML = `
+    <div class="kpi-card"><div class="kpi-label">TM Cosechadas</div><div class="kpi-valor">${fmt(tTmC,0)}</div></div>
+    <div class="kpi-card"><div class="kpi-label">TM Estimadas</div><div class="kpi-valor">${fmt(tTmE,0)}</div></div>
+    <div class="kpi-card"><div class="kpi-label">Área Cosechada</div><div class="kpi-valor">${fmt(tA,0)} ha</div></div>
+    <div class="kpi-card"><div class="kpi-label">% Avance Área</div><div class="kpi-valor">${fmt(tAT>0?tA/tAT*100:0,1)}%</div></div>
+  `
+
+  let html=''
+  Object.keys(dist).sort((a,b)=>a-b).forEach(k=>{
+    const g=dist[k]
+    const avA=g.areaT>0?g.area/g.areaT*100:0
+    const avTm=g.tmE>0?g.tmC/g.tmE*100:0
+    html+=`<tr><td style="font-weight:700">${k}</td><td>${fmt(g.areaT)}</td><td>${fmt(g.area)}</td>
+      <td><span class="${avA>=90?'cel-positivo':avA>=70?'cel-neutro':'cel-negativo'}">${fmt(avA,1)}%</span></td>
+      <td>${fmt(g.tmE)}</td><td>${fmt(g.tmC)}</td>
+      <td><span class="${avTm>=90?'cel-positivo':avTm>=70?'cel-neutro':'cel-negativo'}">${fmt(avTm,1)}%</span></td>
+    </tr>`
+  })
+  html+=`<tr class="total-row"><td>Total</td><td>${fmt(tAT)}</td><td>${fmt(tA)}</td><td>${fmt(tAT>0?tA/tAT*100:0,1)}%</td><td>${fmt(tTmE)}</td><td>${fmt(tTmC)}</td><td>${fmt(tTmE>0?tTmC/tTmE*100:0,1)}%</td></tr>`
+  document.querySelector('#tabla-avance tbody').innerHTML=html
+}
+
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim()
+  const pass  = document.getElementById('login-pass').value
+  const btn   = document.getElementById('login-btn')
+  const err   = document.getElementById('login-error')
+  if (!email || !pass) { err.textContent = 'Ingresa tu correo y contraseña.'; return }
+  btn.disabled = true
+  btn.textContent = 'Ingresando...'
+  err.textContent = ''
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: pass })
+  if (error) {
+    err.textContent = 'Credenciales incorrectas. Intenta de nuevo.'
+    btn.disabled = false
+    btn.textContent = 'INGRESAR'
+  } else {
+    mostrarApp()
+  }
+}
+
+async function doLogout() {
+  await sb.auth.signOut()
+  document.getElementById('pag-login').classList.remove('oculto')
+  document.getElementById('login-email').value = ''
+  document.getElementById('login-pass').value = ''
+  document.getElementById('login-btn').disabled = false
+  document.getElementById('login-btn').textContent = 'INGRESAR'
+}
+
+async function mostrarApp() {
+  document.getElementById('pag-login').classList.add('oculto')
+  const hoy = new Date()
+  document.getElementById('fecha-header').textContent = hoy.toLocaleDateString('es-HN',{weekday:'long',year:'numeric',month:'long',day:'numeric'})
+  await cargarSemanas()
+  await cargarFincasSelect()
+}
+
+async function init() {
+  const { data: { session } } = await sb.auth.getSession()
+  if (session) {
+    mostrarApp()
+  }
+}
+
+init()
+</script>
+</body>
+</html>

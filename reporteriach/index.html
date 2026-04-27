@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerencia Agrícola | Chumbagua</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --azul:       #1a3a6b;
+    --azul-medio: #2a5298;
+    --azul-claro: #3d7abf;
+    --verde:      #2d7a3a;
+    --naranja:    #d4521a;
+    --rojo:       #c0392b;
+    --gris:       #f0f2f5;
+    --blanco:     #ffffff;
+    --texto:      #1a1a2e;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family:'Barlow', sans-serif;
+    background: var(--gris);
+    color: var(--texto);
+    min-height: 100vh;
+  }
+
+  /* ── LOGIN ── */
+  #pag-login {
+    position:fixed; inset:0; background:var(--azul);
+    display:flex; align-items:center; justify-content:center; z-index:9999;
+  }
+  #pag-login.oculto { display:none; }
+  .login-box {
+    background:white; border-radius:12px; padding:40px 48px;
+    width:100%; max-width:380px; text-align:center;
+    box-shadow:0 20px 60px rgba(0,0,0,0.3);
+  }
+  .login-logo { font-family:"Barlow Condensed",sans-serif; font-size:32px; font-weight:800; color:var(--azul); margin-bottom:4px; }
+  .login-sub  { font-size:11px; color:#888; margin-bottom:28px; letter-spacing:1px; text-transform:uppercase; }
+  .login-titulo { font-family:"Barlow Condensed",sans-serif; font-size:17px; font-weight:700; color:var(--azul); margin-bottom:20px; }
+  .login-input { width:100%; padding:11px 14px; border:1.5px solid #ddd; border-radius:6px; font-size:14px; margin-bottom:10px; outline:none; box-sizing:border-box; }
+  .login-input:focus { border-color:var(--azul-medio); }
+  .login-btn { width:100%; padding:12px; background:var(--azul); color:white; border:none; border-radius:6px; font-family:"Barlow Condensed",sans-serif; font-size:16px; font-weight:700; cursor:pointer; margin-top:6px; letter-spacing:0.5px; }
+  .login-btn:hover { background:var(--azul-medio); }
+  .login-btn:disabled { background:#aaa; cursor:not-allowed; }
+  .login-error { color:var(--rojo); font-size:13px; margin-top:10px; min-height:18px; }
+
+  /* ── HEADER ── */
+  .header {
+    background:var(--blanco);
+    border-bottom:3px solid var(--azul);
+    padding:14px 40px;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .header-logo { display:flex; align-items:center; gap:14px; }
+  .logo-circle {
+    width:52px; height:52px; border-radius:50%;
+    background:var(--azul); display:flex; align-items:center; justify-content:center;
+    font-family:"Barlow Condensed",sans-serif; font-size:18px; font-weight:800; color:white;
+  }
+  .header-title { font-family:"Barlow Condensed",sans-serif; font-size:22px; font-weight:700; color:var(--azul); line-height:1.2; }
+  .header-title span { display:block; font-size:13px; font-weight:400; color:#777; }
+  .header-right { text-align:right; font-size:12px; color:#888; }
+  .header-right strong { display:block; font-size:15px; color:var(--azul); font-weight:600; }
+  .logout-btn { background:none; border:1px solid #ccc; border-radius:4px; padding:4px 12px; font-size:12px; cursor:pointer; color:#666; margin-top:4px; }
+  .logout-btn:hover { background:#f5f5f5; }
+
+  /* ── PORTAL ── */
+  #portal { display:none; }
+  #portal.visible { display:block; }
+
+  .portal-hero {
+    background: linear-gradient(135deg, var(--azul) 0%, var(--azul-medio) 60%, var(--azul-claro) 100%);
+    padding: 36px 40px 28px;
+    text-align:center;
+    color:white;
+  }
+  .portal-hero h1 {
+    font-family:"Barlow Condensed",sans-serif;
+    font-size:36px; font-weight:800; letter-spacing:1px;
+    text-transform:uppercase; margin-bottom:4px;
+  }
+  .portal-hero p { font-size:14px; opacity:0.85; letter-spacing:2px; text-transform:uppercase; }
+
+  .portal-body { max-width:1100px; margin:0 auto; padding:36px 24px; }
+
+  /* ── SECCIONES ── */
+  .seccion { margin-bottom:36px; }
+  .seccion-titulo {
+    font-family:"Barlow Condensed",sans-serif;
+    font-size:13px; font-weight:700; color:#999;
+    text-transform:uppercase; letter-spacing:2px;
+    margin-bottom:14px; padding-bottom:6px;
+    border-bottom:1px solid #ddd;
+  }
+
+  .grid { display:grid; gap:12px; }
+  .grid-2 { grid-template-columns:repeat(2,1fr); }
+  .grid-3 { grid-template-columns:repeat(3,1fr); }
+  .grid-4 { grid-template-columns:repeat(4,1fr); }
+
+  /* ── BOTONES ── */
+  .portal-btn {
+    display:flex; flex-direction:column; align-items:flex-start; justify-content:center;
+    padding:18px 20px;
+    border:none; border-radius:8px;
+    font-family:"Barlow Condensed",sans-serif;
+    cursor:pointer; transition:all 0.15s;
+    text-decoration:none;
+    position:relative; overflow:hidden;
+    min-height:72px;
+  }
+  .portal-btn:hover { transform:translateY(-2px); filter:brightness(1.08); box-shadow:0 6px 20px rgba(0,0,0,0.15); }
+
+  .portal-btn .btn-label {
+    font-size:16px; font-weight:700; letter-spacing:0.5px;
+    color:white; text-transform:uppercase; line-height:1.2;
+  }
+  .portal-btn .btn-sub {
+    font-size:11px; font-weight:400; color:rgba(255,255,255,0.78);
+    margin-top:3px; text-transform:none; letter-spacing:0;
+  }
+
+  /* Badge NUEVO */
+  .badge-nuevo {
+    position:absolute; top:8px; right:8px;
+    background:rgba(255,255,255,0.25);
+    color:white; font-size:9px; font-weight:700;
+    padding:2px 7px; border-radius:10px; letter-spacing:1px;
+  }
+
+  /* Colores */
+  .btn-azul    { background:var(--azul-medio); }
+  .btn-verde   { background:var(--verde); }
+  .btn-naranja { background:var(--naranja); }
+  .btn-gris    { background:#7f8c8d; }
+  .btn-oscuro  { background:#34495e; }
+
+  /* Próximamente */
+  .btn-pronto {
+    background:#b0bec5;
+    cursor:default;
+  }
+  .btn-pronto:hover { transform:none; filter:none; box-shadow:none; }
+  .btn-pronto .btn-label { color:rgba(255,255,255,0.7); }
+  .btn-pronto .btn-sub   { color:rgba(255,255,255,0.5); }
+
+  /* ── PIE ── */
+  .portal-footer {
+    text-align:center; padding:20px;
+    font-size:12px; color:#aaa;
+    border-top:1px solid #e0e0e0;
+    margin-top:20px;
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="pag-login">
+  <div class="login-box">
+    <div class="login-logo">CHUMBAGUA</div>
+    <div class="login-sub">Azúcar · Energía · Honduras</div>
+    <div class="login-titulo">Acceso al Sistema</div>
+    <input class="login-input" type="email" id="login-email" placeholder="Correo electrónico"/>
+    <input class="login-input" type="password" id="login-pass" placeholder="Contraseña" onkeydown="if(event.key==='Enter')doLogin()"/>
+    <button class="login-btn" id="login-btn" onclick="doLogin()">INGRESAR</button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-logo">
+    <div class="logo-circle">CA</div>
+    <div>
+      <div class="header-title">CHUMBAGUA <span>Compañía Azucarera · Honduras</span></div>
+    </div>
+  </div>
+  <div class="header-right">
+    <strong id="fecha-header">—</strong>
+    Depto. de Estadística Agrícola
+    <br><button class="logout-btn" onclick="doLogout()">Cerrar sesión</button>
+  </div>
+</div>
+
+<!-- PORTAL -->
+<div id="portal">
+  <div class="portal-hero">
+    <h1>Gerencia Agrícola</h1>
+    <p>Sistema de Inteligencia Agrícola · Zafra 2025-2026</p>
+  </div>
+
+  <div class="portal-body">
+
+    <!-- COSECHA -->
+    <div class="seccion">
+      <div class="seccion-titulo">Cosecha & Molienda</div>
+      <div class="grid grid-3">
+        <a href="cosecha.html" class="portal-btn btn-verde">
+          <span class="badge-nuevo">NUEVO</span>
+          <span class="btn-label">Avance de Cosecha</span>
+          <span class="btn-sub">Resumen, frescura, escenarios</span>
+        </a>
+        <a href="#" class="portal-btn btn-gris">
+          <span class="btn-label">Prog. Cosecha</span>
+          <span class="btn-sub">Programa diario</span>
+        </a>
+        <a href="#" class="portal-btn btn-gris">
+          <span class="btn-label">Eficiencias Cosecha</span>
+          <span class="btn-sub">Indicadores operativos</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- RENDIMIENTOS -->
+    <div class="seccion">
+      <div class="seccion-titulo">Rendimientos Agrícolas</div>
+      <div class="grid grid-3">
+        <a href="rendimientos.html" class="portal-btn btn-azul">
+          <span class="badge-nuevo">NUEVO</span>
+          <span class="btn-label">Rendimientos Zafra</span>
+          <span class="btn-sub">Fincas, lotes, variedades</span>
+        </a>
+        <a href="#" class="portal-btn btn-gris">
+          <span class="btn-label">Análisis de Variedades</span>
+          <span class="btn-sub">Comportamiento TCH por ciclo</span>
+        </a>
+        <a href="#" class="portal-btn btn-gris">
+          <span class="btn-label">Análisis Riegos</span>
+          <span class="btn-sub">Seguimiento sistemas de riego</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- PLANIFICACIÓN -->
+    <div class="seccion">
+      <div class="seccion-titulo">Planificación & Labores</div>
+      <div class="grid grid-2">
+        <a href="#" class="portal-btn btn-gris">
+          <span class="btn-label">Planificación de Labores</span>
+          <span class="btn-sub">Programación agrícola</span>
+        </a>
+        <a href="#" class="portal-btn btn-gris">
+          <span class="btn-label">Maestro de Lotes</span>
+          <span class="btn-sub">Catálogo completo de lotes</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- COSTOS -->
+    <div class="seccion">
+      <div class="seccion-titulo">Costos & Finanzas</div>
+      <div class="grid grid-2">
+        <a href="#" class="portal-btn btn-naranja">
+          <span class="btn-label">Costos por Distrito</span>
+          <span class="btn-sub">Análisis de costos distritales</span>
+        </a>
+        <a href="#" class="portal-btn btn-naranja">
+          <span class="btn-label">Costos Gerencia Agrícola</span>
+          <span class="btn-sub">Consolidado gerencial</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- OPERACIONES -->
+    <div class="seccion">
+      <div class="seccion-titulo">Operaciones & Maquinaria</div>
+      <div class="grid grid-3">
+        <a href="#" class="portal-btn btn-oscuro">
+          <span class="btn-label">Maquinaria y Operaciones</span>
+          <span class="btn-sub">Control de equipos</span>
+        </a>
+        <a href="#" class="portal-btn btn-oscuro">
+          <span class="btn-label">Plataforma Taller Mecánico</span>
+          <span class="btn-sub">Mantenimiento y reparaciones</span>
+        </a>
+        <a href="#" class="portal-btn btn-oscuro">
+          <span class="btn-label">NAX Solutions</span>
+          <span class="btn-sub">Integración NAX</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- PROGRAMACIÓN -->
+    <div class="seccion">
+      <div class="seccion-titulo">Programación Diaria</div>
+      <div class="grid grid-2">
+        <a href="#" class="portal-btn btn-verde">
+          <span class="btn-label">Programación Diaria</span>
+          <span class="btn-sub">Reporte operativo del día</span>
+        </a>
+        <a href="#" class="portal-btn btn-gris">
+          <span class="btn-label">Quemas Criminales</span>
+          <span class="btn-sub">Registro histórico</span>
+        </a>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="portal-footer">
+    Depto. de Estadística Agrícola &nbsp;|&nbsp; Compañía Azucarera Chumbagua &nbsp;|&nbsp; Zafra 2025-2026
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL     = 'https://dhbyjqmdcezdiucxeqpp.supabase.co'
+const SUPABASE_ANON_KEY= 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRoYnlqcW1kY2V6ZGl1Y3hlcXBwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMzI2NjEsImV4cCI6MjA5MjcwODY2MX0.TwRDctpOab02EsGo6q6-Zx0vtdLPlxn_mhowxu93EF0'
+const sb = supabase.createClient ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim()
+  const pass  = document.getElementById('login-pass').value
+  const btn   = document.getElementById('login-btn')
+  const err   = document.getElementById('login-error')
+  if(!email||!pass){err.textContent='Ingresa tu correo y contraseña.';return}
+  btn.disabled=true; btn.textContent='Ingresando...'; err.textContent=''
+  const {error} = await sb.auth.signInWithPassword({email,password:pass})
+  if(error){err.textContent='Credenciales incorrectas.';btn.disabled=false;btn.textContent='INGRESAR'}
+  else mostrarPortal()
+}
+
+async function doLogout() {
+  await sb.auth.signOut()
+  document.getElementById('pag-login').classList.remove('oculto')
+  document.getElementById('portal').classList.remove('visible')
+}
+
+function mostrarPortal() {
+  document.getElementById('pag-login').classList.add('oculto')
+  document.getElementById('portal').classList.add('visible')
+  const hoy = new Date()
+  document.getElementById('fecha-header').textContent =
+    hoy.toLocaleDateString('es-HN',{weekday:'long',year:'numeric',month:'long',day:'numeric'})
+}
+
+async function init() {
+  const { data:{session} } = await sb.auth.getSession()
+  if(session) mostrarPortal()
+}
+init()
+</script>
+</body>
+</html>
