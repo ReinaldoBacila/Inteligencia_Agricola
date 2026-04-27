@@ -523,7 +523,11 @@ let TOTALES     = {}
 let RESUMEN_FRENTES = []
 let FRESCURA_DIAS   = []
 let V_RIEGO      = []  // v_cosecha_riego
-let V_FRESC_DET  = []  // v_frescura_detalle
+let V_FRESC_QUEMA  = []  // v_fresc_por_quema
+let V_FRESC_CORTE  = []  // v_fresc_por_corte
+let V_FRESC_ORIG   = []  // v_fresc_por_origen
+let V_FRESC_DIST   = []  // v_fresc_por_dist
+let V_FRESC_GLOB   = {}  // v_fresc_global
 let V_DIST_FRESC = []  // v_cosecha_dist_fresc
 let V_QUEMAS     = []  // v_cosecha_quemas
 let BOLETAS      = []  // zag212_boletas (para escenarios/frentes)
@@ -535,14 +539,18 @@ let datosListos = false
 // ── CARGA INICIAL ──────────────────────────────────────────
 async function cargarDatos() {
   // Cargar cada tabla individualmente para aislar errores
-  const [tot, res, fres, riego, distfresc, quemas, frdet] = await Promise.all([
+  const [tot, res, fres, riego, distfresc, quemas, fquma, fcorte, forig, fdist, fglob] = await Promise.all([
     sb.from('v_cosecha_totales').select('*'),
     sb.from('v_cosecha_resumen').select('*'),
     sb.from('v_frescura_por_dia').select('*'),
     sb.from('v_cosecha_riego').select('*'),
     sb.from('v_cosecha_dist_fresc').select('*'),
     sb.from('v_cosecha_quemas').select('*'),
-    sb.from('v_frescura_detalle').select('*'),
+    sb.from('v_fresc_por_quema').select('*'),
+    sb.from('v_fresc_por_corte').select('*'),
+    sb.from('v_fresc_por_origen').select('*'),
+    sb.from('v_fresc_por_dist').select('*'),
+    sb.from('v_fresc_global').select('*'),
   ])
 
   if(tot.error)      console.error('v_cosecha_totales:', tot.error.message)
@@ -550,15 +558,22 @@ async function cargarDatos() {
   if(riego.error)    console.error('v_cosecha_riego:', riego.error.message)
   if(distfresc.error)console.error('v_cosecha_dist_fresc:', distfresc.error.message)
   if(quemas.error)   console.error('v_cosecha_quemas:', quemas.error.message)
-  if(frdet.error)    console.error('v_frescura_detalle:', frdet.error.message)
+  if(fquma.error)  console.error('v_fresc_por_quema:', fquma.error.message)
+  if(fcorte.error) console.error('v_fresc_por_corte:', fcorte.error.message)
+  if(forig.error)  console.error('v_fresc_por_origen:', forig.error.message)
+  if(fdist.error)  console.error('v_fresc_por_dist:', fdist.error.message)
+  if(fglob.error)  console.error('v_fresc_global:', fglob.error.message)
   TOTALES         = tot.data?.[0] || {}
   RESUMEN_FRENTES = res.data || []
   FRESCURA_DIAS   = fres.data || []
   V_RIEGO         = riego.data || []
   V_DIST_FRESC    = distfresc.data || []
-  V_QUEMAS        = quemas.data || []
-
-
+  V_QUEMAS       = quemas.data || []
+  V_FRESC_QUEMA  = fquma.data || []
+  V_FRESC_CORTE  = fcorte.data || []
+  V_FRESC_ORIG   = forig.data || []
+  V_FRESC_DIST   = fdist.data || []
+  V_FRESC_GLOB   = fglob.data?.[0] || {}
 }
 
 async function cargarPlanificacion() {
@@ -808,16 +823,9 @@ async function cargarFrescura() {
     return true
   })
 
-  // Filtrar V_FRESC_DET por rango de día
-  const detFilt = V_FRESC_DET.filter(r=>{
-    if(dDesde && r.dia_z<dDesde) return false
-    if(dHasta && r.dia_z>dHasta) return false
-    return true
-  })
-
-  // ── KPI frescura global ponderada
-  const {sp:gSp,sw:gSw} = detFilt.reduce((a,r)=>({sp:a.sp+r.frescura*r.peso_ton,sw:a.sw+r.peso_ton}),{sp:0,sw:0})
-  document.getElementById('frescura-global').textContent = fmt(gSw>0?gSp/gSw:0,2)
+  // ── KPI frescura global (desde v_fresc_global)
+  const frescGlob = parseFloat(V_FRESC_GLOB.frescura_global)||0
+  document.getElementById('frescura-global').textContent = fmt(frescGlob,2)
 
   // ── RANGOS POR FRENTE (desde FRESCURA_DIAS filtrado)
   const frentes={}
@@ -877,78 +885,50 @@ async function cargarFrescura() {
     options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,title:{display:true,text:'Horas'}}}}
   })
 
-  // ── POR TIPO DE QUEMA (desde v_frescura_detalle)
-  const porQuema={}
-  detFilt.forEach(r=>{
-    const k=r.f_quema ? 'Quema Programada' : 'Sin Quemar'
-    if(!porQuema[k]) porQuema[k]={sp:0,sw:0}
-    porQuema[k].sp+=r.frescura*r.peso_ton; porQuema[k].sw+=r.peso_ton
+  // ── POR TIPO DE QUEMA (desde v_fresc_por_quema)
+  let hQ='', totQsw=0, totQsp=0
+  V_FRESC_QUEMA.forEach(r=>{
+    const sw=parseFloat(r.peso_ton)||0, fp=parseFloat(r.fresc_pond)||0
+    totQsw+=sw; totQsp+=fp*sw
+    hQ+=`<tr><td style="text-align:left;font-weight:600">${r.tipo_quema}</td><td>${fmt(sw,2)}</td><td>${fmt(fp,2)}</td></tr>`
   })
-  let hQ=''
-  Object.entries(porQuema).sort((a,b)=>b[1].sw-a[1].sw).forEach(([k,v])=>{
-    hQ+=`<tr><td style="text-align:left;font-weight:600">${k}</td><td>${fmt(v.sw,2)}</td><td>${fmt(v.sw>0?v.sp/v.sw:0,2)}</td></tr>`
-  })
-  const totQ=detFilt.reduce((a,r)=>({sp:a.sp+r.frescura*r.peso_ton,sw:a.sw+r.peso_ton}),{sp:0,sw:0})
-  hQ+=`<tr class="total-row"><td>TOTAL</td><td>${fmt(totQ.sw,2)}</td><td>${fmt(totQ.sw>0?totQ.sp/totQ.sw:0,2)}</td></tr>`
+  hQ+=`<tr class="total-row"><td>TOTAL</td><td>${fmt(totQsw,2)}</td><td>${fmt(totQsw>0?totQsp/totQsw:0,2)}</td></tr>`
   document.querySelector('#tbl-fresc-quema tbody').innerHTML=hQ||'<tr><td colspan="3">Sin datos</td></tr>'
 
-  // ── POR TIPO DE CORTE (Manual/Mecanizado)
-  const porTC={}
-  detFilt.forEach(r=>{
-    const k=esMecanizado(r.fte_corte)?'MECANIZADO':'MANUAL'
-    if(!porTC[k]) porTC[k]={sp:0,sw:0}
-    porTC[k].sp+=r.frescura*r.peso_ton; porTC[k].sw+=r.peso_ton
-  })
-  let hTC=''
+  // ── POR TIPO DE CORTE (desde v_fresc_por_corte)
+  let hTC='', totTCsw=0, totTCsp=0
   ;['MANUAL','MECANIZADO'].forEach(k=>{
-    const v=porTC[k]||{sp:0,sw:0}
-    hTC+=`<tr><td style="text-align:left;font-weight:600">${k}</td><td>${fmt(v.sw,2)}</td><td>${fmt(v.sw>0?v.sp/v.sw:0,2)}</td></tr>`
+    const r=V_FRESC_CORTE.find(x=>x.tipo_corte===k)||{peso_ton:0,fresc_pond:0}
+    const sw=parseFloat(r.peso_ton)||0, fp=parseFloat(r.fresc_pond)||0
+    totTCsw+=sw; totTCsp+=fp*sw
+    hTC+=`<tr><td style="text-align:left;font-weight:600">${k}</td><td>${fmt(sw,2)}</td><td>${fmt(fp,2)}</td></tr>`
   })
-  const totTC=Object.values(porTC).reduce((a,v)=>({sp:a.sp+v.sp,sw:a.sw+v.sw}),{sp:0,sw:0})
-  hTC+=`<tr class="total-row"><td>TOTAL</td><td>${fmt(totTC.sw,2)}</td><td>${fmt(totTC.sw>0?totTC.sp/totTC.sw:0,2)}</td></tr>`
+  hTC+=`<tr class="total-row"><td>TOTAL</td><td>${fmt(totTCsw,2)}</td><td>${fmt(totTCsw>0?totTCsp/totTCsw:0,2)}</td></tr>`
   document.querySelector('#tbl-fresc-tipo-corte tbody').innerHTML=hTC
 
-  // ── POR ORIGEN DE CAÑA
-  const porOrig={}
-  detFilt.forEach(r=>{
-    const k=r.origen_corte||'N/D'
-    if(!porOrig[k]) porOrig[k]={sp:0,sw:0}
-    porOrig[k].sp+=r.frescura*r.peso_ton; porOrig[k].sw+=r.peso_ton
+  // ── POR ORIGEN DE CAÑA (desde v_fresc_por_origen)
+  let hO='', totOsw=0, totOsp=0
+  V_FRESC_ORIG.sort((a,b)=>parseFloat(b.peso_ton)-parseFloat(a.peso_ton)).forEach(r=>{
+    const sw=parseFloat(r.peso_ton)||0, fp=parseFloat(r.fresc_pond)||0
+    totOsw+=sw; totOsp+=fp*sw
+    hO+=`<tr><td style="text-align:left;font-weight:600">${r.origen_corte||'N/D'}</td><td>${fmt(sw,2)}</td><td>${fmt(fp,2)}</td></tr>`
   })
-  let hO=''
-  Object.entries(porOrig).sort((a,b)=>b[1].sw-a[1].sw).forEach(([k,v])=>{
-    hO+=`<tr><td style="text-align:left;font-weight:600">${k}</td><td>${fmt(v.sw,2)}</td><td>${fmt(v.sw>0?v.sp/v.sw:0,2)}</td></tr>`
-  })
-  const totO=Object.values(porOrig).reduce((a,v)=>({sp:a.sp+v.sp,sw:a.sw+v.sw}),{sp:0,sw:0})
-  hO+=`<tr class="total-row"><td>TOTAL</td><td>${fmt(totO.sw,2)}</td><td>${fmt(totO.sw>0?totO.sp/totO.sw:0,2)}</td></tr>`
+  hO+=`<tr class="total-row"><td>TOTAL</td><td>${fmt(totOsw,2)}</td><td>${fmt(totOsw>0?totOsp/totOsw:0,2)}</td></tr>`
   document.querySelector('#tbl-fresc-origen tbody').innerHTML=hO||'<tr><td colspan="3">Sin datos</td></tr>'
 
-  // ── FRESCURA POR RANGO DE DISTANCIA
-  const rangos=[
-    {label:'0 - 5 km',  min:0,  max:5},
-    {label:'5 - 10 km', min:5,  max:10},
-    {label:'10 - 15 km',min:10, max:15},
-    {label:'15 - 20 km',min:15, max:20},
-    {label:'20 - 25 km',min:20, max:25},
-    {label:'25+ km',    min:25, max:9999},
-  ]
-  const porRango={}
-  rangos.forEach(r=>{ porRango[r.label]={sp:0,sw:0} })
-  detFilt.forEach(b=>{
-    const d=b.dist_cent
-    const rng=rangos.find(r=>d>=r.min && d<r.max)
-    if(!rng)return
-    porRango[rng.label].sp+=b.frescura*b.peso_ton
-    porRango[rng.label].sw+=b.peso_ton
-  })
-  const totSW=Object.values(porRango).reduce((s,v)=>s+v.sw,0)
+  // ── FRESCURA POR RANGO DE DISTANCIA (desde v_fresc_por_dist)
+  const ordenDist=['0 - 5 km','5 - 10 km','10 - 15 km','15 - 20 km','20 - 25 km','25+ km']
+  const totDsw=V_FRESC_DIST.reduce((s,r)=>s+(parseFloat(r.peso_ton)||0),0)
+  const totDsp=V_FRESC_DIST.reduce((s,r)=>s+(parseFloat(r.fresc_pond)||0)*(parseFloat(r.peso_ton)||0),0)
   let hD=''
-  rangos.forEach(r=>{
-    const v=porRango[r.label]
-    if(v.sw===0) return
-    hD+=`<tr><td style="text-align:left;font-weight:600">${r.label}</td><td>${fmt(v.sw,2)}</td><td>${fmt(v.sw>0?v.sp/v.sw:0,2)}</td><td>${fmt(totSW>0?v.sw/totSW*100:0,2)}%</td></tr>`
+  const distMap={}
+  V_FRESC_DIST.forEach(r=>{ distMap[r.rango_dist]=r })
+  ordenDist.forEach(k=>{
+    const r=distMap[k]; if(!r)return
+    const sw=parseFloat(r.peso_ton)||0, fp=parseFloat(r.fresc_pond)||0
+    hD+=`<tr><td style="text-align:left;font-weight:600">${k}</td><td>${fmt(sw,2)}</td><td>${fmt(fp,2)}</td><td>${fmt(totDsw>0?sw/totDsw*100:0,2)}%</td></tr>`
   })
-  hD+=`<tr class="total-row"><td>TOTAL</td><td>${fmt(totSW,2)}</td><td>${fmt(totSW>0?detFilt.reduce((s,b)=>s+b.frescura*b.peso_ton,0)/totSW:0,2)}</td><td>100.00%</td></tr>`
+  hD+=`<tr class="total-row"><td>TOTAL</td><td>${fmt(totDsw,2)}</td><td>${fmt(totDsw>0?totDsp/totDsw:0,2)}</td><td>100.00%</td></tr>`
   document.querySelector('#tbl-fresc-dist-rango tbody').innerHTML=hD||'<tr><td colspan="4">Sin datos</td></tr>'
 }
 
