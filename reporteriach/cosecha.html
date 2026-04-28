@@ -1276,14 +1276,23 @@ async function cargarQuemas() {
   const detKey = zafrasParaDet.join(',')
   if(!window._detCache) window._detCache = {}
   if(!window._detCache[detKey]) {
-    let q = sb.from('v_quemas_detalle').select('*')
-    if(zafrasParaDet.length===1) q=q.eq('zafra',zafrasParaDet[0])
-    else q=q.in('zafra',zafrasParaDet)
-    const r2 = await q
-    window._detCache[detKey] = (r2.data||[]).map(r=>{
+    // Cargar todos los registros en páginas de 1000
+    let allDet = [], page = 0, pageSize = 1000
+    while(true) {
+      let q = sb.from('v_quemas_detalle').select('*').range(page*pageSize, (page+1)*pageSize-1)
+      if(zafrasParaDet.length===1) q=q.eq('zafra',zafrasParaDet[0])
+      else q=q.in('zafra',zafrasParaDet)
+      const r2 = await q
+      const chunk = r2.data||[]
+      allDet = allDet.concat(chunk)
+      if(chunk.length < pageSize) break
+      page++
+    }
+    window._detCache[detKey] = allDet.map(r=>{
       if(!r.zona_geo && r.desc_finca) r.zona_geo = PLAN_MAP[(r.desc_finca||'').toUpperCase()]||null
       return r
     })
+    console.log('Total detalle cargado:', window._detCache[detKey].length)
   }
   V_QUEMAS_DET = window._detCache[detKey]
 
