@@ -1513,30 +1513,18 @@ async function actualizarMapaQuemas(detFilt) {
   geojLayer._isQuemaLayer = true
   geojLayer.addTo(mapaQ)
 
-  // Heatmap estilo imagen 3: concentración por TM, radio grande, blur suave
-  // Usar múltiples puntos por lote proporcional a TM para mayor concentración visual
   const heatPoints = []
   GEOJSON_FINCAS.features.forEach(f=>{
     const fl = normFL(f.properties.finca_lote)
     if(!quemaActiva.has(fl) || !f.properties.centroid) return
     const tm = tmPorLote[fl]||0
-    // Añadir puntos proporcionales a TM (más TM = más puntos = más intenso)
-    const nPuntos = Math.max(1, Math.round(tm/maxTM * 10))
-    for(let i=0; i<nPuntos; i++){
-      // Pequeña dispersión aleatoria para efecto blur natural
-      const jLat = (Math.random()-0.5)*0.003
-      const jLon = (Math.random()-0.5)*0.003
-      heatPoints.push([
-        f.properties.centroid[0]+jLat,
-        f.properties.centroid[1]+jLon,
-        tm/maxTM
-      ])
-    }
+    const intens = Math.max(0.4, tm/maxTM)
+    heatPoints.push([f.properties.centroid[0], f.properties.centroid[1], intens])
   })
   if(heatPoints.length){
     console.log('🔥 HeatPoints:', heatPoints.length, 'max intensidad:', Math.max(...heatPoints.map(p=>p[2])))
     const heat = L.heatLayer(heatPoints,{
-      radius:60, blur:50, maxZoom:18, max:1, minOpacity:0.5,
+      radius:25, blur:15, maxZoom:18, max:1, minOpacity:0.6,
       gradient:{0.0:'#ffffb2',0.3:'#fecc5c',0.6:'#fd8d3c',0.8:'#f03b20',1.0:'#bd0026'}
     })
     heat._isQuemaLayer = true
