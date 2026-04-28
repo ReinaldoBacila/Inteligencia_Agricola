@@ -8,13 +8,15 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --azul:       #1a3a6b;
+    --azul:       #1e3f7a;
     --azul-medio: #2a5298;
     --azul-claro: #3d7abf;
-    --verde:      #2d7a3a;
-    --naranja:    #d4521a;
+    --verde:      #2d6e3e;
+    --verde-claro:#3a8a4e;
+    --dorado:     #e8a020;
+    --naranja:    #c97d1a;
     --rojo:       #c0392b;
-    --gris:       #f0f2f5;
+    --gris:       #f5f6f8;
     --blanco:     #ffffff;
     --texto:      #1a1a2e;
   }
@@ -30,7 +32,8 @@
 
   /* ── LOGIN ── */
   #pag-login {
-    position:fixed; inset:0; background:var(--azul);
+    position:fixed; inset:0;
+    background:linear-gradient(135deg,#1e3f7a 0%,#2d6e3e 100%);
     display:flex; align-items:center; justify-content:center; z-index:9999;
   }
   #pag-login.oculto { display:none; }
@@ -39,71 +42,88 @@
     width:100%; max-width:380px; text-align:center;
     box-shadow:0 20px 60px rgba(0,0,0,0.3);
   }
-  .login-logo { font-family:"Barlow Condensed",sans-serif; font-size:32px; font-weight:800; color:var(--azul); margin-bottom:4px; }
-  .login-sub  { font-size:11px; color:#888; margin-bottom:28px; letter-spacing:1px; text-transform:uppercase; }
-  .login-titulo { font-family:"Barlow Condensed",sans-serif; font-size:17px; font-weight:700; color:var(--azul); margin-bottom:20px; }
-  .login-input { width:100%; padding:11px 14px; border:1.5px solid #ddd; border-radius:6px; font-size:14px; margin-bottom:10px; outline:none; box-sizing:border-box; }
+  .login-logo { font-family:"Barlow Condensed",sans-serif; font-size:32px; font-weight:800; color:var(--azul); margin-bottom:2px; }
+  .login-sub  { font-size:11px; color:var(--verde-claro); font-weight:700; margin-bottom:28px; letter-spacing:1.5px; text-transform:uppercase; }
+  .login-titulo { font-family:"Barlow Condensed",sans-serif; font-size:15px; font-weight:600; color:#888; margin-bottom:20px; }
+  .login-input { width:100%; padding:11px 14px; border:1px solid #e0e4ec; border-radius:6px; font-size:14px; margin-bottom:10px; outline:none; box-sizing:border-box; }
   .login-input:focus { border-color:var(--azul-medio); }
-  .login-btn { width:100%; padding:12px; background:var(--azul); color:white; border:none; border-radius:6px; font-family:"Barlow Condensed",sans-serif; font-size:16px; font-weight:700; cursor:pointer; margin-top:6px; letter-spacing:0.5px; }
-  .login-btn:hover { background:var(--azul-medio); }
+  .login-btn { width:100%; padding:12px; background:linear-gradient(135deg,#1e3f7a,#2d6e3e); color:white; border:none; border-radius:6px; font-family:"Barlow Condensed",sans-serif; font-size:16px; font-weight:700; cursor:pointer; margin-top:6px; }
+  .login-btn:hover { opacity:0.9; }
   .login-btn:disabled { background:#aaa; cursor:not-allowed; }
   .login-error { color:var(--rojo); font-size:13px; margin-top:10px; min-height:18px; }
 
   /* ── HEADER ── */
   .header {
-    background:var(--blanco);
-    border-bottom:3px solid var(--azul);
-    padding:14px 40px;
+    background:#fff;
+    border-bottom:1px solid #e0e4ec;
+    padding:12px 36px;
     display:flex; align-items:center; justify-content:space-between;
+    box-shadow:0 1px 4px rgba(30,63,122,0.06);
+    position:sticky; top:0; z-index:100;
   }
-  .header-logo { display:flex; align-items:center; gap:14px; }
-  .logo-circle {
-    width:52px; height:52px; border-radius:50%;
-    background:var(--azul); display:flex; align-items:center; justify-content:center;
-    font-family:"Barlow Condensed",sans-serif; font-size:18px; font-weight:800; color:white;
-  }
-  .header-title { font-family:"Barlow Condensed",sans-serif; font-size:22px; font-weight:700; color:var(--azul); line-height:1.2; }
-  .header-title span { display:block; font-size:13px; font-weight:400; color:#777; }
-  .header-right { text-align:right; font-size:12px; color:#888; }
-  .header-right strong { display:block; font-size:15px; color:var(--azul); font-weight:600; }
-  .logout-btn { background:none; border:1px solid #ccc; border-radius:4px; padding:4px 12px; font-size:12px; cursor:pointer; color:#666; margin-top:4px; }
-  .logout-btn:hover { background:#f5f5f5; }
+  .header-brand { display:flex; flex-direction:column; }
+  .hdr-name { font-family:'Barlow Condensed',sans-serif; font-size:20px; font-weight:700; color:#1e3f7a; letter-spacing:1px; }
+  .hdr-sub  { font-size:11px; color:#3a8a4e; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; margin-top:1px; }
+  .header-right { display:flex; flex-direction:column; align-items:flex-end; gap:5px; }
+  .header-depto { font-size:12px; font-weight:700; color:#fff; background:#2d6e3e; padding:3px 10px; border-radius:4px; }
+  .header-fecha { font-size:11px; color:#999; }
+  .logout-btn { background:none; border:1px solid #dde1ea; border-radius:4px; padding:4px 12px; font-size:11px; cursor:pointer; color:#888; }
 
-  /* ── PORTAL ── */
+  /* ── NAV TABS ── */
   #portal { display:none; }
   #portal.visible { display:block; }
 
+  .nav-tabs {
+    background:#fff;
+    border-bottom:1px solid #e0e4ec;
+    display:flex;
+    padding:0 36px;
+    gap:0;
+  }
+  .nav-tab {
+    padding:12px 20px;
+    font-family:'Barlow Condensed',sans-serif;
+    font-size:13px; font-weight:700;
+    letter-spacing:0.5px; text-transform:uppercase;
+    color:#888; cursor:pointer;
+    border-bottom:3px solid transparent;
+    transition:all 0.15s;
+  }
+  .nav-tab:hover { color:var(--azul); }
+  .nav-tab.activo { color:var(--azul); border-bottom-color:var(--dorado); }
+
+  /* ── PÁGINAS ── */
+  .tab-page { display:none; }
+  .tab-page.activo { display:block; }
+
+  /* ── INICIO ── */
   .portal-hero {
-    background: linear-gradient(135deg, var(--azul) 0%, var(--azul-medio) 60%, var(--azul-claro) 100%);
-    padding: 36px 40px 28px;
-    text-align:center;
-    color:white;
+    background:linear-gradient(135deg, var(--azul) 0%, var(--azul-medio) 60%, var(--azul-claro) 100%);
+    padding:32px 40px 24px;
+    text-align:center; color:white;
   }
   .portal-hero h1 {
     font-family:"Barlow Condensed",sans-serif;
-    font-size:36px; font-weight:800; letter-spacing:1px;
+    font-size:34px; font-weight:800; letter-spacing:1px;
     text-transform:uppercase; margin-bottom:4px;
   }
-  .portal-hero p { font-size:14px; opacity:0.85; letter-spacing:2px; text-transform:uppercase; }
+  .portal-hero p { font-size:13px; opacity:0.85; letter-spacing:2px; text-transform:uppercase; }
 
-  .portal-body { max-width:1100px; margin:0 auto; padding:36px 24px; }
+  .portal-body { max-width:1100px; margin:0 auto; padding:28px 24px; }
 
-  /* ── SECCIONES ── */
-  .seccion { margin-bottom:36px; }
+  .seccion { margin-bottom:28px; }
   .seccion-titulo {
-    font-family:"Barlow Condensed",sans-serif;
-    font-size:13px; font-weight:700; color:#999;
-    text-transform:uppercase; letter-spacing:2px;
-    margin-bottom:14px; padding-bottom:6px;
-    border-bottom:1px solid #ddd;
+    font-size:10px; font-weight:700; color:#1e3f7a;
+    text-transform:uppercase; letter-spacing:0.08em;
+    margin-bottom:10px; padding-bottom:6px;
+    border-bottom:2px solid var(--dorado);
   }
 
-  .grid { display:grid; gap:12px; }
+  .grid { display:grid; gap:10px; }
   .grid-2 { grid-template-columns:repeat(2,1fr); }
   .grid-3 { grid-template-columns:repeat(3,1fr); }
   .grid-4 { grid-template-columns:repeat(4,1fr); }
 
-  /* ── BOTONES ── */
   .portal-btn {
     display:flex; flex-direction:column; align-items:flex-start; justify-content:center;
     padding:18px 20px;
@@ -112,49 +132,65 @@
     cursor:pointer; transition:all 0.15s;
     text-decoration:none;
     position:relative; overflow:hidden;
-    min-height:72px;
+    min-height:68px;
   }
   .portal-btn:hover { transform:translateY(-2px); filter:brightness(1.08); box-shadow:0 6px 20px rgba(0,0,0,0.15); }
+  .portal-btn .btn-label { font-size:15px; font-weight:700; letter-spacing:0.5px; color:white; text-transform:uppercase; line-height:1.2; }
+  .portal-btn .btn-sub   { font-size:11px; font-weight:400; color:rgba(255,255,255,0.78); margin-top:3px; }
+  .badge-nuevo { position:absolute; top:8px; right:8px; background:rgba(255,255,255,0.25); color:white; font-size:9px; font-weight:700; padding:2px 7px; border-radius:10px; letter-spacing:1px; }
 
-  .portal-btn .btn-label {
-    font-size:16px; font-weight:700; letter-spacing:0.5px;
-    color:white; text-transform:uppercase; line-height:1.2;
-  }
-  .portal-btn .btn-sub {
-    font-size:11px; font-weight:400; color:rgba(255,255,255,0.78);
-    margin-top:3px; text-transform:none; letter-spacing:0;
-  }
-
-  /* Badge NUEVO */
-  .badge-nuevo {
-    position:absolute; top:8px; right:8px;
-    background:rgba(255,255,255,0.25);
-    color:white; font-size:9px; font-weight:700;
-    padding:2px 7px; border-radius:10px; letter-spacing:1px;
-  }
-
-  /* Colores */
   .btn-azul    { background:var(--azul-medio); }
   .btn-verde   { background:var(--verde); }
   .btn-naranja { background:var(--naranja); }
   .btn-gris    { background:#7f8c8d; }
   .btn-oscuro  { background:#34495e; }
-
-  /* Próximamente */
-  .btn-pronto {
-    background:#b0bec5;
-    cursor:default;
-  }
+  .btn-rojo    { background:#a93226; }
+  .btn-pronto  { background:#b0bec5; cursor:default; }
   .btn-pronto:hover { transform:none; filter:none; box-shadow:none; }
   .btn-pronto .btn-label { color:rgba(255,255,255,0.7); }
   .btn-pronto .btn-sub   { color:rgba(255,255,255,0.5); }
 
+  /* ── MAPA ── */
+  .mapa-wrap { padding:20px 36px 28px; }
+  .mapa-titulo { font-size:10px; font-weight:700; color:#1e3f7a; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:10px; padding-bottom:6px; border-bottom:2px solid var(--dorado); }
+  .mapa-iframe { width:100%; height:580px; border:none; border-radius:8px; border:1px solid #e0e4ec; box-shadow:0 2px 8px rgba(0,0,0,0.08); }
+
+  /* ── REPORTERÍA ── */
+  .rep-wrap { padding:20px 36px 28px; max-width:1100px; margin:0 auto; }
+
+  /* ── CONTACTO ── */
+  .contacto-wrap {
+    max-width:680px; margin:0 auto; padding:32px 24px;
+  }
+  .contacto-titulo { font-family:'Barlow Condensed',sans-serif; font-size:28px; font-weight:700; color:var(--azul); margin-bottom:6px; }
+  .contacto-sub { font-size:13px; color:#888; margin-bottom:28px; }
+  .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }
+  .form-full { margin-bottom:14px; }
+  .form-label { font-size:11px; font-weight:700; color:#888; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:5px; display:block; }
+  .form-input {
+    width:100%; padding:11px 14px; border:1px solid #e0e4ec;
+    border-radius:6px; font-size:14px; font-family:'Barlow',sans-serif;
+    outline:none; background:#fff; color:var(--texto);
+  }
+  .form-input:focus { border-color:var(--azul-medio); }
+  textarea.form-input { resize:vertical; min-height:120px; }
+  .form-btn {
+    background:linear-gradient(135deg,#1e3f7a,#2d6e3e);
+    color:white; border:none; border-radius:6px;
+    padding:12px 32px; font-family:'Barlow Condensed',sans-serif;
+    font-size:15px; font-weight:700; cursor:pointer; letter-spacing:0.5px;
+  }
+  .form-btn:hover { opacity:0.9; }
+  .form-msg { margin-top:10px; font-size:13px; min-height:18px; }
+  .contacto-info { margin-top:28px; padding-top:20px; border-top:1px solid #e0e4ec; display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px; }
+  .contacto-info-item { font-size:12px; color:#666; }
+  .contacto-info-item strong { display:block; color:var(--azul); font-weight:700; font-size:13px; }
+
   /* ── PIE ── */
   .portal-footer {
-    text-align:center; padding:20px;
-    font-size:12px; color:#aaa;
+    text-align:center; padding:16px;
+    font-size:11px; color:#aaa;
     border-top:1px solid #e0e0e0;
-    margin-top:20px;
   }
 </style>
 </head>
@@ -175,142 +211,245 @@
 
 <!-- HEADER -->
 <div class="header">
-  <div class="header-logo">
-    <div class="logo-circle">CA</div>
-    <div>
-      <div class="header-title">CHUMBAGUA <span>Compañía Azucarera · Honduras</span></div>
-    </div>
+  <div class="header-brand">
+    <span class="hdr-name">CHUMBAGUA</span>
+    <span class="hdr-sub">Azúcar · Energía · Honduras</span>
   </div>
   <div class="header-right">
-    <strong id="fecha-header">—</strong>
-    Depto. de Estadística Agrícola
-    <br><button class="logout-btn" onclick="doLogout()">Cerrar sesión</button>
+    <span class="header-depto">Depto. de Estadística Agrícola</span>
+    <span class="header-fecha" id="fecha-header">—</span>
+    <button class="logout-btn" onclick="doLogout()">Cerrar sesión</button>
   </div>
 </div>
 
 <!-- PORTAL -->
 <div id="portal">
-  <div class="portal-hero">
-    <h1>Gerencia Agrícola</h1>
-    <p>Sistema de Inteligencia Agrícola · Zafra 2025-2026</p>
+
+  <!-- TABS -->
+  <div class="nav-tabs">
+    <div class="nav-tab activo" onclick="irTab('inicio')">Inicio</div>
+    <div class="nav-tab" onclick="irTab('reporteria')">Reportería</div>
+    <div class="nav-tab" onclick="irTab('mapa')">Mapa</div>
+    <div class="nav-tab" onclick="irTab('contacto')">Contacto</div>
   </div>
 
-  <div class="portal-body">
+  <!-- TAB: INICIO -->
+  <div id="tab-inicio" class="tab-page activo">
+    <div class="portal-hero">
+      <h1>Gerencia Agrícola</h1>
+      <p>Sistema de Inteligencia Agrícola · Zafra 2025-2026</p>
+    </div>
+    <div class="portal-body">
 
-    <!-- COSECHA -->
-    <div class="seccion">
-      <div class="seccion-titulo">Cosecha & Molienda</div>
-      <div class="grid grid-3">
-        <a href="cosecha.html" class="portal-btn btn-verde">
+      <div class="seccion">
+        <div class="seccion-titulo">Cosecha & Molienda</div>
+        <div class="grid grid-3">
+          <a href="cosecha.html" class="portal-btn btn-verde">
+            <span class="badge-nuevo">NUEVO</span>
+            <span class="btn-label">Avance de Cosecha</span>
+            <span class="btn-sub">Resumen, frescura, escenarios</span>
+          </a>
+          <a href="#" class="portal-btn btn-gris">
+            <span class="btn-label">Prog. Cosecha</span>
+            <span class="btn-sub">Programa diario</span>
+          </a>
+          <a href="#" class="portal-btn btn-gris">
+            <span class="btn-label">Eficiencias Cosecha</span>
+            <span class="btn-sub">Indicadores operativos</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="seccion">
+        <div class="seccion-titulo">Rendimientos Agrícolas</div>
+        <div class="grid grid-3">
+          <a href="rendimientos.html" class="portal-btn btn-azul">
+            <span class="badge-nuevo">NUEVO</span>
+            <span class="btn-label">Rendimientos Zafra</span>
+            <span class="btn-sub">Fincas, lotes, variedades</span>
+          </a>
+          <a href="#" class="portal-btn btn-gris">
+            <span class="btn-label">Análisis de Variedades</span>
+            <span class="btn-sub">Comportamiento TCH por ciclo</span>
+          </a>
+          <a href="#" class="portal-btn btn-gris">
+            <span class="btn-label">Análisis Riegos</span>
+            <span class="btn-sub">Seguimiento sistemas de riego</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="seccion">
+        <div class="seccion-titulo">Planificación & Labores</div>
+        <div class="grid grid-2">
+          <a href="#" class="portal-btn btn-gris">
+            <span class="btn-label">Planificación de Labores</span>
+            <span class="btn-sub">Programación agrícola</span>
+          </a>
+          <a href="#" class="portal-btn btn-gris">
+            <span class="btn-label">Maestro de Lotes</span>
+            <span class="btn-sub">Catálogo completo de lotes</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="seccion">
+        <div class="seccion-titulo">Costos & Finanzas</div>
+        <div class="grid grid-2">
+          <a href="#" class="portal-btn btn-naranja">
+            <span class="btn-label">Costos por Distrito</span>
+            <span class="btn-sub">Análisis de costos distritales</span>
+          </a>
+          <a href="#" class="portal-btn btn-naranja">
+            <span class="btn-label">Costos Gerencia Agrícola</span>
+            <span class="btn-sub">Consolidado gerencial</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="seccion">
+        <div class="seccion-titulo">Operaciones & Maquinaria</div>
+        <div class="grid grid-3">
+          <a href="#" class="portal-btn btn-oscuro">
+            <span class="btn-label">Maquinaria y Operaciones</span>
+            <span class="btn-sub">Control de equipos</span>
+          </a>
+          <a href="#" class="portal-btn btn-oscuro">
+            <span class="btn-label">Plataforma Taller Mecánico</span>
+            <span class="btn-sub">Mantenimiento y reparaciones</span>
+          </a>
+          <a href="#" class="portal-btn btn-oscuro">
+            <span class="btn-label">NAX Solutions</span>
+            <span class="btn-sub">Integración NAX</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="seccion">
+        <div class="seccion-titulo">Programación & Seguridad</div>
+        <div class="grid grid-2">
+          <a href="#" class="portal-btn btn-verde">
+            <span class="btn-label">Programación Diaria</span>
+            <span class="btn-sub">Reporte operativo del día</span>
+          </a>
+          <a href="cosecha.html#quemas" class="portal-btn btn-rojo">
+            <span class="btn-label">Quemas Criminales</span>
+            <span class="btn-sub">Registro histórico</span>
+          </a>
+        </div>
+      </div>
+
+    </div>
+    <div class="portal-footer">
+      Depto. de Estadística Agrícola &nbsp;|&nbsp; Compañía Azucarera Chumbagua &nbsp;|&nbsp; Zafra 2025-2026
+    </div>
+  </div>
+
+  <!-- TAB: REPORTERÍA -->
+  <div id="tab-reporteria" class="tab-page">
+    <div class="portal-hero">
+      <h1>Reportería</h1>
+      <p>Módulos de análisis y seguimiento agrícola</p>
+    </div>
+    <div class="rep-wrap">
+      <div class="grid grid-3" style="margin-top:8px;">
+        <a href="cosecha.html" class="portal-btn btn-verde" style="min-height:90px;">
           <span class="badge-nuevo">NUEVO</span>
           <span class="btn-label">Avance de Cosecha</span>
-          <span class="btn-sub">Resumen, frescura, escenarios</span>
+          <span class="btn-sub">Resumen, frescura, quemas, escenarios molienda</span>
         </a>
-        <a href="#" class="portal-btn btn-gris">
+        <a href="rendimientos.html" class="portal-btn btn-azul" style="min-height:90px;">
+          <span class="badge-nuevo">NUEVO</span>
+          <span class="btn-label">Rendimientos Zafra</span>
+          <span class="btn-sub">TCH por finca, lote y variedad</span>
+        </a>
+        <a href="#" class="portal-btn btn-gris" style="min-height:90px;">
           <span class="btn-label">Prog. Cosecha</span>
-          <span class="btn-sub">Programa diario</span>
+          <span class="btn-sub">Programa diario de cosecha</span>
         </a>
-        <a href="#" class="portal-btn btn-gris">
+        <a href="#" class="portal-btn btn-gris" style="min-height:90px;">
           <span class="btn-label">Eficiencias Cosecha</span>
           <span class="btn-sub">Indicadores operativos</span>
         </a>
-      </div>
-    </div>
-
-    <!-- RENDIMIENTOS -->
-    <div class="seccion">
-      <div class="seccion-titulo">Rendimientos Agrícolas</div>
-      <div class="grid grid-3">
-        <a href="rendimientos.html" class="portal-btn btn-azul">
-          <span class="badge-nuevo">NUEVO</span>
-          <span class="btn-label">Rendimientos Zafra</span>
-          <span class="btn-sub">Fincas, lotes, variedades</span>
-        </a>
-        <a href="#" class="portal-btn btn-gris">
-          <span class="btn-label">Análisis de Variedades</span>
-          <span class="btn-sub">Comportamiento TCH por ciclo</span>
-        </a>
-        <a href="#" class="portal-btn btn-gris">
-          <span class="btn-label">Análisis Riegos</span>
-          <span class="btn-sub">Seguimiento sistemas de riego</span>
-        </a>
-      </div>
-    </div>
-
-    <!-- PLANIFICACIÓN -->
-    <div class="seccion">
-      <div class="seccion-titulo">Planificación & Labores</div>
-      <div class="grid grid-2">
-        <a href="#" class="portal-btn btn-gris">
-          <span class="btn-label">Planificación de Labores</span>
-          <span class="btn-sub">Programación agrícola</span>
-        </a>
-        <a href="#" class="portal-btn btn-gris">
-          <span class="btn-label">Maestro de Lotes</span>
-          <span class="btn-sub">Catálogo completo de lotes</span>
-        </a>
-      </div>
-    </div>
-
-    <!-- COSTOS -->
-    <div class="seccion">
-      <div class="seccion-titulo">Costos & Finanzas</div>
-      <div class="grid grid-2">
-        <a href="#" class="portal-btn btn-naranja">
+        <a href="#" class="portal-btn btn-naranja" style="min-height:90px;">
           <span class="btn-label">Costos por Distrito</span>
           <span class="btn-sub">Análisis de costos distritales</span>
         </a>
-        <a href="#" class="portal-btn btn-naranja">
-          <span class="btn-label">Costos Gerencia Agrícola</span>
-          <span class="btn-sub">Consolidado gerencial</span>
-        </a>
-      </div>
-    </div>
-
-    <!-- OPERACIONES -->
-    <div class="seccion">
-      <div class="seccion-titulo">Operaciones & Maquinaria</div>
-      <div class="grid grid-3">
-        <a href="#" class="portal-btn btn-oscuro">
+        <a href="#" class="portal-btn btn-oscuro" style="min-height:90px;">
           <span class="btn-label">Maquinaria y Operaciones</span>
           <span class="btn-sub">Control de equipos</span>
         </a>
-        <a href="#" class="portal-btn btn-oscuro">
-          <span class="btn-label">Plataforma Taller Mecánico</span>
-          <span class="btn-sub">Mantenimiento y reparaciones</span>
-        </a>
-        <a href="#" class="portal-btn btn-oscuro">
-          <span class="btn-label">NAX Solutions</span>
-          <span class="btn-sub">Integración NAX</span>
-        </a>
       </div>
     </div>
+    <div class="portal-footer">
+      Depto. de Estadística Agrícola &nbsp;|&nbsp; Compañía Azucarera Chumbagua &nbsp;|&nbsp; Zafra 2025-2026
+    </div>
+  </div>
 
-    <!-- PROGRAMACIÓN -->
-    <div class="seccion">
-      <div class="seccion-titulo">Programación Diaria</div>
-      <div class="grid grid-2">
-        <a href="#" class="portal-btn btn-verde">
-          <span class="btn-label">Programación Diaria</span>
-          <span class="btn-sub">Reporte operativo del día</span>
-        </a>
-        <a href="#" class="portal-btn btn-gris">
-          <span class="btn-label">Quemas Criminales</span>
-          <span class="btn-sub">Registro histórico</span>
-        </a>
+  <!-- TAB: MAPA -->
+  <div id="tab-mapa" class="tab-page">
+    <div class="mapa-wrap">
+      <div class="mapa-titulo">Mapa de Fincas — Compañía Azucarera Chumbagua</div>
+      <iframe
+        class="mapa-iframe"
+        src="https://www.google.com/maps/d/u/0/embed?mid=15d723R-0hMWzKFw9g_ZB4pq1LV987tY&femb=1&ll=15.24200727603822,-88.53571945446465&z=13"
+        allowfullscreen>
+      </iframe>
+    </div>
+    <div class="portal-footer">
+      Depto. de Estadística Agrícola &nbsp;|&nbsp; Compañía Azucarera Chumbagua &nbsp;|&nbsp; Zafra 2025-2026
+    </div>
+  </div>
+
+  <!-- TAB: CONTACTO -->
+  <div id="tab-contacto" class="tab-page">
+    <div class="contacto-wrap">
+      <div class="contacto-titulo">Ponte en contacto.</div>
+      <div class="contacto-sub">Depto. de Estadística Agrícola — Compañía Azucarera Chumbagua</div>
+
+      <div class="form-grid">
+        <div>
+          <label class="form-label">Nombre</label>
+          <input class="form-input" type="text" id="c-nombre" placeholder="Tu nombre completo">
+        </div>
+        <div>
+          <label class="form-label">Email *</label>
+          <input class="form-input" type="email" id="c-email" placeholder="tu@correo.com">
+        </div>
+      </div>
+      <div class="form-full">
+        <label class="form-label">Teléfono</label>
+        <input class="form-input" type="tel" id="c-telefono" placeholder="Número de teléfono">
+      </div>
+      <div class="form-full">
+        <label class="form-label">Mensaje</label>
+        <textarea class="form-input" id="c-mensaje" placeholder="Escribe tu mensaje aquí..."></textarea>
+      </div>
+      <button class="form-btn" onclick="enviarContacto()">Enviar mensaje</button>
+      <div class="form-msg" id="form-msg"></div>
+
+      <div class="contacto-info">
+        <div class="contacto-info-item">
+          <strong>Reinaldo Bacilá</strong>
+          reinaldo.bacila@chumbagua.com
+        </div>
+        <div class="contacto-info-item">
+          <strong>Cel. 9455-8288</strong>
+          Estadística Agrícola
+        </div>
+        <div class="contacto-info-item" style="text-align:right;">
+          <strong>Depto. Estadística Agrícola</strong>
+          Zafra 2025-2026
+        </div>
       </div>
     </div>
-
   </div>
 
-  <div class="portal-footer">
-    Depto. de Estadística Agrícola &nbsp;|&nbsp; Compañía Azucarera Chumbagua &nbsp;|&nbsp; Zafra 2025-2026
-  </div>
 </div>
 
 <script>
-const SUPABASE_URL     = 'https://dhbyjqmdcezdiucxeqpp.supabase.co'
-const SUPABASE_ANON_KEY= 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRoYnlqcW1kY2V6ZGl1Y3hlcXBwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMzI2NjEsImV4cCI6MjA5MjcwODY2MX0.TwRDctpOab02EsGo6q6-Zx0vtdLPlxn_mhowxu93EF0'
+const SUPABASE_URL      = 'https://dhbyjqmdcezdiucxeqpp.supabase.co'
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRoYnlqcW1kY2V6ZGl1Y3hlcXBwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMzI2NjEsImV4cCI6MjA5MjcwODY2MX0.TwRDctpOab02EsGo6q6-Zx0vtdLPlxn_mhowxu93EF0'
 const sb = supabase.createClient ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
 async function doLogin() {
@@ -334,9 +473,30 @@ async function doLogout() {
 function mostrarPortal() {
   document.getElementById('pag-login').classList.add('oculto')
   document.getElementById('portal').classList.add('visible')
-  const hoy = new Date()
   document.getElementById('fecha-header').textContent =
-    hoy.toLocaleDateString('es-HN',{weekday:'long',year:'numeric',month:'long',day:'numeric'})
+    new Date().toLocaleDateString('es-HN',{weekday:'long',year:'numeric',month:'long',day:'numeric'})
+}
+
+function irTab(tab) {
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('activo'))
+  document.querySelectorAll('.tab-page').forEach(p=>p.classList.remove('activo'))
+  document.querySelector(`[onclick="irTab('${tab}')"]`).classList.add('activo')
+  document.getElementById('tab-'+tab).classList.add('activo')
+}
+
+function enviarContacto() {
+  const nombre  = document.getElementById('c-nombre').value.trim()
+  const email   = document.getElementById('c-email').value.trim()
+  const telefono= document.getElementById('c-telefono').value.trim()
+  const mensaje = document.getElementById('c-mensaje').value.trim()
+  const msg     = document.getElementById('form-msg')
+  if(!email||!mensaje){msg.style.color='#c0392b';msg.textContent='Por favor completa el email y el mensaje.';return}
+  // Construir mailto
+  const subject = encodeURIComponent('Mensaje desde portal Chumbagua')
+  const body    = encodeURIComponent(`Nombre: ${nombre}\nTeléfono: ${telefono}\n\n${mensaje}`)
+  window.location.href = `mailto:reinaldo.bacila@chumbagua.com?subject=${subject}&body=${body}`
+  msg.style.color='#2d6e3e'
+  msg.textContent='Abriendo cliente de correo...'
 }
 
 async function init() {
