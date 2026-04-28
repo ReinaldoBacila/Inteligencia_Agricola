@@ -1451,60 +1451,85 @@ async function cargarQuemas() {
 async function actualizarMapaQuemas(detFilt) {
   if(!GEOJSON_FINCAS) GEOJSON_FINCAS = GEOJSON_DATA
 
-  // TM por finca_lote (para intensidad heatmap)
+  // Normalizar finca_lote: quitar espacios y asegurar formato consistente
+  const normFL = s => (s||'').toString().trim().toUpperCase().replace(/\s+/g,'')
+
+  // TM por finca_lote normalizado
   const tmPorLote = {}
   detFilt.forEach(r=>{
-    const fl = r.conc||''
+    // Intentar conc primero, luego construir
+    let fl = normFL(r.conc)
+    if(!fl && r.cod_finca) fl = normFL((r.cod_finca||'') + String(Math.round(parseFloat(r.lote)||0)))
     if(!fl) return
     tmPorLote[fl] = (tmPorLote[fl]||0) + (parseFloat(r.neto)||0)
   })
+  console.log('🔴 Lotes con quema en detFilt:', Object.keys(tmPorLote).length)
+  console.log('🔴 Muestra tmPorLote:', Object.entries(tmPorLote).slice(0,5))
+  console.log('🔴 detFilt[0]:', detFilt[0])
   const quemaActiva = new Set(Object.keys(tmPorLote))
   const maxTM = Math.max(...Object.values(tmPorLote), 1)
 
-  // Limpiar capas GeoJSON y heatmap anteriores
+  // Limpiar capas anteriores
   mapaQ.eachLayer(l=>{ if(l._isQuemaLayer) mapaQ.removeLayer(l) })
 
-  // Polígonos
+  const tch_act = parseFloat((V_QUEMAS_RES.find(r=>r.zafra==='2025-2026')||{}).tch)||104.54
+
+  // Polígonos: azul claro sin quema, rojo con quema (intensidad por TM)
   const geojLayer = L.geoJSON(GEOJSON_FINCAS, {
     style: f => {
-      const fl = f.properties.finca_lote
+      const fl = normFL(f.properties.finca_lote)
       if(quemaActiva.has(fl)){
-        const intens = Math.min(tmPorLote[fl]/maxTM, 1)
-        const op = 0.45 + intens*0.45
-        return {color:'#8B0000',fillColor:'#c0392b',fillOpacity:op,weight:1.5}
+        return {color:'#8B0000',fillColor:'#e74c3c',fillOpacity:0.7,weight:1.5}
       }
-      return {color:'#7fa8cc',fillColor:'#aac4e8',fillOpacity:0.2,weight:0.4}
+      return {color:'#7fa8cc',fillColor:'#aac4e8',fillOpacity:0.25,weight:0.4}
     },
     onEachFeature: (f, layer) => {
       const p = f.properties
-      const fl = p.finca_lote
+      const fl = normFL(p.finca_lote)
       const tm = tmPorLote[fl]||0
-      const tch_act = parseFloat((V_QUEMAS_RES.find(r=>r.zafra==='2025-2026')||{}).tch)||104.54
       const ha = tm>0 ? (tm/tch_act).toFixed(2) : p.ha
       layer.bindPopup(`
-        <b style="color:#c0392b">${p.desc_finca||p.finca}</b><br>
-        <b>Finca-Lote:</b> ${fl}<br>
+        <b style="color:${tm>0?'#c0392b':'#333'}">${p.desc_finca||p.finca}</b><br>
+        <b>Finca-Lote:</b> ${p.finca_lote}<br>
         <b>Distrito:</b> ${p.distrito}<br>
         <b>HA finca:</b> ${p.ha}<br>
-        ${tm>0?`<span style="color:#c0392b;font-weight:700">🔴 QUEMA CRIMINAL</span><br><b>TM Quemadas:</b> ${fmt(tm,2)}<br><b>HA aprox:</b> ${ha}`:'Sin quema'}
+        ${tm>0
+          ?`<span style="color:#c0392b;font-weight:700">🔴 QUEMA CRIMINAL</span><br>
+            <b>TM Quemadas:</b> ${fmt(tm,2)}<br>
+            <b>HA aprox:</b> ${ha}`
+          :'<span style="color:#888">Sin quema registrada</span>'}
       `)
     }
   })
   geojLayer._isQuemaLayer = true
   geojLayer.addTo(mapaQ)
 
-  // Heatmap con intensidad por TM
+  // Heatmap estilo imagen 3: concentración por TM, radio grande, blur suave
+  // Usar múltiples puntos por lote proporcional a TM para mayor concentración visual
   const heatPoints = []
   GEOJSON_FINCAS.features.forEach(f=>{
-    const fl = f.properties.finca_lote
+    const fl = normFL(f.properties.finca_lote)
     if(!quemaActiva.has(fl) || !f.properties.centroid) return
     const tm = tmPorLote[fl]||0
-    const intens = Math.max(0.3, tm/maxTM)
-    heatPoints.push([f.properties.centroid[0], f.properties.centroid[1], intens])
+    // Añadir puntos proporcionales a TM (más TM = más puntos = más intenso)
+    const nPuntos = Math.max(1, Math.round(tm/maxTM * 10))
+    for(let i=0; i<nPuntos; i++){
+      // Pequeña dispersión aleatoria para efecto blur natural
+      const jLat = (Math.random()-0.5)*0.003
+      const jLon = (Math.random()-0.5)*0.003
+      heatPoints.push([
+        f.properties.centroid[0]+jLat,
+        f.properties.centroid[1]+jLon,
+        tm/maxTM
+      ])
+    }
   })
   if(heatPoints.length){
-    const heat = L.heatLayer(heatPoints,{radius:30,blur:20,maxZoom:17,max:1,
-      gradient:{0.2:'#ffffb2',0.5:'#fd8d3c',0.75:'#e74c3c',1:'#800026'}})
+    console.log('🔥 HeatPoints:', heatPoints.length, 'max intensidad:', Math.max(...heatPoints.map(p=>p[2])))
+    const heat = L.heatLayer(heatPoints,{
+      radius:60, blur:50, maxZoom:18, max:1, minOpacity:0.5,
+      gradient:{0.0:'#ffffb2',0.3:'#fecc5c',0.6:'#fd8d3c',0.8:'#f03b20',1.0:'#bd0026'}
+    })
     heat._isQuemaLayer = true
     heat.addTo(mapaQ)
   }
