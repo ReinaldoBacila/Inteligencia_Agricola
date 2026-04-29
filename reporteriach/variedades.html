@@ -967,6 +967,20 @@ function renderRendvar(){
     console.log('   muestra 2023-2024:', sample)
     console.log('     ¿pasa filtro?', filtrar(sample), '· ciclos:', sample.ciclos, '· edad:', sample.edad)
   }
+  // Ver por qué falla 2024-2025 — analizar individualmente cada filtro
+  const z24 = DATOS.filter(d=>zafraEq(d.zafra,'2024-2025'))
+  if(z24.length > 0){
+    const sample = z24[0]
+    console.log('   muestra 2024-2025:', sample)
+    console.log('     zafra OK?', enZafras(sample.zafra, zafrasAct))
+    console.log('     dis OK?', !fDis || String(sample.distrito)===fDis)
+    console.log('     fin OK?', !fFin || sample.finca===fFin)
+    console.log('     rie OK?', !fRie || sample.riego===fRie)
+    console.log('     cor OK?', !fCor || sample.corte===fCor)
+    console.log('     ter OK?', !fTer || sample.tercio===fTer)
+    console.log('     ciclos OK?', sample.ciclos==null || (sample.ciclos>=cMin && sample.ciclos<=cMax), '· valor:', sample.ciclos)
+    console.log('     edad OK?', sample.edad==null || (sample.edad>=eMin && sample.edad<=eMax), '· valor:', sample.edad)
+  }
 
   // Header
   let theadHTML = '<tr><th class="left" rowspan="2">Variedad</th>'
