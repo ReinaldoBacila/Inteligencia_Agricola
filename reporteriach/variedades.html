@@ -563,7 +563,7 @@ async function cargarDatos(){
     pureza:   r['Pureza Jugo'],
     brix:     r['Brix %'],
     humedad:  r['Humedad'],
-    edad:     r['Edad de Corte'],
+    edad:     r['EDAD MESES'] != null ? r['EDAD MESES'] : r['Edad de Corte'],
     tercio:   limpio(r['Tercio']),
     rango_edad:limpio(r['RANGO EDAD'])
   }))
@@ -923,17 +923,6 @@ function renderRendvar(){
   const eMin = parseFloat(document.getElementById('rv-edad-min').value)||0
   const eMax = parseFloat(document.getElementById('rv-edad-max').value)||999
 
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-  console.log('🟢 RENDVAR llamado')
-  console.log('   zafrasAct (chips activos):', zafrasAct)
-  console.log('   filtros:', {fDis,fFin,fRie,fCor,fTer,cMin,cMax,eMin,eMax})
-  // ¿Están todos los chips visualmente activos? Vamos a verlo
-  const chipsRaw = document.querySelectorAll('#rv-chips-zafras .chip')
-  console.log('   chips RV totales:', chipsRaw.length)
-  chipsRaw.forEach(c => {
-    console.log(`     chip "${c.dataset.zafra}" activo=${c.classList.contains('activo')}`)
-  })
-
   const filtrar = d =>
     enZafras(d.zafra, zafrasAct) &&
     (!fDis || String(d.distrito)===fDis) &&
@@ -949,38 +938,6 @@ function renderRendvar(){
   const filtradas = DATOS.filter(filtrar)
   const variedades = [...new Set(filtradas.map(d=>d.variedad).filter(Boolean))].sort()
   const zafras = zafrasAct.sort()
-
-  // DIAGNÓSTICO TEMPORAL
-  console.log('🔬 renderRendvar()')
-  console.log('   zafrasAct:', zafrasAct)
-  console.log('   filtros:', {fDis,fFin,fRie,fCor,fTer,cMin,cMax,eMin,eMax})
-  console.log('   filtradas total:', filtradas.length)
-  zafrasAct.forEach(z=>{
-    const cnt = filtradas.filter(d=>zafraEq(d.zafra,z)).length
-    const cntSinFiltros = DATOS.filter(d=>zafraEq(d.zafra,z)).length
-    console.log(`   ${z}: ${cnt} con filtros · ${cntSinFiltros} totales`)
-  })
-  // Ver muestra de filas excluidas para zafra 2023-2024
-  const z23 = DATOS.filter(d=>zafraEq(d.zafra,'2023-2024'))
-  if(z23.length > 0){
-    const sample = z23[0]
-    console.log('   muestra 2023-2024:', sample)
-    console.log('     ¿pasa filtro?', filtrar(sample), '· ciclos:', sample.ciclos, '· edad:', sample.edad)
-  }
-  // Ver por qué falla 2024-2025 — analizar individualmente cada filtro
-  const z24 = DATOS.filter(d=>zafraEq(d.zafra,'2024-2025'))
-  if(z24.length > 0){
-    const sample = z24[0]
-    console.log('   muestra 2024-2025:', sample)
-    console.log('     zafra OK?', enZafras(sample.zafra, zafrasAct))
-    console.log('     dis OK?', !fDis || String(sample.distrito)===fDis)
-    console.log('     fin OK?', !fFin || sample.finca===fFin)
-    console.log('     rie OK?', !fRie || sample.riego===fRie)
-    console.log('     cor OK?', !fCor || sample.corte===fCor)
-    console.log('     ter OK?', !fTer || sample.tercio===fTer)
-    console.log('     ciclos OK?', sample.ciclos==null || (sample.ciclos>=cMin && sample.ciclos<=cMax), '· valor:', sample.ciclos)
-    console.log('     edad OK?', sample.edad==null || (sample.edad>=eMin && sample.edad<=eMax), '· valor:', sample.edad)
-  }
 
   // Header
   let theadHTML = '<tr><th class="left" rowspan="2">Variedad</th>'
