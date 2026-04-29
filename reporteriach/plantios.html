@@ -1,0 +1,1370 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maestro de Plantíos | Chumbagua</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --azul: #1e3f7a;
+    --azul-medio: #2a5298;
+    --azul-claro: #3d7abf;
+    --verde: #2d6e3e;
+    --verde-claro: #3a8a4e;
+    --dorado: #e8a020;
+    --naranja: #c97d1a;
+    --rojo: #c0392b;
+    --gris: #f5f6f8;
+    --blanco: #ffffff;
+    --texto: #1a1a2e;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Barlow',sans-serif; background:var(--gris); color:var(--texto); min-height:100vh; }
+
+  /* HEADER */
+  /* [EDITABLE] Header principal */
+  .header { background:#fff; border-bottom:1px solid #e0e4ec; padding:12px 36px; display:flex; align-items:center; justify-content:space-between; }
+  .header-brand { display:flex; flex-direction:column; }
+  /* [EDITABLE] Nombre empresa */
+  .hdr-name { font-family:'Barlow Condensed',sans-serif; font-size:24px; font-weight:700; color:#1e3f7a; letter-spacing:1.5px; }
+  /* [EDITABLE] Subtítulo empresa */
+  .hdr-sub { font-size:11px; color:#3a8a4e; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; margin-top:1px; }
+  .header-right { display:flex; flex-direction:column; align-items:flex-end; gap:5px; }
+  /* [EDITABLE] Badge departamento */
+  .header-depto { font-size:13px; font-weight:700; color:#fff; background:#2d6e3e; padding:5px 14px; border-radius:4px; }
+  .header-fecha { font-size:12px; color:#999; }
+  .logout-btn { background:none; border:1px solid #dde1ea; border-radius:4px; padding:5px 14px; font-size:12px; cursor:pointer; color:#888; }
+
+  /* PÁGINAS */
+  .page { display:none; padding:28px 40px; }
+  .page.active { display:block; }
+
+  /* MENÚ */
+  .menu-page { max-width:1400px; margin:52px auto; text-align:center; padding:0 32px; }
+  /* [EDITABLE] Título del menú principal */
+  .menu-banner { background:linear-gradient(135deg,#1e3f7a 0%,#2d6e3e 100%); color:white; font-family:'Barlow Condensed',sans-serif; font-size:53px; font-weight:700; letter-spacing:3px; padding:43px; border-radius:10px; margin-bottom:32px; }
+  .menu-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:28px; }
+  /* [EDITABLE] Botones menú */
+  .menu-btn { padding:53px 34px; border:none; border-radius:12px; font-family:'Barlow Condensed',sans-serif; font-size:29px; font-weight:700; letter-spacing:0.5px; cursor:pointer; transition:all 0.15s; color:white; }
+  .menu-btn:hover { filter:brightness(1.1); transform:translateY(-2px); }
+  .menu-btn .sub { display:block; font-size:18px; font-weight:400; margin-top:8px; opacity:0.85; }
+  .menu-btn.azul { background:#2a5298; }
+  /* [EDITABLE] Color botones verdes menú */
+  .menu-btn.verde { background:#2d6e3e; }
+  /* [EDITABLE] Color botones dorados menú */
+  .menu-btn.naranja { background:#c97d1a; }
+  /* [EDITABLE] Color botón mapa */
+  .menu-btn.morado { background:linear-gradient(135deg,#5d4e75 0%,#1e3f7a 100%); }
+
+  /* BACK */
+  .back-btn { display:inline-flex; align-items:center; gap:6px; background:none; color:#1e3f7a; border:1px solid #ccd3e0; border-radius:5px; padding:6px 14px; font-family:'Barlow Condensed',sans-serif; font-size:12px; font-weight:700; cursor:pointer; }
+  .back-btn:hover { background:#f0f4ff; }
+  /* Page header: título izq, acciones der */
+  .pag-hdr { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; gap:12px; flex-wrap:wrap; }
+  /* [EDITABLE] Título de página interna */
+  .pag-hdr-titulo { font-family:'Barlow Condensed',sans-serif; font-size:17px; font-weight:700; color:#1e3f7a; text-transform:uppercase; letter-spacing:0.5px; }
+  /* [EDITABLE] Subtítulo empresa bajo título */
+  .pag-hdr-sub { font-size:11px; color:#888; margin-top:2px; }
+  .pag-hdr-actions { display:flex; align-items:center; gap:10px; flex-shrink:0; }
+  /* [EDITABLE] Badge depto en páginas internas */
+  .depto-badge { font-size:11px; font-weight:700; color:#fff; background:#2d6e3e; padding:4px 10px; border-radius:4px; white-space:nowrap; }
+
+  /* FILTROS */
+  .filtros { display:flex; gap:14px; flex-wrap:wrap; margin-bottom:16px; background:#fff; padding:12px 16px; border-radius:8px; border:1px solid #e0e4ec; align-items:flex-end; }
+  .filtro-grupo { display:flex; flex-direction:column; gap:4px; }
+  .filtro-grupo label { font-size:10px; font-weight:700; color:#aaa; text-transform:uppercase; letter-spacing:0.6px; }
+  .filtro-grupo select, .filtro-grupo input { border:1px solid #dde2ec; border-radius:4px; padding:5px 10px; font-size:12px; min-width:130px; background:white; color:#1e3f7a; font-family:inherit; }
+  .filtro-grupo input[type=number] { min-width:75px; width:75px; }
+  .filtro-rango { display:flex; gap:4px; align-items:center; }
+  .filtro-rango span { font-size:11px; color:#888; }
+  .btn-limpiar { background:none; border:1px solid #ccd3e0; border-radius:4px; padding:6px 12px; font-size:11px; font-weight:600; color:#888; cursor:pointer; font-family:inherit; }
+  .btn-limpiar:hover { background:#f6f7fa; color:var(--azul); }
+
+  /* KPIs */
+  .kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-bottom:20px; }
+  .kpi-card { background:white; border-radius:8px; padding:14px 16px; border:1px solid #e8edf5; border-top:3px solid var(--azul-medio); }
+  .kpi-card.verde { border-top-color:var(--verde-claro); }
+  .kpi-card.naranja { border-top-color:var(--dorado); }
+  .kpi-card.rojo { border-top-color:var(--rojo); }
+  /* [EDITABLE] Etiquetas KPI */
+  .kpi-label { font-size:10px; font-weight:700; color:#aaa; text-transform:uppercase; letter-spacing:0.6px; margin-bottom:4px; }
+  .kpi-valor { font-family:'Barlow Condensed',sans-serif; font-size:26px; font-weight:700; color:var(--azul); }
+  .kpi-sub { font-size:11px; color:#aaa; margin-top:2px; }
+
+  /* SECCIÓN */
+  /* [EDITABLE] Títulos de sección/tabla */
+  .seccion-titulo { font-size:10px; font-weight:700; color:#1e3f7a; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:8px; padding-bottom:6px; border-bottom:2px solid #e8a020; }
+
+  /* TABLAS */
+  .tabla-wrap { overflow-x:auto; margin-bottom:14px; border-radius:6px; border:1px solid #e8edf5; }
+  .tabla-wrap.scroll-y { max-height:540px; overflow-y:auto; }
+  table { width:100%; border-collapse:collapse; font-size:12px; background:white; }
+  thead tr { background:linear-gradient(90deg,#1e3f7a,#2a5298); color:white; }
+  thead th { font-size:11px; font-weight:700; padding:7px 10px; text-align:center; border-right:1px solid rgba(255,255,255,0.1); letter-spacing:0.04em; position:sticky; top:0; z-index:5; background:linear-gradient(90deg,#1e3f7a,#2a5298); }
+  tbody tr { border-bottom:1px solid #f0f3f8; }
+  tbody tr:hover { background:#f5f7fc; }
+  tbody td { padding:5px 10px; text-align:center; color:#1a1a1a; }
+  tbody tr.total-row { background:linear-gradient(90deg,#1e3f7a,#2a5298) !important; color:white; font-weight:700; }
+  tbody tr.total-row td { color:white; }
+  td.left, th.left { text-align:left !important; }
+
+  /* TABLA DETALLE COMPACTA */
+  #tbl-detalle { font-size:11px; }
+  #tbl-detalle thead th { padding:6px 4px; font-size:10px; line-height:1.2; }
+  #tbl-detalle tbody td { padding:4px 4px; font-size:11px; }
+  #tbl-detalle tbody td.left { padding-left:8px; }
+
+  /* GRID DOS / TRES COLUMNAS */
+  .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
+  .grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:16px; }
+
+  /* CANVAS */
+  .chart-box { background:white; border-radius:8px; border:1px solid #e8edf5; padding:14px 16px; }
+  /* [EDITABLE] Títulos de gráficas */
+  .chart-title { font-size:10px; font-weight:700; color:#1e3f7a; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:8px; }
+  .chart-canvas-wrap { position:relative; height:240px; }
+  .chart-canvas-wrap.tall { height:320px; }
+
+  .loading { text-align:center; padding:28px; color:#bbb; font-size:13px; }
+  .pie-pagina { text-align:right; font-size:11px; color:#bbb; font-style:italic; margin-top:14px; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<!-- [EDITABLE] Header: nombre empresa, subtítulo, departamento -->
+<div class="header">
+  <div class="header-brand">
+    <span class="hdr-name">CHUMBAGUA</span>
+    <span class="hdr-sub">Azúcar · Energía · Honduras</span>
+  </div>
+  <div class="header-right">
+    <span class="header-depto">Depto. de Estadística Agrícola</span>
+    <span class="header-fecha" id="fecha-header">—</span>
+    <button class="logout-btn" onclick="window.location.href='index.html'">← Volver al portal</button>
+  </div>
+</div>
+
+<!-- MENÚ -->
+<div id="pag-menu" class="page active">
+  <div class="menu-page">
+    <!-- [EDITABLE] Título del menú principal -->
+    <div class="menu-banner">MAESTRO DE PLANTÍOS — PERIODO 2025-2026</div>
+    <div class="menu-grid">
+      <button class="menu-btn azul" onclick="irA('pag-resumen')">RESUMEN MAESTRO<span class="sub">Dashboard general</span></button>
+      <button class="menu-btn verde" onclick="irA('pag-detalle')">CUADRO DETALLADO<span class="sub">Listado por lote</span></button>
+      <button class="menu-btn naranja" onclick="irA('pag-variedades')">DISTRIBUCIÓN VARIETAL<span class="sub">% y HA por variedad</span></button>
+      <button class="menu-btn morado" onclick="irA('pag-mapa')" style="grid-column:1/-1;">MAPA INTERACTIVO<span class="sub">Vista geográfica del campo</span></button>
+    </div>
+    <p class="pie-pagina">Depto. de Estadística Agrícola | Zafra 2025-2026</p>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- RESUMEN MAESTRO DE PLANTIOS                                       -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div id="pag-resumen" class="page">
+  <!-- [EDITABLE] Título página Resumen -->
+  <div class="pag-hdr">
+    <div>
+      <div class="pag-hdr-titulo">Resumen Maestro de Plantíos</div>
+      <div class="pag-hdr-sub">Compañía Azucarera Chumbagua | Zafra 2025-2026</div>
+    </div>
+    <div class="pag-hdr-actions">
+      <span class="depto-badge">Depto. Estadística Agrícola</span>
+      <button class="back-btn" onclick="irA('pag-menu')">← Ir al menú</button>
+    </div>
+  </div>
+
+  <!-- FILTROS -->
+  <div class="filtros">
+    <div class="filtro-grupo">
+      <label>Destino Caña</label>
+      <select id="r-destino"><option value="">Todas</option></select>
+    </div>
+    <div class="filtro-grupo">
+      <label>Distrito</label>
+      <select id="r-distrito"><option value="">Todos</option></select>
+    </div>
+    <div class="filtro-grupo">
+      <label>Tenencia</label>
+      <select id="r-tenencia"><option value="">Todas</option></select>
+    </div>
+    <div class="filtro-grupo">
+      <label>Tipo Riego</label>
+      <select id="r-riego"><option value="">Todos</option></select>
+    </div>
+    <button class="btn-limpiar" onclick="limpiarFiltros('r')">Limpiar</button>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <div class="kpi-card"><div class="kpi-label">Has Totales</div><div class="kpi-valor" id="kpi-has-totales">—</div></div>
+    <div class="kpi-card verde"><div class="kpi-label">Has Producción</div><div class="kpi-valor" id="kpi-has-prod">—</div></div>
+    <div class="kpi-card naranja"><div class="kpi-label">Has Semilla</div><div class="kpi-valor" id="kpi-has-semilla">—</div></div>
+    <div class="kpi-card"><div class="kpi-label">Prom. Ciclos</div><div class="kpi-valor" id="kpi-prom-ciclos">—</div></div>
+    <div class="kpi-card"><div class="kpi-label">Edad Prom (meses)</div><div class="kpi-valor" id="kpi-edad-prom">—</div></div>
+    <div class="kpi-card"><div class="kpi-label">Total Lotes</div><div class="kpi-valor" id="kpi-total-lotes">—</div></div>
+  </div>
+
+  <!-- FILA: TENENCIA + ETAPA FENOLÓGICA -->
+  <div class="grid-2">
+    <div class="chart-box">
+      <div class="chart-title">Tenencia</div>
+      <div class="chart-canvas-wrap"><canvas id="chart-tenencia"></canvas></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-title">Etapa Fenológica del Cultivo</div>
+      <div class="chart-canvas-wrap"><canvas id="chart-etapa"></canvas></div>
+    </div>
+  </div>
+
+  <!-- TABLA DISTRITOS -->
+  <div class="seccion-titulo">Resumen por Distrito</div>
+  <div class="tabla-wrap">
+    <table id="tbl-distritos">
+      <thead><tr>
+        <th class="left">Distrito</th>
+        <th>Has</th>
+        <th>%</th>
+        <th>N° Fincas</th>
+        <th>Edad Prom.</th>
+        <th>Ciclos Prom.</th>
+        <th>Distancia (km)</th>
+      </tr></thead>
+      <tbody><tr><td colspan="7" class="loading">Cargando...</td></tr></tbody>
+    </table>
+  </div>
+
+  <!-- FILA: CICLOS + VARIEDADES + RIEGO -->
+  <div class="grid-3">
+    <div class="chart-box">
+      <div class="chart-title">Número de Ciclos</div>
+      <div class="chart-canvas-wrap tall"><canvas id="chart-ciclos"></canvas></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-title">Distribución de Variedades</div>
+      <div class="chart-canvas-wrap tall"><canvas id="chart-variedades"></canvas></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-title">Tipo de Riego</div>
+      <div class="chart-canvas-wrap tall"><canvas id="chart-riego"></canvas></div>
+    </div>
+  </div>
+
+  <!-- TABLA FINCAS -->
+  <div class="seccion-titulo">Resumen por Finca</div>
+  <div class="tabla-wrap scroll-y">
+    <table id="tbl-fincas">
+      <thead><tr>
+        <th class="left">Nombre Finca</th>
+        <th>Has</th>
+        <th>N° Lotes</th>
+        <th>Prom. Edad</th>
+        <th>Prom. Ciclos</th>
+      </tr></thead>
+      <tbody><tr><td colspan="5" class="loading">Cargando...</td></tr></tbody>
+    </table>
+  </div>
+
+  <p class="pie-pagina">Depto. de Estadística Agrícola | Zafra 2025-2026</p>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- CUADRO DETALLADO                                                  -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div id="pag-detalle" class="page">
+  <!-- [EDITABLE] Título página Detalle -->
+  <div class="pag-hdr">
+    <div>
+      <div class="pag-hdr-titulo">Cuadro Detallado · Maestro de Plantíos</div>
+      <div class="pag-hdr-sub">Compañía Azucarera Chumbagua | Zafra 2025-2026</div>
+    </div>
+    <div class="pag-hdr-actions">
+      <span class="depto-badge">Depto. Estadística Agrícola</span>
+      <button class="back-btn" onclick="irA('pag-menu')">← Ir al menú</button>
+    </div>
+  </div>
+
+  <!-- FILTROS -->
+  <div class="filtros">
+    <div class="filtro-grupo"><label>Distrito</label><select id="d-distrito"><option value="">Todos</option></select></div>
+    <div class="filtro-grupo"><label>Finca</label><select id="d-finca"><option value="">Todas</option></select></div>
+    <div class="filtro-grupo"><label>Riego</label><select id="d-riego"><option value="">Todos</option></select></div>
+    <div class="filtro-grupo"><label>Destino Caña</label><select id="d-destino"><option value="">Todos</option></select></div>
+    <div class="filtro-grupo"><label>Tipo Suelo</label><select id="d-suelo"><option value="">Todos</option></select></div>
+    <div class="filtro-grupo"><label>Tenencia</label><select id="d-tenencia"><option value="">Todas</option></select></div>
+    <div class="filtro-grupo"><label>Variedad</label><select id="d-variedad"><option value="">Todas</option></select></div>
+    <div class="filtro-grupo">
+      <label>Rango Ciclos</label>
+      <div class="filtro-rango">
+        <input type="number" id="d-ciclo-min" value="0" min="0" max="20">
+        <span>a</span>
+        <input type="number" id="d-ciclo-max" value="16" min="0" max="20">
+      </div>
+    </div>
+    <div class="filtro-grupo">
+      <label>Rango Edad (meses)</label>
+      <div class="filtro-rango">
+        <input type="number" id="d-edad-min" value="0" min="0" max="30" step="0.1">
+        <span>a</span>
+        <input type="number" id="d-edad-max" value="20" min="0" max="30" step="0.1">
+      </div>
+    </div>
+    <button class="btn-limpiar" onclick="limpiarFiltros('d')">Limpiar</button>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <div class="kpi-card"><div class="kpi-label">Lotes</div><div class="kpi-valor" id="d-kpi-lotes">—</div></div>
+    <div class="kpi-card verde"><div class="kpi-label">Has Totales</div><div class="kpi-valor" id="d-kpi-has">—</div></div>
+    <div class="kpi-card naranja"><div class="kpi-label">Edad Prom.</div><div class="kpi-valor" id="d-kpi-edad">—</div></div>
+    <div class="kpi-card"><div class="kpi-label">Ciclos Prom.</div><div class="kpi-valor" id="d-kpi-ciclos">—</div></div>
+  </div>
+
+  <!-- TABLA -->
+  <div class="tabla-wrap scroll-y" style="max-height:65vh">
+    <table id="tbl-detalle">
+      <thead><tr>
+        <th class="left">Descripción Finca</th>
+        <th>Finca</th>
+        <th>Lote</th>
+        <th>Área</th>
+        <th>Ciclos</th>
+        <th>Variedad</th>
+        <th>Tipo<br>Riego</th>
+        <th>Edad<br>Días</th>
+        <th>Edad<br>Meses</th>
+        <th>Tipo Suelo</th>
+        <th>Tercio</th>
+        <th>Tenencia</th>
+        <th>Ancho<br>Surco</th>
+        <th>Dist.<br>Siembra</th>
+        <th>Dist.<br>Km</th>
+        <th>Destino<br>Caña</th>
+        <th>Última<br>Cosecha</th>
+        <th>Fecha<br>Siembra</th>
+        <th>Estado<br>Cosecha</th>
+      </tr></thead>
+      <tbody><tr><td colspan="19" class="loading">Cargando...</td></tr></tbody>
+    </table>
+  </div>
+
+  <p class="pie-pagina">Depto. de Estadística Agrícola | Zafra 2025-2026</p>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- DISTRIBUCIÓN VARIETAL                                             -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div id="pag-variedades" class="page">
+  <!-- [EDITABLE] Título página Variedades -->
+  <div class="pag-hdr">
+    <div>
+      <div class="pag-hdr-titulo">Distribución de Variedades · 25-26</div>
+      <div class="pag-hdr-sub">Compañía Azucarera Chumbagua | Zafra 2025-2026</div>
+    </div>
+    <div class="pag-hdr-actions">
+      <span class="depto-badge">Depto. Estadística Agrícola</span>
+      <button class="back-btn" onclick="irA('pag-menu')">← Ir al menú</button>
+    </div>
+  </div>
+
+  <!-- FILTROS -->
+  <div class="filtros">
+    <div class="filtro-grupo"><label>Distrito</label><select id="v-distrito"><option value="">Todos</option></select></div>
+    <div class="filtro-grupo"><label>Finca</label><select id="v-finca"><option value="">Todas</option></select></div>
+    <div class="filtro-grupo"><label>Tipo Riego</label><select id="v-riego"><option value="">Todos</option></select></div>
+    <div class="filtro-grupo"><label>Destino Caña</label><select id="v-destino"><option value="">Todos</option></select></div>
+    <div class="filtro-grupo"><label>Tenencia</label><select id="v-tenencia"><option value="">Todas</option></select></div>
+    <div class="filtro-grupo"><label>Variedad</label><select id="v-variedad"><option value="">Todas</option></select></div>
+    <div class="filtro-grupo">
+      <label>Rango Ciclos</label>
+      <div class="filtro-rango">
+        <input type="number" id="v-ciclo-min" value="0" min="0" max="20">
+        <span>a</span>
+        <input type="number" id="v-ciclo-max" value="16" min="0" max="20">
+      </div>
+    </div>
+    <button class="btn-limpiar" onclick="limpiarFiltros('v')">Limpiar</button>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <div class="kpi-card"><div class="kpi-label">Has Totales</div><div class="kpi-valor" id="v-kpi-has">—</div></div>
+    <div class="kpi-card verde"><div class="kpi-label">N° Variedades</div><div class="kpi-valor" id="v-kpi-num">—</div></div>
+    <div class="kpi-card naranja"><div class="kpi-label">Variedad Principal</div><div class="kpi-valor" id="v-kpi-top" style="font-size:18px">—</div></div>
+    <div class="kpi-card"><div class="kpi-label">Total Lotes</div><div class="kpi-valor" id="v-kpi-lotes">—</div></div>
+  </div>
+
+  <!-- LAYOUT 2 COL: GRÁFICO + TABLA -->
+  <div class="grid-2" style="grid-template-columns:1.4fr 1fr">
+    <div class="chart-box">
+      <div class="chart-title">Distribución de Variedades</div>
+      <div style="position:relative;height:560px"><canvas id="chart-var-pie"></canvas></div>
+    </div>
+    <div>
+      <div class="seccion-titulo">Has por Variedad</div>
+      <div class="tabla-wrap scroll-y" style="max-height:560px">
+        <table id="tbl-variedades">
+          <thead><tr>
+            <th class="left">Variedad</th>
+            <th>Has</th>
+            <th>%</th>
+          </tr></thead>
+          <tbody><tr><td colspan="3" class="loading">Cargando...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <p class="pie-pagina">Depto. de Estadística Agrícola | Zafra 2025-2026</p>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- MAPA INTERACTIVO                                                  -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<style>
+  /* Estilos específicos del mapa */
+  .mapa-layout { display:grid; grid-template-columns:1fr 320px; gap:14px; }
+  @media(max-width:1100px){ .mapa-layout { grid-template-columns:1fr; } }
+
+  .mapa-controles { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:12px; background:white; border:1px solid #e0e4ec; border-radius:8px; padding:10px 14px; }
+  .mapa-controles-label { font-size:10px; font-weight:700; color:#888; text-transform:uppercase; letter-spacing:0.5px; margin-right:4px; }
+  .mapa-btn { background:white; color:#1e3f7a; border:1px solid #ccd3e0; padding:5px 12px; border-radius:4px; font-size:11px; font-weight:700; font-family:'Barlow Condensed',sans-serif; letter-spacing:0.4px; cursor:pointer; transition:all 0.15s; }
+  .mapa-btn:hover { background:#f0f4ff; border-color:#1e3f7a; }
+  .mapa-btn.activo { background:#1e3f7a; color:white; border-color:#1e3f7a; }
+
+  #mapa-container { height:600px; border-radius:8px; border:1px solid #e0e4ec; background:#e8eef5; }
+
+  .mapa-leyenda { background:white; border-radius:6px; padding:10px 12px; border:1px solid #d6dff0; font-size:11px; }
+  .mapa-leyenda-tit { font-weight:700; color:#1e3f7a; text-transform:uppercase; letter-spacing:0.4px; margin-bottom:6px; font-size:10px; }
+  .mapa-leyenda-item { display:flex; align-items:center; gap:6px; margin-bottom:3px; }
+  .mapa-leyenda-color { width:14px; height:11px; border-radius:2px; display:inline-block; flex-shrink:0; }
+
+  .mapa-ficha { background:white; border:1px solid #e8edf5; border-radius:8px; padding:14px; height:600px; overflow-y:auto; }
+  .mapa-ficha-vacio { color:#999; font-style:italic; font-size:12px; text-align:center; padding:40px 20px; line-height:1.5; }
+  .mapa-ficha-tit { font-family:'Barlow Condensed',sans-serif; font-size:18px; font-weight:700; color:#1e3f7a; line-height:1.1; }
+  .mapa-ficha-sub { font-size:10px; color:#888; margin-top:2px; margin-bottom:10px; }
+  .mapa-ficha-row { display:flex; justify-content:space-between; border-bottom:1px solid #f0f3f8; padding:4px 0; font-size:11px; }
+  .mapa-ficha-row span:first-child { color:#888; }
+  .mapa-ficha-row span:last-child { font-weight:700; color:#1e3f7a; }
+  .mapa-ficha-alerta { background:#fef5f3; border-left:3px solid #c0392b; padding:7px 9px; border-radius:3px; font-size:11px; color:#a32d2d; margin-top:10px; }
+  .mapa-ficha-ok { background:#eaf3de; border-left:3px solid #2d6e3e; padding:7px 9px; border-radius:3px; font-size:11px; color:#2d6e3e; margin-top:10px; }
+
+  .mapa-stats { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:12px; }
+  .mapa-stat { background:#f9fafc; border:1px solid #e8edf5; border-radius:5px; padding:7px 9px; }
+  .mapa-stat-label { font-size:9px; color:#888; font-weight:700; text-transform:uppercase; letter-spacing:0.4px; }
+  .mapa-stat-num { font-family:'Barlow Condensed',sans-serif; font-size:18px; font-weight:700; color:#1e3f7a; line-height:1.1; }
+
+  /* Tooltip personalizado leaflet */
+  .leaflet-tooltip { background:#1e3f7a !important; color:white !important; border:none !important; padding:5px 9px !important; font-family:'Barlow',sans-serif; font-size:11px; box-shadow:0 2px 8px rgba(0,0,0,0.2); }
+  .leaflet-tooltip-top:before { border-top-color:#1e3f7a !important; }
+</style>
+
+<div id="pag-mapa" class="page">
+  <!-- [EDITABLE] Título página Mapa -->
+  <div class="pag-hdr">
+    <div>
+      <div class="pag-hdr-titulo">Mapa Interactivo · Maestro de Plantíos</div>
+      <div class="pag-hdr-sub">Compañía Azucarera Chumbagua | Zafra 2025-2026</div>
+    </div>
+    <div class="pag-hdr-actions">
+      <span class="depto-badge">Depto. Estadística Agrícola</span>
+      <button class="back-btn" onclick="irA('pag-menu')">← Ir al menú</button>
+    </div>
+  </div>
+
+  <!-- CONTROLES: COLOREAR POR -->
+  <div class="mapa-controles">
+    <span class="mapa-controles-label">Colorear por:</span>
+    <button class="mapa-btn activo" data-modo="edad"      onclick="cambiarModoMapa('edad')">EDAD</button>
+    <button class="mapa-btn"        data-modo="ciclos"    onclick="cambiarModoMapa('ciclos')">CICLOS</button>
+    <button class="mapa-btn"        data-modo="variedad"  onclick="cambiarModoMapa('variedad')">VARIEDAD</button>
+    <button class="mapa-btn"        data-modo="riego"     onclick="cambiarModoMapa('riego')">TIPO RIEGO</button>
+    <button class="mapa-btn"        data-modo="tenencia"  onclick="cambiarModoMapa('tenencia')">TENENCIA</button>
+    <button class="mapa-btn"        data-modo="tercio"    onclick="cambiarModoMapa('tercio')">TERCIO</button>
+    <button class="mapa-btn"        data-modo="suelo"     onclick="cambiarModoMapa('suelo')">TIPO SUELO</button>
+    <button class="mapa-btn"        data-modo="distrito"  onclick="cambiarModoMapa('distrito')">DISTRITO</button>
+    <span style="flex:1"></span>
+    <span id="mapa-stats-mini" style="font-size:10px;color:#888;font-weight:600;"></span>
+  </div>
+
+  <!-- LAYOUT 2 COL: MAPA + FICHA -->
+  <div class="mapa-layout">
+    <div>
+      <div id="mapa-container"></div>
+      <div class="mapa-leyenda" id="mapa-leyenda" style="margin-top:8px;">
+        <div class="mapa-leyenda-tit" id="mapa-leyenda-tit">Edad (meses)</div>
+        <div id="mapa-leyenda-items"></div>
+      </div>
+    </div>
+
+    <div class="mapa-ficha" id="mapa-ficha">
+      <div class="mapa-ficha-vacio">
+        🗺️<br><br>
+        Haz click en un polígono<br>para ver la ficha del lote
+      </div>
+    </div>
+  </div>
+
+  <p class="pie-pagina">Depto. de Estadística Agrícola | Zafra 2025-2026</p>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- LÓGICA                                                            -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<script>
+const SUPABASE_URL      = 'https://dhbyjqmdcezdiucxeqpp.supabase.co'
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRoYnlqcW1kY2V6ZGl1Y3hlcXBwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMzI2NjEsImV4cCI6MjA5MjcwODY2MX0.TwRDctpOab02EsGo6q6-Zx0vtdLPlxn_mhowxu93EF0'
+const sb = supabase.createClient ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+// Registrar plugin de etiquetas pero desactivado por defecto - se activa selectivamente
+if(window.ChartDataLabels){
+  Chart.register(window.ChartDataLabels)
+  Chart.defaults.set('plugins.datalabels', { display:false })
+}
+
+// ── Helpers ──
+const fmt    = (n,d=2) => n==null||isNaN(n)?'—':Number(n).toLocaleString('es-HN',{minimumFractionDigits:d,maximumFractionDigits:d})
+const fmt0   = n => n==null||isNaN(n)?'—':Number(n).toLocaleString('es-HN',{maximumFractionDigits:0})
+const fmtPct = n => n==null||isNaN(n)?'—':Number(n).toFixed(2).replace('.',',')+'%'
+const fmtFecha = d => {
+  if(!d) return '—'
+  if(typeof d==='number'){
+    const date = new Date((d-25569)*86400*1000)
+    return isNaN(date)?'—':date.toLocaleDateString('es-HN',{day:'2-digit',month:'2-digit',year:'numeric'})
+  }
+  const date = new Date(d)
+  return isNaN(date)?'—':date.toLocaleDateString('es-HN',{day:'2-digit',month:'2-digit',year:'numeric'})
+}
+
+// Etapa fenológica derivada de edad_meses (igual al Power BI)
+function etapaFenologica(em){
+  if(em==null) return 'SIN DATO'
+  if(em <= 3)  return 'CRECIMIENTO'
+  if(em <= 6)  return 'MACOLLAMIENTO'
+  if(em <= 9)  return 'ELONGACION FINAL'
+  if(em <= 11) return 'PRE-MADURACION'
+  if(em <= 12) return 'MADURACION'
+  return 'MAYOR A 1 AÑO'
+}
+
+// Destino caña derivado de estado_de_cosecha
+function destinoCaña(estado){
+  const e = (estado||'').toUpperCase()
+  if(e.includes('SEMILLA')) return 'SEMILLA'
+  return 'PRODUCCION'
+}
+
+const PALETTE = ['#3a5fa8','#1e3f7a','#2d6e3e','#4a9b5d','#e8a020','#7ba0d4','#a4d4ad','#d68f1a','#5d4e75','#a93226','#88a8d8','#c4b59c','#6b8e23','#d4a574','#9c8aa5','#5a8fa3','#b2967d','#7a9e7e','#c08081','#a0826d']
+
+// ── DATOS GLOBALES ──
+let DATOS = []
+let CHARTS = {}
+
+// ── NAVEGACIÓN ──
+function irA(idPag){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'))
+  document.getElementById(idPag).classList.add('active')
+  window.scrollTo({top:0,behavior:'smooth'})
+  if(idPag==='pag-resumen')    renderResumen()
+  if(idPag==='pag-detalle')    renderDetalle()
+  if(idPag==='pag-variedades') renderVariedades()
+  if(idPag==='pag-mapa')       initMapa()
+}
+
+// ── CARGA DE DATOS ──
+async function cargarDatos(){
+  const FILAS = []
+  let from = 0, to = 999
+  while(true){
+    const {data,error} = await sb.from('maestro_plantios').select('*').range(from,to)
+    if(error){
+      console.error('Error cargando maestro_plantios:',error)
+      alert('Error cargando maestro_plantios: '+error.message)
+      return
+    }
+    if(!data || !data.length) break
+    FILAS.push(...data)
+    if(data.length < 1000) break
+    from += 1000; to += 1000
+  }
+  DATOS = FILAS.map(r=>({
+    ...r,
+    _etapa: etapaFenologica(r.edad_meses),
+    _destino: destinoCaña(r.estado_de_cosecha)
+  }))
+  console.log('Cargados',DATOS.length,'lotes de maestro_plantios')
+  prepararFiltros()
+}
+
+// ── FILTROS ──
+function prepararFiltros(){
+  const distritos = [...new Set(DATOS.map(d=>d.distrito).filter(Boolean))].sort()
+  const fincas    = [...new Set(DATOS.map(d=>d.descripcion_finca).filter(Boolean))].sort()
+  const riegos    = [...new Set(DATOS.map(d=>d.tipo_riego).filter(Boolean))].sort()
+  const tenencias = [...new Set(DATOS.map(d=>d.propietario).filter(Boolean))].sort()
+  const variedades= [...new Set(DATOS.map(d=>d.variedad).filter(Boolean))].sort()
+  const suelos    = [...new Set(DATOS.map(d=>d.tipo_de_suelo).filter(Boolean))].sort()
+  const destinos  = [...new Set(DATOS.map(d=>d._destino).filter(Boolean))].sort()
+
+  const fillOpts = (id, arr) => {
+    const el = document.getElementById(id)
+    if(!el) return
+    const cur = el.value
+    const first = el.options[0].outerHTML
+    el.innerHTML = first + arr.map(v=>`<option value="${v}">${v}</option>`).join('')
+    el.value = cur
+  }
+
+  // Resumen
+  fillOpts('r-destino', destinos)
+  fillOpts('r-distrito', distritos)
+  fillOpts('r-tenencia', tenencias)
+  fillOpts('r-riego', riegos)
+  // Detalle
+  fillOpts('d-distrito', distritos)
+  fillOpts('d-finca', fincas)
+  fillOpts('d-riego', riegos)
+  fillOpts('d-destino', destinos)
+  fillOpts('d-suelo', suelos)
+  fillOpts('d-tenencia', tenencias)
+  fillOpts('d-variedad', variedades)
+  // Variedades
+  fillOpts('v-distrito', distritos)
+  fillOpts('v-finca', fincas)
+  fillOpts('v-riego', riegos)
+  fillOpts('v-destino', destinos)
+  fillOpts('v-tenencia', tenencias)
+  fillOpts('v-variedad', variedades)
+
+  // Listeners
+  ;['r-destino','r-distrito','r-tenencia','r-riego'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.onchange=renderResumen
+  })
+  ;['d-distrito','d-finca','d-riego','d-destino','d-suelo','d-tenencia','d-variedad','d-ciclo-min','d-ciclo-max','d-edad-min','d-edad-max'].forEach(id=>{
+    const el=document.getElementById(id); if(el){ el.onchange=renderDetalle; if(el.tagName==='INPUT') el.oninput=renderDetalle }
+  })
+  ;['v-distrito','v-finca','v-riego','v-destino','v-tenencia','v-variedad','v-ciclo-min','v-ciclo-max'].forEach(id=>{
+    const el=document.getElementById(id); if(el){ el.onchange=renderVariedades; if(el.tagName==='INPUT') el.oninput=renderVariedades }
+  })
+}
+
+function limpiarFiltros(prefix){
+  document.querySelectorAll(`[id^="${prefix}-"]`).forEach(el=>{
+    if(el.tagName==='SELECT') el.value=''
+    if(el.tagName==='INPUT' && el.type==='number'){
+      if(el.id.endsWith('-min')) el.value = '0'
+      if(el.id.endsWith('-max')) el.value = el.id.includes('edad') ? '20' : '16'
+    }
+  })
+  if(prefix==='r') renderResumen()
+  if(prefix==='d') renderDetalle()
+  if(prefix==='v') renderVariedades()
+}
+
+// ── APLICAR FILTROS ──
+function filtrarResumen(){
+  const fDest=document.getElementById('r-destino').value
+  const fDis =document.getElementById('r-distrito').value
+  const fTen =document.getElementById('r-tenencia').value
+  const fRie =document.getElementById('r-riego').value
+  return DATOS.filter(d=>
+    (!fDest || d._destino===fDest) &&
+    (!fDis  || d.distrito===fDis) &&
+    (!fTen  || d.propietario===fTen) &&
+    (!fRie  || d.tipo_riego===fRie)
+  )
+}
+function filtrarDetalle(){
+  const fDis =document.getElementById('d-distrito').value
+  const fFin =document.getElementById('d-finca').value
+  const fRie =document.getElementById('d-riego').value
+  const fDest=document.getElementById('d-destino').value
+  const fSue =document.getElementById('d-suelo').value
+  const fTen =document.getElementById('d-tenencia').value
+  const fVar =document.getElementById('d-variedad').value
+  const cMin =parseFloat(document.getElementById('d-ciclo-min').value)
+  const cMax =parseFloat(document.getElementById('d-ciclo-max').value)
+  const eMin =parseFloat(document.getElementById('d-edad-min').value)
+  const eMax =parseFloat(document.getElementById('d-edad-max').value)
+  const cMinV = isNaN(cMin)?0:cMin
+  const cMaxV = isNaN(cMax)?999:cMax
+  const eMinV = isNaN(eMin)?0:eMin
+  const eMaxV = isNaN(eMax)?999:eMax
+  return DATOS.filter(d=>
+    (!fDis  || d.distrito===fDis) &&
+    (!fFin  || d.descripcion_finca===fFin) &&
+    (!fRie  || d.tipo_riego===fRie) &&
+    (!fDest || d._destino===fDest) &&
+    (!fSue  || d.tipo_de_suelo===fSue) &&
+    (!fTen  || d.propietario===fTen) &&
+    (!fVar  || d.variedad===fVar) &&
+    (d.ciclo!=null && d.ciclo>=cMinV && d.ciclo<=cMaxV) &&
+    (d.edad_meses!=null && d.edad_meses>=eMinV && d.edad_meses<=eMaxV)
+  )
+}
+function filtrarVariedades(){
+  const fDis =document.getElementById('v-distrito').value
+  const fFin =document.getElementById('v-finca').value
+  const fRie =document.getElementById('v-riego').value
+  const fDest=document.getElementById('v-destino').value
+  const fTen =document.getElementById('v-tenencia').value
+  const fVar =document.getElementById('v-variedad').value
+  const cMin =parseFloat(document.getElementById('v-ciclo-min').value)
+  const cMax =parseFloat(document.getElementById('v-ciclo-max').value)
+  const cMinV = isNaN(cMin)?0:cMin
+  const cMaxV = isNaN(cMax)?999:cMax
+  return DATOS.filter(d=>
+    (!fDis  || d.distrito===fDis) &&
+    (!fFin  || d.descripcion_finca===fFin) &&
+    (!fRie  || d.tipo_riego===fRie) &&
+    (!fDest || d._destino===fDest) &&
+    (!fTen  || d.propietario===fTen) &&
+    (!fVar  || d.variedad===fVar) &&
+    (d.ciclo!=null && d.ciclo>=cMinV && d.ciclo<=cMaxV)
+  )
+}
+
+// ════════════════════════════════════════════════════════════════
+// RENDER RESUMEN
+// ════════════════════════════════════════════════════════════════
+function renderResumen(){
+  const data = filtrarResumen()
+  const total = data.reduce((s,d)=>s+(d.area_ha||0),0)
+  const semilla = data.filter(d=>d._destino==='SEMILLA').reduce((s,d)=>s+(d.area_ha||0),0)
+  const prod = total - semilla
+
+  // KPIs
+  document.getElementById('kpi-has-totales').textContent = fmt(total)
+  document.getElementById('kpi-has-prod').textContent = fmt(prod)
+  document.getElementById('kpi-has-semilla').textContent = fmt(semilla)
+
+  const totArea = total
+  const ciclosPond = totArea ? data.reduce((s,d)=>s+(d.area_ha||0)*(d.ciclo||0),0)/totArea : 0
+  const edadPond   = totArea ? data.reduce((s,d)=>s+(d.area_ha||0)*(d.edad_meses||0),0)/totArea : 0
+  document.getElementById('kpi-prom-ciclos').textContent = fmt(ciclosPond)
+  document.getElementById('kpi-edad-prom').textContent = fmt(edadPond)
+  document.getElementById('kpi-total-lotes').textContent = fmt0(data.length)
+
+  // ── Tenencia (pie) ──
+  const tenenciaMap = {}
+  data.forEach(d=>{
+    const k = d.propietario||'Sin dato'
+    tenenciaMap[k] = (tenenciaMap[k]||0) + (d.area_ha||0)
+  })
+  const tenLab = Object.keys(tenenciaMap)
+  const tenColors = {Alquilado:'#f4a86b', Propio:'#3a5fa8', Independiente:'#4a9b5d'}
+  pieChart('chart-tenencia', tenLab, tenLab.map(k=>tenenciaMap[k]), tenLab.map(k=>tenColors[k]||'#888'))
+
+  // ── Etapa Fenológica (bar horiz) ──
+  const ETAPAS = ['CRECIMIENTO','PRE-MADURACION','ELONGACION FINAL','MACOLLAMIENTO','MADURACION','MAYOR A 1 AÑO','ELONGACION INICIAL','SIN DATO']
+  const ETAPA_COLORS = {
+    'CRECIMIENTO':'#2d6e3e','PRE-MADURACION':'#f4a86b','ELONGACION FINAL':'#e8a020',
+    'MACOLLAMIENTO':'#7ba0d4','MADURACION':'#e8865c','MAYOR A 1 AÑO':'#7d5a4e',
+    'ELONGACION INICIAL':'#b9c2d8','SIN DATO':'#bbb'
+  }
+  const etapaMap = {}
+  data.forEach(d=>{
+    const k = d._etapa
+    etapaMap[k] = (etapaMap[k]||0) + (d.area_ha||0)
+  })
+  const etapaOrd = ETAPAS.filter(e=>etapaMap[e]>0)
+  barHorizChart('chart-etapa', etapaOrd, etapaOrd.map(e=>etapaMap[e]), etapaOrd.map(e=>ETAPA_COLORS[e]))
+
+  // ── Tabla Distritos ──
+  const distritosMap = {}
+  data.forEach(d=>{
+    if(!d.distrito) return
+    if(!distritosMap[d.distrito]) distritosMap[d.distrito]={has:0,fincas:new Set(),sumEdadW:0,sumCiclosW:0,sumDist:0,n:0}
+    const r = distritosMap[d.distrito]
+    r.has += d.area_ha||0
+    if(d.descripcion_finca) r.fincas.add(d.descripcion_finca)
+    r.sumEdadW   += (d.area_ha||0)*(d.edad_meses||0)
+    r.sumCiclosW += (d.area_ha||0)*(d.ciclo||0)
+    r.sumDist    += d.distancia_km||0
+    r.n++
+  })
+  const distOrd = Object.keys(distritosMap).sort()
+  let distHTML = distOrd.map(k=>{
+    const r=distritosMap[k]
+    const pct=total?(r.has/total*100):0
+    const edad=r.has?r.sumEdadW/r.has:0
+    const cic=r.has?r.sumCiclosW/r.has:0
+    const distprom=r.n?r.sumDist/r.n:0
+    return `<tr>
+      <td class="left"><strong>${k}</strong></td>
+      <td>${fmt(r.has)}</td>
+      <td>${fmtPct(pct)}</td>
+      <td>${r.fincas.size}</td>
+      <td>${fmt(edad)}</td>
+      <td>${fmt(cic)}</td>
+      <td>${fmt(distprom)}</td>
+    </tr>`
+  }).join('')
+  const totalFincas = new Set(data.map(d=>d.descripcion_finca).filter(Boolean)).size
+  const totalDistprom = data.length ? data.reduce((s,d)=>s+(d.distancia_km||0),0)/data.length : 0
+  distHTML += `<tr class="total-row">
+    <td class="left">Total</td>
+    <td>${fmt(total)}</td>
+    <td>100,00%</td>
+    <td>${totalFincas}</td>
+    <td>${fmt(edadPond)}</td>
+    <td>${fmt(ciclosPond)}</td>
+    <td>${fmt(totalDistprom)}</td>
+  </tr>`
+  document.querySelector('#tbl-distritos tbody').innerHTML = distHTML || '<tr><td colspan="7" class="loading">Sin datos</td></tr>'
+
+  // ── Ciclos (bar horiz) ──
+  const ciclosMap = {}
+  data.forEach(d=>{
+    if(d.ciclo==null) return
+    ciclosMap[d.ciclo] = (ciclosMap[d.ciclo]||0) + (d.area_ha||0)
+  })
+  const cicLab = Object.keys(ciclosMap).map(Number).sort((a,b)=>a-b)
+  barHorizChart('chart-ciclos', cicLab.map(String), cicLab.map(c=>ciclosMap[c]), cicLab.map(()=>'#3a5fa8'))
+
+  // ── Variedades top 13 (bar horiz) ──
+  const varMap = {}
+  data.forEach(d=>{
+    const v = d.variedad||'Sin dato'
+    varMap[v] = (varMap[v]||0) + (d.area_ha||0)
+  })
+  const varOrd = Object.entries(varMap).sort((a,b)=>b[1]-a[1]).slice(0,13)
+  barHorizChart('chart-variedades', varOrd.map(([k])=>k), varOrd.map(([,v])=>v),
+    varOrd.map((_,i)=> i<5 ? '#1e3f7a' : '#e8a020'))
+
+  // ── Tipo Riego (pie) ──
+  const riegoMap = {}
+  data.forEach(d=>{
+    const k = d.tipo_riego||'Sin dato'
+    riegoMap[k] = (riegoMap[k]||0) + (d.area_ha||0)
+  })
+  const RIEGO_ORDER = ['Aspersión','Goteo','Gravedad','Pivote','Secano']
+  const COLORS_RIEGO = {Aspersión:'#7ba0d4', Goteo:'#1e3f7a', Gravedad:'#a4d4ad', Pivote:'#d68f1a', Secano:'#a93226'}
+  const riegoLab = RIEGO_ORDER.filter(r=>riegoMap[r]>0).concat(Object.keys(riegoMap).filter(r=>!RIEGO_ORDER.includes(r)))
+  pieChart('chart-riego', riegoLab, riegoLab.map(k=>riegoMap[k]), riegoLab.map(k=>COLORS_RIEGO[k]||'#888'))
+
+  // ── Tabla Fincas ──
+  const fincaMap = {}
+  data.forEach(d=>{
+    const k = d.descripcion_finca||'Sin dato'
+    if(!fincaMap[k]) fincaMap[k]={has:0,sumEdadW:0,sumCiclosW:0,n:0}
+    const r=fincaMap[k]
+    r.has+=d.area_ha||0
+    r.sumEdadW+=(d.area_ha||0)*(d.edad_meses||0)
+    r.sumCiclosW+=(d.area_ha||0)*(d.ciclo||0)
+    r.n++
+  })
+  const fincaOrd = Object.entries(fincaMap).sort((a,b)=>a[0].localeCompare(b[0]))
+  document.querySelector('#tbl-fincas tbody').innerHTML = fincaOrd.length
+    ? fincaOrd.map(([k,r])=>{
+        const edad=r.has?r.sumEdadW/r.has:0
+        const cic=r.has?r.sumCiclosW/r.has:0
+        return `<tr>
+          <td class="left"><strong>${k}</strong></td>
+          <td>${fmt(r.has)}</td>
+          <td>${r.n}</td>
+          <td>${fmt(edad)}</td>
+          <td>${fmt(cic)}</td>
+        </tr>`
+      }).join('')
+    : '<tr><td colspan="5" class="loading">Sin datos</td></tr>'
+}
+
+// ════════════════════════════════════════════════════════════════
+// RENDER DETALLE
+// ════════════════════════════════════════════════════════════════
+function renderDetalle(){
+  const data = filtrarDetalle()
+  const totHas = data.reduce((s,d)=>s+(d.area_ha||0),0)
+  const cicAvg = totHas ? data.reduce((s,d)=>s+(d.ciclo||0)*(d.area_ha||0),0)/totHas : 0
+  const edAvg  = totHas ? data.reduce((s,d)=>s+(d.edad_meses||0)*(d.area_ha||0),0)/totHas : 0
+
+  document.getElementById('d-kpi-lotes').textContent = fmt0(data.length)
+  document.getElementById('d-kpi-has').textContent = fmt(totHas)
+  document.getElementById('d-kpi-edad').textContent = fmt(edAvg)
+  document.getElementById('d-kpi-ciclos').textContent = fmt(cicAvg)
+
+  const tbody = document.querySelector('#tbl-detalle tbody')
+  if(!data.length){
+    tbody.innerHTML = '<tr><td colspan="19" class="loading">Sin resultados con los filtros actuales</td></tr>'
+    return
+  }
+  data.sort((a,b)=>{
+    const c1 = (a.descripcion_finca||'').localeCompare(b.descripcion_finca||'')
+    if(c1) return c1
+    return (a.lote||0)-(b.lote||0)
+  })
+  const MAX = 2000
+  const rows = data.slice(0,MAX).map(d=>`
+    <tr>
+      <td class="left">${d.descripcion_finca||''}</td>
+      <td>${d.finca||''}</td>
+      <td>${d.lote!=null?d.lote:''}</td>
+      <td>${fmt(d.area_ha)}</td>
+      <td>${d.ciclo!=null?d.ciclo:''}</td>
+      <td>${d.variedad||''}</td>
+      <td>${d.tipo_riego||''}</td>
+      <td>${d.edad_dias!=null?Math.round(d.edad_dias):''}</td>
+      <td>${fmt(d.edad_meses)}</td>
+      <td>${d.tipo_de_suelo||''}</td>
+      <td>${d.tercio||''}</td>
+      <td>${d.propietario||''}</td>
+      <td>${fmt(d.ancho_surco)}</td>
+      <td>${fmt(d.distancia_siembra)}</td>
+      <td>${fmt(d.distancia_km)}</td>
+      <td>${d._destino}</td>
+      <td>${fmtFecha(d.fecha_fin_de_cosecha)}</td>
+      <td>${fmtFecha(d.fecha_siembra_original)}</td>
+      <td>${d.estado_de_cosecha||''}</td>
+    </tr>`).join('')
+  const totRow = `<tr class="total-row">
+    <td class="left"><strong>Total (${fmt0(data.length)} lotes${data.length>MAX?' · mostrando '+MAX:''})</strong></td>
+    <td></td><td></td>
+    <td>${fmt(totHas)}</td>
+    <td>${fmt(cicAvg)}</td>
+    <td></td><td></td><td></td>
+    <td>${fmt(edAvg)}</td>
+    <td colspan="10"></td>
+  </tr>`
+  tbody.innerHTML = totRow + rows
+}
+
+// ════════════════════════════════════════════════════════════════
+// RENDER VARIEDADES
+// ════════════════════════════════════════════════════════════════
+function renderVariedades(){
+  const data = filtrarVariedades()
+  const total = data.reduce((s,d)=>s+(d.area_ha||0),0)
+
+  const varMap = {}
+  data.forEach(d=>{
+    const v = d.variedad||'Sin dato'
+    varMap[v] = (varMap[v]||0) + (d.area_ha||0)
+  })
+  const varOrd = Object.entries(varMap).sort((a,b)=>b[1]-a[1])
+
+  // KPIs
+  document.getElementById('v-kpi-has').textContent = fmt(total)
+  document.getElementById('v-kpi-num').textContent = fmt0(varOrd.length)
+  document.getElementById('v-kpi-top').textContent = varOrd[0] ? varOrd[0][0] : '—'
+  document.getElementById('v-kpi-lotes').textContent = fmt0(data.length)
+
+  // Pie chart - con etiquetas externas estilo Power BI
+  const lab = varOrd.map(([k])=>k)
+  const val = varOrd.map(([,v])=>v)
+  pieChart('chart-var-pie', lab, val, lab.map((_,i)=>PALETTE[i%PALETTE.length]), true, true)
+
+  // Tabla
+  let html = varOrd.map(([k,v])=>{
+    const pct = total ? (v/total*100) : 0
+    return `<tr>
+      <td class="left"><strong>${k}</strong></td>
+      <td>${fmt(v)}</td>
+      <td>${fmtPct(pct)}</td>
+    </tr>`
+  }).join('')
+  html += `<tr class="total-row">
+    <td class="left">Total</td>
+    <td>${fmt(total)}</td>
+    <td>100,00%</td>
+  </tr>`
+  document.querySelector('#tbl-variedades tbody').innerHTML = html || '<tr><td colspan="3" class="loading">Sin datos</td></tr>'
+}
+
+// ════════════════════════════════════════════════════════════════
+// CHART HELPERS
+// ════════════════════════════════════════════════════════════════
+function destroyChart(id){ if(CHARTS[id]){ CHARTS[id].destroy(); delete CHARTS[id] } }
+
+function pieChart(id, labels, values, colors, withLegend, withDatalabels){
+  destroyChart(id)
+  const total = values.reduce((s,v)=>s+v,0)
+  const cfg = {
+    type:'pie',
+    data:{labels, datasets:[{data:values, backgroundColor:colors, borderColor:'#fff', borderWidth:1.5}]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      layout: withDatalabels ? {padding:{top:30,bottom:30,left:60,right:60}} : {},
+      plugins:{
+        legend:{position: withLegend?'left':'bottom', labels:{boxWidth:10, font:{size:10}, padding:6}},
+        tooltip:{callbacks:{label:(ctx)=>{
+          const v=ctx.parsed
+          const pct=total? (v/total*100).toFixed(2).replace('.',','):'0'
+          return ` ${ctx.label}: ${fmt(v)} ha (${pct}%)`
+        }}},
+        datalabels: withDatalabels ? {
+          color:'#1a1a2e',
+          font:{size:11, weight:'700', family:'Barlow,sans-serif'},
+          anchor:'end',
+          align:'end',
+          offset:8,
+          formatter:(v,ctx)=>{
+            const pct = total ? (v/total*100) : 0
+            // Solo etiqueta si la porción es >= 1.5% (evita amontonamiento)
+            if(pct < 1.5) return ''
+            return ctx.chart.data.labels[ctx.dataIndex] + ' ' + pct.toFixed(2).replace('.',',')+'%'
+          },
+          // Dibuja líneas guía desde el borde de la porción a la etiqueta
+          textStrokeColor:'#fff',
+          textStrokeWidth:3
+        } : { display:false }
+      }
+    }
+  }
+  CHARTS[id] = new Chart(document.getElementById(id), cfg)
+}
+
+function barHorizChart(id, labels, values, colors){
+  destroyChart(id)
+  CHARTS[id] = new Chart(document.getElementById(id),{
+    type:'bar',
+    data:{labels, datasets:[{data:values, backgroundColor:colors, borderRadius:3}]},
+    options:{
+      indexAxis:'y',
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:(ctx)=>` ${fmt(ctx.parsed.x)} ha`}}
+      },
+      scales:{
+        x:{ticks:{font:{size:10}, callback:v=>fmt0(v)}, grid:{color:'#f0f2f6'}},
+        y:{ticks:{font:{size:10}}, grid:{display:false}}
+      }
+    }
+  })
+}
+
+// ════════════════════════════════════════════════════════════════
+// MAPA INTERACTIVO
+// ════════════════════════════════════════════════════════════════
+// [EDITABLE] URL del GeoJSON con polígonos de fincas (modelo_con_Datos.geojson)
+const GEOJSON_URL = 'https://reinaldobacila.github.io/Inteligencia_Agricola/reporteriach/modelo_con_Datos.geojson'
+
+// [EDITABLE] Centro del mapa - calculado del centroide de los 939 polígonos
+const MAPA_CENTER = [15.2446, -88.5036]
+const MAPA_ZOOM   = 11
+
+let MAPA = null
+let CAPA_LOTES = null
+let GEOJSON_DATA = null
+let MODO_MAPA = 'edad'
+
+// Paletas de color por modo
+const PAL_EDAD = [
+  {min:0,  max:3,  color:'#2d6e3e', label:'0-3 m (Crecimiento)'},
+  {min:3,  max:6,  color:'#7ba85f', label:'3-6 m (Macollamiento)'},
+  {min:6,  max:9,  color:'#e8a020', label:'6-9 m (Elong. final)'},
+  {min:9,  max:11, color:'#c97d1a', label:'9-11 m (Pre-mad.)'},
+  {min:11, max:12, color:'#e8865c', label:'11-12 m (Maduración)'},
+  {min:12, max:99, color:'#a93226', label:'+12 m (Mayor 1 año)'}
+]
+const PAL_CICLOS = [
+  {min:0,  max:1,  color:'#7ba85f', label:'0-1 ciclos (Plantía/Soca)'},
+  {min:1,  max:4,  color:'#3a8a4e', label:'2-3 ciclos'},
+  {min:4,  max:7,  color:'#e8a020', label:'4-6 ciclos'},
+  {min:7,  max:10, color:'#c97d1a', label:'7-9 ciclos'},
+  {min:10, max:99, color:'#a93226', label:'+10 ciclos (Crítico)'}
+]
+const COLORS_RIEGO_M = {Aspersión:'#7ba0d4', Goteo:'#1e3f7a', Gravedad:'#a4d4ad', Pivote:'#d68f1a', Secano:'#a93226'}
+const COLORS_TENENCIA = {Propio:'#3a5fa8', Alquilado:'#f4a86b', Independiente:'#4a9b5d'}
+const COLORS_TERCIO = {Temprana:'#2d6e3e', Media:'#e8a020', Tardia:'#a93226', 'NO ASIGNADO':'#999'}
+// Paleta categórica para variedades, suelos, distritos
+const PAL_CAT = ['#3a5fa8','#1e3f7a','#2d6e3e','#4a9b5d','#e8a020','#7ba0d4','#a4d4ad','#d68f1a','#5d4e75','#a93226','#88a8d8','#c4b59c','#6b8e23','#d4a574','#9c8aa5','#5a8fa3','#b2967d','#7a9e7e','#c08081','#a0826d']
+
+function colorPorRango(valor, paleta){
+  if(valor==null||isNaN(valor)) return '#cccccc'
+  for(const r of paleta){
+    if(valor >= r.min && valor < r.max) return r.color
+  }
+  return paleta[paleta.length-1].color
+}
+
+function colorPorCategoria(valor, mapaColores, valoresUnicos){
+  if(!valor) return '#cccccc'
+  if(mapaColores[valor]) return mapaColores[valor]
+  // Si no está en mapa fijo, asignar por índice
+  const idx = valoresUnicos.indexOf(valor)
+  return PAL_CAT[idx % PAL_CAT.length]
+}
+
+// Genera diccionario lookup por finca_lote
+function diccionarioPorFincaLote(){
+  const d = {}
+  DATOS.forEach(r=>{
+    if(r.finca_lote) d[r.finca_lote] = r
+  })
+  return d
+}
+
+async function initMapa(){
+  // Inicializar leaflet si no existe
+  if(!MAPA){
+    MAPA = L.map('mapa-container', {preferCanvas:true}).setView(MAPA_CENTER, MAPA_ZOOM)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom:19,
+      attribution:'© OpenStreetMap'
+    }).addTo(MAPA)
+
+    // Cargar GeoJSON una sola vez
+    try{
+      const resp = await fetch(GEOJSON_URL)
+      if(!resp.ok) throw new Error('HTTP '+resp.status)
+      GEOJSON_DATA = await resp.json()
+      console.log('GeoJSON cargado:', GEOJSON_DATA.features.length, 'polígonos')
+    }catch(e){
+      console.error('Error cargando GeoJSON:', e)
+      document.getElementById('mapa-container').innerHTML = `<div style="padding:40px;text-align:center;color:#a32d2d;font-size:13px;">⚠ No se pudo cargar el archivo de fincas.<br><small style="color:#888">${e.message}</small></div>`
+      return
+    }
+  }
+
+  // Pintar polígonos con el modo actual
+  pintarMapa()
+}
+
+function pintarMapa(){
+  if(!GEOJSON_DATA || !MAPA) return
+
+  // Quitar capa anterior
+  if(CAPA_LOTES){ MAPA.removeLayer(CAPA_LOTES); CAPA_LOTES = null }
+
+  const dict = diccionarioPorFincaLote()  // fallback con datos del maestro_plantios
+  const valoresUnicos = []                 // para colores categóricos
+  let conDatos = 0
+  let sinDatos = 0
+
+  // Mapeo: propiedades del GeoJSON → estructura usada en este sistema
+  // El GeoJSON modelo_con_Datos.geojson trae los datos embebidos
+  const propsToLote = (props) => {
+    if(!props) return null
+    const lote = {
+      finca_lote:            props.FINCA_LOTE || props.finca_lote,
+      finca:                 props.FINCA || props.finca,
+      lote:                  props.LOTE != null ? props.LOTE : props.lote,
+      descripcion_finca:     props.DESCRIPCIO || props.Name || props.descripcion_finca,
+      area_ha:               props.HA != null ? props.HA : props.area_ha,
+      ciclo:                 props.CICLO != null ? props.CICLO : props.ciclo,
+      variedad:              props.VARIEDAD || props.variedad,
+      tipo_riego:            props.TIPO_RIEGO || props.tipo_riego,
+      propietario:           props.PROPIETARI || props.propietario,
+      tercio:                props.TERCIO || props.tercio,
+      tipo_de_suelo:         props.TIPO_DE_SU || props.tipo_de_suelo,
+      distrito:              props.DISTRITO || props.distrito,
+      municipio:             props.MUNICIPIO || props.municipio,
+      departamento:          props.DEPARTAMEN || props.departamento,
+      pureza:                props.PUREZA || props.pureza,
+      arreglo:               props.ARREGLO || props.arreglo,
+      ancho_surco:           props.ANCHO_SURC != null ? props.ANCHO_SURC : props.ancho_surco,
+      distancia_siembra:     props.DISTANCIA != null ? props.DISTANCIA : props.distancia_siembra,
+      distancia_km:          props.DISTANCI_1 != null ? props.DISTANCI_1 : props.distancia_km,
+      estado_de_cosecha:     props.ESTADO_DE || props.estado_de_cosecha,
+      fecha_fin_de_cosecha:  props.FECHA_FIN || props.fecha_fin_de_cosecha,
+      fecha_siembra_original:props.FECHA_SIEM || props.fecha_siembra_original,
+      tipo_de_corte:         props.TIPO_DE_CO || props.tipo_de_corte
+    }
+    // Enriquecer con datos del maestro si existen (edad_meses, edad_dias)
+    const m = dict[lote.finca_lote]
+    if(m){
+      lote.edad_meses  = m.edad_meses
+      lote.edad_dias   = m.edad_dias
+      lote._destino    = m._destino
+    } else {
+      // Calcular destino desde estado_cosecha del GeoJSON
+      lote._destino = destinoCaña(lote.estado_de_cosecha)
+    }
+    return lote
+  }
+
+  // Pre-calcular valores únicos para modos categóricos (desde GeoJSON)
+  if(['variedad','suelo','distrito'].includes(MODO_MAPA)){
+    const set = new Set()
+    GEOJSON_DATA.features.forEach(f=>{
+      const lote = propsToLote(f.properties)
+      let v
+      if(MODO_MAPA==='variedad') v = lote.variedad
+      if(MODO_MAPA==='suelo')    v = lote.tipo_de_suelo
+      if(MODO_MAPA==='distrito') v = lote.distrito
+      if(v) set.add(v)
+    })
+    valoresUnicos.push(...[...set].sort())
+  }
+
+  // Función que asigna color según el modo
+  const obtColor = (lote) => {
+    if(!lote) return '#cccccc'
+    switch(MODO_MAPA){
+      case 'edad':     return colorPorRango(lote.edad_meses, PAL_EDAD)
+      case 'ciclos':   return colorPorRango(lote.ciclo,      PAL_CICLOS)
+      case 'riego':    return colorPorCategoria(lote.tipo_riego, COLORS_RIEGO_M, [])
+      case 'tenencia': return colorPorCategoria(lote.propietario, COLORS_TENENCIA, [])
+      case 'tercio':   return colorPorCategoria(lote.tercio, COLORS_TERCIO, [])
+      case 'variedad': return colorPorCategoria(lote.variedad,      {}, valoresUnicos)
+      case 'suelo':    return colorPorCategoria(lote.tipo_de_suelo, {}, valoresUnicos)
+      case 'distrito': return colorPorCategoria(lote.distrito,      {}, valoresUnicos)
+      default: return '#cccccc'
+    }
+  }
+
+  CAPA_LOTES = L.geoJSON(GEOJSON_DATA, {
+    style: (feature) => {
+      const lote = propsToLote(feature.properties)
+      if(lote && lote.finca_lote) conDatos++; else sinDatos++
+      return {
+        fillColor: obtColor(lote),
+        fillOpacity: 0.78,
+        color: '#fff',
+        weight: 1
+      }
+    },
+    onEachFeature: (feature, layer) => {
+      const lote = propsToLote(feature.properties)
+      const tooltip = lote && lote.finca_lote
+        ? `<strong>${lote.descripcion_finca || ''}</strong> · Lote ${lote.lote || ''}<br>${fmt(lote.area_ha)} ha · ${lote.variedad || ''}`
+        : `<strong>Sin identificar</strong>`
+      layer.bindTooltip(tooltip, {direction:'top', sticky:true})
+      layer.on('click', () => mostrarFichaLote(lote, lote ? lote.finca_lote : null))
+    }
+  }).addTo(MAPA)
+
+  // Ajustar bounds al GeoJSON solo la primera vez
+  if(!MAPA._boundsAjustado){
+    try{
+      MAPA.fitBounds(CAPA_LOTES.getBounds(), {padding:[20,20]})
+      MAPA._boundsAjustado = true
+    }catch(e){ console.warn('No se pudo ajustar bounds:', e) }
+  }
+
+  // Stats mini
+  document.getElementById('mapa-stats-mini').textContent =
+    `${conDatos} polígonos · ${sinDatos} sin datos`
+
+  // Render leyenda
+  renderLeyendaMapa(valoresUnicos)
+}
+
+function renderLeyendaMapa(valoresUnicos){
+  const titEl = document.getElementById('mapa-leyenda-tit')
+  const itemsEl = document.getElementById('mapa-leyenda-items')
+
+  const titulos = {
+    edad:'Edad (meses)', ciclos:'Número de ciclos', variedad:'Variedad',
+    riego:'Tipo de riego', tenencia:'Tenencia', tercio:'Tercio',
+    suelo:'Tipo de suelo', distrito:'Distrito'
+  }
+  titEl.textContent = titulos[MODO_MAPA] || ''
+
+  let items = []
+  if(MODO_MAPA==='edad'){
+    items = PAL_EDAD.map(r=>({color:r.color, label:r.label}))
+  } else if(MODO_MAPA==='ciclos'){
+    items = PAL_CICLOS.map(r=>({color:r.color, label:r.label}))
+  } else if(MODO_MAPA==='riego'){
+    items = Object.entries(COLORS_RIEGO_M).map(([k,c])=>({color:c, label:k}))
+  } else if(MODO_MAPA==='tenencia'){
+    items = Object.entries(COLORS_TENENCIA).map(([k,c])=>({color:c, label:k}))
+  } else if(MODO_MAPA==='tercio'){
+    items = Object.entries(COLORS_TERCIO).map(([k,c])=>({color:c, label:k}))
+  } else {
+    // categórico: usar valoresUnicos
+    items = valoresUnicos.map((v,i)=>({color:PAL_CAT[i%PAL_CAT.length], label:v}))
+  }
+  // Layout en columnas si hay muchos items
+  const colCount = items.length > 8 ? 2 : 1
+  itemsEl.style.columnCount = colCount
+  itemsEl.innerHTML = items.map(it=>`
+    <div class="mapa-leyenda-item">
+      <span class="mapa-leyenda-color" style="background:${it.color}"></span>
+      <span style="color:#666">${it.label}</span>
+    </div>
+  `).join('')
+}
+
+function cambiarModoMapa(modo){
+  MODO_MAPA = modo
+  document.querySelectorAll('.mapa-btn[data-modo]').forEach(b=>{
+    b.classList.toggle('activo', b.dataset.modo===modo)
+  })
+  pintarMapa()
+}
+
+function mostrarFichaLote(lote, key){
+  const ficha = document.getElementById('mapa-ficha')
+  if(!lote){
+    ficha.innerHTML = `
+      <div class="mapa-ficha-tit">${key || 'Lote sin identificar'}</div>
+      <div class="mapa-ficha-sub">Sin datos disponibles</div>
+    `
+    return
+  }
+
+  // Alertas automáticas
+  let alertas = []
+  if(lote.edad_meses != null && lote.edad_meses > 11) alertas.push('Edad >11m sin cortar')
+  if(lote.ciclo != null && lote.ciclo >= 10) alertas.push('Renovación urgente (≥10 ciclos)')
+  if(lote.tercio === 'NO ASIGNADO' || !lote.tercio) alertas.push('Tercio sin asignar')
+  if(lote.tipo_de_suelo === 'SIN IDENTIFICAR' || !lote.tipo_de_suelo) alertas.push('Suelo no identificado')
+
+  const alertHTML = alertas.length
+    ? `<div class="mapa-ficha-alerta"><strong>⚠ Alertas:</strong><br>${alertas.map(a=>'· '+a).join('<br>')}</div>`
+    : `<div class="mapa-ficha-ok">✓ Lote sin alertas</div>`
+
+  // Mostrar edad solo si está disponible (viene del cruce con maestro)
+  const filaEdad = lote.edad_meses != null
+    ? `<div class="mapa-ficha-row"><span>Edad</span><span>${fmt(lote.edad_meses)} m</span></div>`
+    : ''
+
+  ficha.innerHTML = `
+    <div class="mapa-ficha-tit">${lote.descripcion_finca || ''} · ${lote.finca || ''}-${lote.lote || ''}</div>
+    <div class="mapa-ficha-sub">${lote.distrito || ''} · ${lote.municipio || ''}</div>
+
+    <div class="mapa-ficha-row"><span>Área</span><span>${fmt(lote.area_ha)} ha</span></div>
+    <div class="mapa-ficha-row"><span>Ciclos</span><span>${lote.ciclo!=null?lote.ciclo:'—'}</span></div>
+    <div class="mapa-ficha-row"><span>Variedad</span><span>${lote.variedad || '—'}</span></div>
+    <div class="mapa-ficha-row"><span>Riego</span><span>${lote.tipo_riego || '—'}</span></div>
+    ${filaEdad}
+    <div class="mapa-ficha-row"><span>Tercio</span><span>${lote.tercio || '—'}</span></div>
+    <div class="mapa-ficha-row"><span>Suelo</span><span style="font-size:10px">${lote.tipo_de_suelo || '—'}</span></div>
+    <div class="mapa-ficha-row"><span>Tenencia</span><span>${lote.propietario || '—'}</span></div>
+    <div class="mapa-ficha-row"><span>Pureza</span><span>${lote.pureza || '—'}</span></div>
+    <div class="mapa-ficha-row"><span>Tipo corte</span><span>${lote.tipo_de_corte || '—'}</span></div>
+    <div class="mapa-ficha-row"><span>Arreglo</span><span style="font-size:10px">${lote.arreglo || '—'}</span></div>
+    <div class="mapa-ficha-row"><span>Distancia</span><span>${fmt(lote.distancia_km)} km</span></div>
+    <div class="mapa-ficha-row"><span>Destino</span><span>${lote._destino || '—'}</span></div>
+    <div class="mapa-ficha-row"><span>Última cosecha</span><span>${fmtFecha(lote.fecha_fin_de_cosecha)}</span></div>
+    <div class="mapa-ficha-row"><span>Fecha siembra</span><span>${fmtFecha(lote.fecha_siembra_original)}</span></div>
+    <div class="mapa-ficha-row"><span>Estado cosecha</span><span style="font-size:10px">${lote.estado_de_cosecha || '—'}</span></div>
+
+    <div class="mapa-stats">
+      <div class="mapa-stat"><div class="mapa-stat-label">Ancho surco</div><div class="mapa-stat-num">${fmt(lote.ancho_surco)}</div></div>
+      <div class="mapa-stat"><div class="mapa-stat-label">Dist. siembra</div><div class="mapa-stat-num">${fmt(lote.distancia_siembra)}</div></div>
+    </div>
+
+    ${alertHTML}
+  `
+}
+
+
+async function init(){
+  // Verifica sesión activa - si no hay, redirige al portal
+  const {data:{session}} = await sb.auth.getSession()
+  if(!session){
+    window.location.href = 'index.html'
+    return
+  }
+  document.getElementById('fecha-header').textContent =
+    new Date().toLocaleDateString('es-HN',{weekday:'long',year:'numeric',month:'long',day:'numeric'})
+  await cargarDatos()
+  irA('pag-menu')
+}
+init()
+</script>
+</body>
+</html>
