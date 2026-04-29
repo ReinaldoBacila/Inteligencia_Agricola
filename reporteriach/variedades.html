@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Análisis de Variedades | Chumbagua</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --azul: #1e3f7a;
+    --azul-medio: #2a5298;
+    --azul-claro: #3d7abf;
+    --verde: #2d6e3e;
+    --verde-claro: #3a8a4e;
+    --dorado: #e8a020;
+    --naranja: #c97d1a;
+    --rojo: #c0392b;
+    --gris: #f5f6f8;
+    --blanco: #ffffff;
+    --texto: #1a1a2e;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Barlow',sans-serif; background:var(--gris); color:var(--texto); min-height:100vh; }
+
+  /* HEADER */
+  /* [EDITABLE] Header principal */
+  .header { background:#fff; border-bottom:1px solid #e0e4ec; padding:12px 36px; display:flex; align-items:center; justify-content:space-between; }
+  .header-brand { display:flex; flex-direction:column; }
+  .hdr-name { font-family:'Barlow Condensed',sans-serif; font-size:24px; font-weight:700; color:#1e3f7a; letter-spacing:1.5px; }
+  .hdr-sub { font-size:11px; color:#3a8a4e; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; margin-top:1px; }
+  .header-right { display:flex; flex-direction:column; align-items:flex-end; gap:5px; }
+  .header-depto { font-size:13px; font-weight:700; color:#fff; background:#2d6e3e; padding:5px 14px; border-radius:4px; }
+  .header-fecha { font-size:12px; color:#999; }
+  .logout-btn { background:none; border:1px solid #dde1ea; border-radius:4px; padding:5px 14px; font-size:12px; cursor:pointer; color:#888; }
+
+  /* PÁGINAS */
+  .page { display:none; padding:28px 40px; }
+  .page.active { display:block; }
+
+  /* MENÚ */
+  .menu-page { max-width:1400px; margin:52px auto; text-align:center; padding:0 32px; }
+  /* [EDITABLE] Banner del menú */
+  .menu-banner { background:linear-gradient(135deg,#1e3f7a 0%,#2d6e3e 100%); color:white; font-family:'Barlow Condensed',sans-serif; font-size:53px; font-weight:700; letter-spacing:3px; padding:43px; border-radius:10px; margin-bottom:32px; }
+  .menu-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:28px; }
+  .menu-btn { padding:36px 28px; border:none; border-radius:12px; font-family:'Barlow Condensed',sans-serif; font-size:24px; font-weight:700; letter-spacing:0.5px; cursor:pointer; transition:all 0.15s; color:white; }
+  .menu-btn:hover { filter:brightness(1.1); transform:translateY(-2px); }
+  .menu-btn .sub { display:block; font-size:14px; font-weight:400; margin-top:6px; opacity:0.85; }
+  .menu-btn.azul    { background:#2a5298; }
+  .menu-btn.verde   { background:#2d6e3e; }
+  .menu-btn.naranja { background:#c97d1a; }
+  .menu-btn.morado  { background:linear-gradient(135deg,#5d4e75,#1e3f7a); }
+  .menu-btn.azul-osc{ background:#1e3f7a; }
+  .menu-btn.verde-osc{ background:#1e5e2c; }
+
+  /* BACK */
+  .back-btn { display:inline-flex; align-items:center; gap:6px; background:none; color:#1e3f7a; border:1px solid #ccd3e0; border-radius:5px; padding:6px 14px; font-family:'Barlow Condensed',sans-serif; font-size:12px; font-weight:700; cursor:pointer; }
+  .back-btn:hover { background:#f0f4ff; }
+  .pag-hdr { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; gap:12px; flex-wrap:wrap; }
+  /* [EDITABLE] Título de páginas internas */
+  .pag-hdr-titulo { font-family:'Barlow Condensed',sans-serif; font-size:17px; font-weight:700; color:#1e3f7a; text-transform:uppercase; letter-spacing:0.5px; }
+  .pag-hdr-sub { font-size:11px; color:#888; margin-top:2px; }
+  .pag-hdr-actions { display:flex; align-items:center; gap:10px; flex-shrink:0; }
+  .depto-badge { font-size:11px; font-weight:700; color:#fff; background:#2d6e3e; padding:4px 10px; border-radius:4px; white-space:nowrap; }
+
+  /* FILTROS */
+  .filtros { display:flex; gap:14px; flex-wrap:wrap; margin-bottom:16px; background:#fff; padding:12px 16px; border-radius:8px; border:1px solid #e0e4ec; align-items:flex-end; }
+  .filtro-grupo { display:flex; flex-direction:column; gap:4px; }
+  .filtro-grupo label { font-size:10px; font-weight:700; color:#aaa; text-transform:uppercase; letter-spacing:0.6px; }
+  .filtro-grupo select, .filtro-grupo input { border:1px solid #dde2ec; border-radius:4px; padding:5px 10px; font-size:12px; min-width:130px; background:white; color:#1e3f7a; font-family:inherit; }
+  .filtro-grupo input[type=number] { min-width:75px; width:75px; }
+  .filtro-rango { display:flex; gap:4px; align-items:center; }
+  .filtro-rango span { font-size:11px; color:#888; }
+  .btn-limpiar { background:none; border:1px solid #ccd3e0; border-radius:4px; padding:6px 12px; font-size:11px; font-weight:600; color:#888; cursor:pointer; font-family:inherit; }
+  .btn-limpiar:hover { background:#f6f7fa; color:var(--azul); }
+
+  /* CHIPS DE ZAFRA - selección múltiple */
+  .chips-zafras { display:flex; flex-wrap:wrap; gap:6px; }
+  .chip { padding:5px 12px; border:1px solid #ccd3e0; border-radius:4px; font-size:11px; font-weight:700; color:#1e3f7a; background:white; cursor:pointer; user-select:none; font-family:'Barlow Condensed',sans-serif; letter-spacing:0.3px; }
+  .chip:hover { background:#f0f4ff; }
+  .chip.activo { background:#1e3f7a; color:white; border-color:#1e3f7a; }
+
+  /* KPIs */
+  .kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-bottom:20px; }
+  .kpi-card { background:white; border-radius:8px; padding:14px 16px; border:1px solid #e8edf5; border-top:3px solid var(--azul-medio); }
+  .kpi-card.verde { border-top-color:var(--verde-claro); }
+  .kpi-card.naranja { border-top-color:var(--dorado); }
+  .kpi-card.rojo { border-top-color:var(--rojo); }
+  .kpi-label { font-size:10px; font-weight:700; color:#aaa; text-transform:uppercase; letter-spacing:0.6px; margin-bottom:4px; }
+  .kpi-valor { font-family:'Barlow Condensed',sans-serif; font-size:26px; font-weight:700; color:var(--azul); }
+  .kpi-sub { font-size:11px; color:#aaa; margin-top:2px; }
+
+  /* SECCIÓN */
+  .seccion-titulo { font-size:10px; font-weight:700; color:#1e3f7a; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:8px; padding-bottom:6px; border-bottom:2px solid #e8a020; }
+
+  /* TABLAS */
+  .tabla-wrap { overflow-x:auto; margin-bottom:14px; border-radius:6px; border:1px solid #e8edf5; }
+  .tabla-wrap.scroll-y { max-height:540px; overflow-y:auto; }
+  table { width:100%; border-collapse:collapse; font-size:12px; background:white; }
+  thead tr { background:linear-gradient(90deg,#1e3f7a,#2a5298); color:white; }
+  thead th { font-size:11px; font-weight:700; padding:7px 10px; text-align:center; border-right:1px solid rgba(255,255,255,0.1); letter-spacing:0.04em; position:sticky; top:0; z-index:5; background:linear-gradient(90deg,#1e3f7a,#2a5298); }
+  tbody tr { border-bottom:1px solid #f0f3f8; }
+  tbody tr:hover { background:#f5f7fc; }
+  tbody td { padding:5px 10px; text-align:center; color:#1a1a1a; }
+  tbody tr.total-row { background:linear-gradient(90deg,#1e3f7a,#2a5298) !important; color:white; font-weight:700; }
+  tbody tr.total-row td { color:white; }
+  td.left, th.left { text-align:left !important; }
+
+  /* HEATMAP — celdas con color según valor */
+  td.heat-bueno  { background:#d4edda; color:#155724; font-weight:700; }
+  td.heat-regular{ background:#fef3c7; color:#854f0b; font-weight:700; }
+  td.heat-malo   { background:#fcd5ce; color:#a32d2d; font-weight:700; }
+
+  /* GRID */
+  .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
+  .grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:16px; }
+
+  /* CHART */
+  .chart-box { background:white; border-radius:8px; border:1px solid #e8edf5; padding:14px 16px; }
+  /* [EDITABLE] Banner verde para títulos de gráficas (estilo Power BI) */
+  .chart-banner { background:linear-gradient(90deg,#2d6e3e,#3a8a4e); color:white; font-family:'Barlow Condensed',sans-serif; font-size:14px; font-weight:700; padding:7px 14px; letter-spacing:0.5px; text-transform:uppercase; border-radius:5px; margin-bottom:10px; text-align:center; }
+  .chart-canvas-wrap { position:relative; height:280px; }
+  .chart-canvas-wrap.tall { height:380px; }
+
+  .loading { text-align:center; padding:28px; color:#bbb; font-size:13px; }
+  .pie-pagina { text-align:right; font-size:11px; color:#bbb; font-style:italic; margin-top:14px; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-brand">
+    <span class="hdr-name">CHUMBAGUA</span>
+    <span class="hdr-sub">Azúcar · Energía · Honduras</span>
+  </div>
+  <div class="header-right">
+    <span class="header-depto">Depto. de Estadística Agrícola</span>
+    <span class="header-fecha" id="fecha-header">—</span>
+    <button class="logout-btn" onclick="window.location.href='index.html'">← Volver al portal</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- MENÚ -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div id="pag-menu" class="page active">
+  <div class="menu-page">
+    <div class="menu-banner">ANÁLISIS DE VARIEDADES</div>
+    <div class="menu-grid">
+      <button class="menu-btn azul"      onclick="irA('pag-resumen')">RESUMEN GENERAL<span class="sub">Tabla por zafra · Histórico TCH por finca</span></button>
+      <button class="menu-btn azul-osc"  onclick="irA('pag-rendvar')">ANÁLISIS REND. VARIETAL<span class="sub">Tabla matriz con filtros completos</span></button>
+      <button class="menu-btn verde"     onclick="irA('pag-estudio')">ESTUDIO DE VARIEDADES<span class="sub">KG/TM · TAH · TCH y HA por variedad</span></button>
+      <button class="menu-btn verde-osc" onclick="irA('pag-comp')">ANÁLISIS COMPARATIVO<span class="sub">Comparativo zafra actual vs anterior</span></button>
+      <button class="menu-btn naranja"   onclick="irA('pag-zafravar')">ANÁLISIS POR ZAFRA/VARIEDAD<span class="sub">Evolución de una variedad</span></button>
+      <button class="menu-btn morado"    onclick="irA('pag-distvar')">HISTÓRICO VARIEDADES<span class="sub">Distribución varietal histórica</span></button>
+    </div>
+    <p class="pie-pagina">Depto. de Estadística Agrícola | Zafra 2025-2026</p>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- 1. RESUMEN GENERAL                                                -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div id="pag-resumen" class="page">
+  <div class="pag-hdr">
+    <div>
+      <div class="pag-hdr-titulo">Rendimiento por Zafra</div>
+      <div class="pag-hdr-sub">Compañía Azucarera Chumbagua | Zafra 2025-2026</div>
+    </div>
+    <div class="pag-hdr-actions">
+      <span class="depto-badge">Depto. Estadística Agrícola</span>
+      <button class="back-btn" onclick="irA('pag-menu')">← Ir al menú</button>
+    </div>
+  </div>
+
+  <!-- FILTROS -->
+  <div class="filtros">
+    <div class="filtro-grupo" style="min-width:280px">
+      <label>Zafras incluidas</label>
+      <div class="chips-zafras" id="r-chips-zafras"></div>
+    </div>
+    <div class="filtro-grupo"><label>Distrito</label><select id="r-distrito"><option value="">Todos</option></select></div>
+    <div class="filtro-grupo"><label>Tercio</label><select id="r-tercio"><option value="">Todos</option><option>1er tercio</option><option>2do tercio</option><option>3er tercio</option></select></div>
+    <div class="filtro-grupo"><label>Tipo Corte</label><select id="r-corte"><option value="">Todos</option></select></div>
+    <div class="filtro-grupo"><label>Variedad</label><select id="r-variedad"><option value="">Todas</option></select></div>
+    <div class="filtro-grupo"><label>Riego</label><select id="r-riego"><option value="">Todos</option></select></div>
+    <button class="btn-limpiar" onclick="limpiarFiltros('r')">Limpiar</button>
+  </div>
+
+  <!-- TABLA RESUMEN POR ZAFRA -->
+  <div class="seccion-titulo">Resumen general por zafra (POL, BRIX, KG.AZ/TM, TAH, PUREZA, HUMEDAD ponderados por TM REAL)</div>
+  <div class="tabla-wrap">
+    <table id="tbl-resumen-zafra">
+      <thead><tr>
+        <th class="left">Zafra</th>
+        <th>TCH</th>
+        <th>POL</th>
+        <th>BRIX</th>
+        <th>TAH</th>
+        <th>HUMEDAD</th>
+        <th>EDAD</th>
+        <th>PUREZA</th>
+        <th>CICLOS</th>
+        <th>KG AZ/TM</th>
+      </tr></thead>
+      <tbody><tr><td colspan="10" class="loading">Cargando...</td></tr></tbody>
+    </table>
+  </div>
+
+  <!-- TABLA HISTÓRICO POR FINCA - matriz finca × zafra -->
+  <div class="seccion-titulo">Rendimiento TCH histórico por finca (TCH | EDAD | CICLOS por zafra)</div>
+  <div class="tabla-wrap scroll-y">
+    <table id="tbl-historico-finca">
+      <thead id="tbl-historico-finca-thead"></thead>
+      <tbody><tr><td colspan="10" class="loading">Cargando...</td></tr></tbody>
+    </table>
+  </div>
+
+  <p class="pie-pagina">Depto. de Estadística Agrícola | Zafra 2025-2026</p>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- 2. ANÁLISIS REND. VARIETAL                                        -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div id="pag-rendvar" class="page">
+  <div class="pag-hdr">
+    <div>
+      <div class="pag-hdr-titulo">Histórico Rendimientos Varietal por Tercio</div>
+      <div class="pag-hdr-sub">Compañía Azucarera Chumbagua | Zafra 2025-2026</div>
+    </div>
+    <div class="pag-hdr-actions">
+      <span class="depto-badge">Depto. Estadística Agrícola</span>
+      <button class="back-btn" onclick="irA('pag-menu')">← Ir al menú</button>
+    </div>
+  </div>
+
+  <div class="filtros">
+    <div class="filtro-grupo" style="min-width:300px">
+      <label>Zafras a comparar (selecciona 2)</label>
+      <div class="chips-zafras" id="rv-chips-zafras"></div>
+    </div>
+    <div class="filtro-grupo"><label>Distrito</label><select id="rv-distrito"><option value="">Todos</option></select></div>
+    <div class="filtro-grupo"><label>Finca</label><select id="rv-finca"><option value="">Todas</option></select></div>
+    <div class="filtro-grupo"><label>Riego</label><select id="rv-riego"><option value="">Todos</option></select></div>
+    <div class="filtro-grupo"><label>Tipo Corte</label><select id="rv-corte"><option value="">Todos</option></select></div>
+    <div class="filtro-grupo"><label>Tercio</label><select id="rv-tercio"><option value="">Todos</option><option>1er tercio</option><option>2do tercio</option><option>3er tercio</option></select></div>
+    <div class="filtro-grupo">
+      <label>Rango Ciclos</label>
+      <div class="filtro-rango">
+        <input type="number" id="rv-ciclo-min" value="0" min="0" max="20">
+        <span>a</span>
+        <input type="number" id="rv-ciclo-max" value="20" min="0" max="20">
+      </div>
+    </div>
+    <div class="filtro-grupo">
+      <label>Rango Edad</label>
+      <div class="filtro-rango">
+        <input type="number" id="rv-edad-min" value="0" min="0" max="30" step="0.5">
+        <span>a</span>
+        <input type="number" id="rv-edad-max" value="30" min="0" max="30" step="0.5">
+      </div>
+    </div>
+    <button class="btn-limpiar" onclick="limpiarFiltros('rv')">Limpiar</button>
+  </div>
+
+  <!-- TABLA MATRIZ -->
+  <div class="seccion-titulo">Tabla comparativa zafra×variedad — Heatmap TCH y TAH</div>
+  <div class="tabla-wrap scroll-y" style="max-height:65vh">
+    <table id="tbl-rendvar">
+      <thead id="tbl-rendvar-thead"></thead>
+      <tbody><tr><td colspan="20" class="loading">Cargando...</td></tr></tbody>
+    </table>
+  </div>
+
+  <p class="pie-pagina">Depto. de Estadística Agrícola | Zafra 2025-2026</p>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- 3. ESTUDIO DE VARIEDADES                                          -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div id="pag-estudio" class="page">
+  <div class="pag-hdr">
+    <div>
+      <div class="pag-hdr-titulo">Análisis de Variedades</div>
+      <div class="pag-hdr-sub">Compañía Azucarera Chumbagua | Zafra 2025-2026</div>
+    </div>
+    <div class="pag-hdr-actions">
+      <span class="depto-badge">Depto. Estadística Agrícola</span>
+      <button class="back-btn" onclick="irA('pag-menu')">← Ir al menú</button>
+    </div>
+  </div>
+
+  <div class="filtros">
+    <div class="filtro-grupo" style="min-width:280px">
+      <label>Zafras incluidas</label>
+      <div class="chips-zafras" id="ev-chips-zafras"></div>
+    </div>
+    <div class="filtro-grupo"><label>Tercio</label><select id="ev-tercio"><option value="">Todos</option><option>1er tercio</option><option>2do tercio</option><option>3er tercio</option></select></div>
+    <div class="filtro-grupo"><label>Tipo Corte</label><select id="ev-corte"><option value="">Todos</option></select></div>
+    <button class="btn-limpiar" onclick="limpiarFiltros('ev')">Limpiar</button>
+  </div>
+
+  <!-- KG/TM y TAH -->
+  <div class="chart-box" style="margin-bottom:14px">
+    <div class="chart-banner">KG/TM y TAH por Variedad</div>
+    <div class="chart-canvas-wrap tall"><canvas id="chart-kgtm-tah"></canvas></div>
+  </div>
+
+  <!-- TCH y HAS -->
+  <div class="chart-box">
+    <div class="chart-banner">TCH y HA Cosechadas por Variedad</div>
+    <div class="chart-canvas-wrap tall"><canvas id="chart-tch-has"></canvas></div>
+  </div>
+
+  <p class="pie-pagina">Depto. de Estadística Agrícola | Zafra 2025-2026</p>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- 4. ANÁLISIS COMPARATIVO                                           -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div id="pag-comp" class="page">
+  <div class="pag-hdr">
+    <div>
+      <div class="pag-hdr-titulo">Comparativo de Variedades</div>
+      <div class="pag-hdr-sub">Compañía Azucarera Chumbagua | Zafra 2025-2026</div>
+    </div>
+    <div class="pag-hdr-actions">
+      <span class="depto-badge">Depto. Estadística Agrícola</span>
+      <button class="back-btn" onclick="irA('pag-menu')">← Ir al menú</button>
+    </div>
+  </div>
+
+  <div class="filtros">
+    <div class="filtro-grupo" style="min-width:300px">
+      <label>Comparar dos zafras</label>
+      <div class="chips-zafras" id="cp-chips-zafras"></div>
+      <div style="font-size:10px;color:#888;margin-top:2px">Selecciona exactamente 2 zafras</div>
+    </div>
+    <div class="filtro-grupo">
+      <label>Indicador</label>
+      <select id="cp-indicador">
+        <option value="TCH">TCH</option>
+        <option value="POL" selected>POL</option>
+        <option value="BRIX">BRIX</option>
+        <option value="PUREZA">PUREZA</option>
+        <option value="HUMEDAD">HUMEDAD</option>
+        <option value="TAH">TAH</option>
+        <option value="KG_AZ_TM">KG.AZ/TM</option>
+        <option value="EDAD">EDAD</option>
+      </select>
+    </div>
+    <div class="filtro-grupo"><label>Distrito</label><select id="cp-distrito"><option value="">Todos</option></select></div>
+    <div class="filtro-grupo"><label>Tercio</label><select id="cp-tercio"><option value="">Todos</option><option>1er tercio</option><option>2do tercio</option><option>3er tercio</option></select></div>
+    <div class="filtro-grupo"><label>Riego</label><select id="cp-riego"><option value="">Todos</option></select></div>
+    <button class="btn-limpiar" onclick="limpiarFiltros('cp')">Limpiar</button>
+  </div>
+
+  <div class="chart-box">
+    <div class="chart-banner">Comparativo Varietal</div>
+    <div class="chart-canvas-wrap tall"><canvas id="chart-comparativo"></canvas></div>
+  </div>
+
+  <p class="pie-pagina">Depto. de Estadística Agrícola | Zafra 2025-2026</p>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- 5. ANÁLISIS POR ZAFRA/VARIEDAD                                    -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div id="pag-zafravar" class="page">
+  <div class="pag-hdr">
+    <div>
+      <div class="pag-hdr-titulo">Rendimiento por Zafra</div>
+      <div class="pag-hdr-sub">Compañía Azucarera Chumbagua | Zafra 2025-2026</div>
+    </div>
+    <div class="pag-hdr-actions">
+      <span class="depto-badge">Depto. Estadística Agrícola</span>
+      <button class="back-btn" onclick="irA('pag-menu')">← Ir al menú</button>
+    </div>
+  </div>
+
+  <div class="filtros">
+    <div class="filtro-grupo" style="min-width:200px">
+      <label>Variedad (1 o más)</label>
+      <select id="zv-variedad" multiple style="height:90px;min-width:200px;font-size:11px">
+      </select>
+    </div>
+    <div class="filtro-grupo">
+      <label>Indicador</label>
+      <select id="zv-indicador">
+        <option value="TCH" selected>TCH</option>
+        <option value="POL">POL</option>
+        <option value="BRIX">BRIX</option>
+        <option value="PUREZA">PUREZA</option>
+        <option value="HUMEDAD">HUMEDAD</option>
+        <option value="TAH">TAH</option>
+        <option value="KG_AZ_TM">KG.AZ/TM</option>
+        <option value="EDAD">EDAD</option>
+      </select>
+    </div>
+    <div class="filtro-grupo"><label>Tipo Corte</label><select id="zv-corte"><option value="">Todos</option></select></div>
+    <div class="filtro-grupo"><label>Riego</label><select id="zv-riego"><option value="">Todos</option></select></div>
+    <button class="btn-limpiar" onclick="limpiarFiltros('zv')">Limpiar</button>
+  </div>
+
+  <div class="chart-box">
+    <div class="chart-banner">Evolución por Zafra</div>
+    <div class="chart-canvas-wrap tall"><canvas id="chart-zafravar"></canvas></div>
+  </div>
+
+  <p class="pie-pagina">Depto. de Estadística Agrícola | Zafra 2025-2026</p>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- 6. HISTÓRICO VARIEDADES                                           -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div id="pag-distvar" class="page">
+  <div class="pag-hdr">
+    <div>
+      <div class="pag-hdr-titulo">Histórico - Distribución Varietal</div>
+      <div class="pag-hdr-sub">Compañía Azucarera Chumbagua | Zafra 2025-2026</div>
+    </div>
+    <div class="pag-hdr-actions">
+      <span class="depto-badge">Depto. Estadística Agrícola</span>
+      <button class="back-btn" onclick="irA('pag-menu')">← Ir al menú</button>
+    </div>
+  </div>
+
+  <div class="filtros">
+    <div class="filtro-grupo" style="min-width:280px">
+      <label>Zafras incluidas</label>
+      <div class="chips-zafras" id="dv-chips-zafras"></div>
+    </div>
+    <div class="filtro-grupo"><label>Distrito</label><select id="dv-distrito"><option value="">Todos</option></select></div>
+    <div class="filtro-grupo"><label>Finca</label><select id="dv-finca"><option value="">Todas</option></select></div>
+    <div class="filtro-grupo"><label>Riego</label><select id="dv-riego"><option value="">Todos</option></select></div>
+    <div class="filtro-grupo"><label>Tenencia</label><select id="dv-tenencia"><option value="">Todas</option></select></div>
+    <div class="filtro-grupo"><label>Tercio</label><select id="dv-tercio"><option value="">Todos</option><option>1er tercio</option><option>2do tercio</option><option>3er tercio</option></select></div>
+    <div class="filtro-grupo"><label>Tipo Corte</label><select id="dv-corte"><option value="">Todos</option></select></div>
+    <button class="btn-limpiar" onclick="limpiarFiltros('dv')">Limpiar</button>
+  </div>
+
+  <div class="grid-2" style="grid-template-columns:1.4fr 1fr">
+    <div class="chart-box">
+      <div class="chart-banner">Distribución de Variedades</div>
+      <div style="position:relative;height:560px"><canvas id="chart-distvar-pie"></canvas></div>
+    </div>
+    <div>
+      <div class="seccion-titulo">Detalle por Variedad</div>
+      <div class="tabla-wrap scroll-y" style="max-height:560px">
+        <table id="tbl-distvar">
+          <thead><tr>
+            <th class="left">Variedad</th>
+            <th>TCH</th>
+            <th>HA</th>
+            <th>Edad</th>
+            <th>Ciclos</th>
+          </tr></thead>
+          <tbody><tr><td colspan="5" class="loading">Cargando...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <p class="pie-pagina">Depto. de Estadística Agrícola | Zafra 2025-2026</p>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- LÓGICA                                                            -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<script>
+const SUPABASE_URL      = 'https://dhbyjqmdcezdiucxeqpp.supabase.co'
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRoYnlqcW1kY2V6ZGl1Y3hlcXBwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMzI2NjEsImV4cCI6MjA5MjcwODY2MX0.TwRDctpOab02EsGo6q6-Zx0vtdLPlxn_mhowxu93EF0'
+const sb = supabase.createClient ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+if(window.ChartDataLabels){ Chart.register(window.ChartDataLabels); Chart.defaults.set('plugins.datalabels', {display:false}) }
+
+// ── Helpers ──
+const fmt    = (n,d=2) => n==null||isNaN(n)?'—':Number(n).toLocaleString('es-HN',{minimumFractionDigits:d,maximumFractionDigits:d})
+const fmt0   = n => n==null||isNaN(n)?'—':Number(n).toLocaleString('es-HN',{maximumFractionDigits:0})
+const fmtPct = n => n==null||isNaN(n)?'—':Number(n).toFixed(2).replace('.',',')+'%'
+
+const PALETTE = ['#3a5fa8','#1e3f7a','#2d6e3e','#4a9b5d','#e8a020','#7ba0d4','#a4d4ad','#d68f1a','#5d4e75','#a93226','#88a8d8','#c4b59c','#6b8e23','#d4a574','#9c8aa5','#5a8fa3','#b2967d','#7a9e7e','#c08081','#a0826d']
+
+// ── DATOS GLOBALES ──
+let DATOS = []        // todas las filas de rendimientos_historico
+let CHARTS = {}
+let ZAFRAS_ORD = []   // zafras ordenadas
+
+// ── NAVEGACIÓN ──
+function irA(idPag){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'))
+  document.getElementById(idPag).classList.add('active')
+  window.scrollTo({top:0,behavior:'smooth'})
+  if(idPag==='pag-resumen')   renderResumen()
+  if(idPag==='pag-rendvar')   renderRendvar()
+  if(idPag==='pag-estudio')   renderEstudio()
+  if(idPag==='pag-comp')      renderComp()
+  if(idPag==='pag-zafravar')  renderZafravar()
+  if(idPag==='pag-distvar')   renderDistvar()
+}
+
+// ── CARGA DE DATOS ──
+async function cargarDatos(){
+  const FILAS = []
+  let from = 0, to = 999
+  while(true){
+    const {data,error} = await sb.from('rendimientos_historico').select('*').range(from,to)
+    if(error){
+      console.error('Error cargando rendimientos_historico:',error)
+      alert('Error: '+error.message)
+      return
+    }
+    if(!data || !data.length) break
+    FILAS.push(...data)
+    if(data.length < 1000) break
+    from += 1000; to += 1000
+  }
+  // Normalizar - mapear nombres con espacios/mayúsculas a una propiedad estable
+  DATOS = FILAS.map(r=>({
+    zafra:    r['ZAFRA'],
+    semana:   r['Semana'],
+    fecha:    r['Fecha Corte'],
+    cod_finca:r['Cod finca'],
+    lote:     r['Lote'],
+    finca_lote:r['Finca-Lote'],
+    finca:    r['NOMBRE FINCA'],
+    variedad: r['Variedad'],
+    distrito: r['Distrito'],
+    ciclos:   r['Ciclos'],
+    area:     r['Area Cosecha'],
+    area_total:r['Area total'],
+    riego:    r['Tipo de riego'],
+    corte:    r['Tipo Corte'],
+    tenencia: r['Tenencia'],
+    tch:      r['TCH REAL'],
+    tch_est:  r['TCH ESTIMADO'],
+    tm:       r['TM REAL'],
+    tm_est:   r['TM ESTIMADO'],
+    kg_az_tm: r['KG AZ/TM'],
+    tah:      r['TAH'],
+    pol:      r['Pol%Caña'],
+    pureza:   r['Pureza Jugo'],
+    brix:     r['Brix %'],
+    humedad:  r['Humedad'],
+    edad:     r['Edad de Corte'],
+    tercio:   r['Tercio'],
+    rango_edad:r['RANGO EDAD']
+  }))
+  console.log('Cargados',DATOS.length,'registros de rendimientos_historico')
+  ZAFRAS_ORD = [...new Set(DATOS.map(d=>d.zafra).filter(Boolean))].sort()
+  prepararFiltros()
+}
+
+// ── PREPARAR FILTROS DE TODAS LAS PÁGINAS ──
+function prepararFiltros(){
+  const distritos = [...new Set(DATOS.map(d=>d.distrito).filter(d=>d!=null))].sort((a,b)=>a-b)
+  const fincas    = [...new Set(DATOS.map(d=>d.finca).filter(Boolean))].sort()
+  const variedades= [...new Set(DATOS.map(d=>d.variedad).filter(Boolean))].sort()
+  const riegos    = [...new Set(DATOS.map(d=>d.riego).filter(Boolean))].sort()
+  const cortes    = [...new Set(DATOS.map(d=>d.corte).filter(Boolean))].sort()
+  const tenencias = [...new Set(DATOS.map(d=>d.tenencia).filter(Boolean))].sort()
+
+  const fillOpts = (id, arr) => {
+    const el = document.getElementById(id); if(!el) return
+    const cur = el.value
+    const first = el.options[0].outerHTML
+    el.innerHTML = first + arr.map(v=>`<option value="${v}">${v}</option>`).join('')
+    el.value = cur
+  }
+  // Resumen
+  fillOpts('r-distrito', distritos)
+  fillOpts('r-corte', cortes)
+  fillOpts('r-variedad', variedades)
+  fillOpts('r-riego', riegos)
+  // Rendvar
+  fillOpts('rv-distrito', distritos)
+  fillOpts('rv-finca', fincas)
+  fillOpts('rv-riego', riegos)
+  fillOpts('rv-corte', cortes)
+  // Estudio
+  fillOpts('ev-corte', cortes)
+  // Comp
+  fillOpts('cp-distrito', distritos)
+  fillOpts('cp-riego', riegos)
+  // Zafravar - select multiple
+  const zv = document.getElementById('zv-variedad')
+  zv.innerHTML = variedades.map((v,i)=>`<option value="${v}"${i===0?' selected':''}>${v}</option>`).join('')
+  fillOpts('zv-corte', cortes)
+  fillOpts('zv-riego', riegos)
+  // Distvar
+  fillOpts('dv-distrito', distritos)
+  fillOpts('dv-finca', fincas)
+  fillOpts('dv-riego', riegos)
+  fillOpts('dv-tenencia', tenencias)
+  fillOpts('dv-corte', cortes)
+
+  // CHIPS DE ZAFRAS - todas activas por defecto en cada página
+  ;['r','ev','dv'].forEach(prefix=>{
+    const cont = document.getElementById(prefix+'-chips-zafras')
+    cont.innerHTML = ZAFRAS_ORD.map(z=>`<span class="chip activo" data-zafra="${z}" onclick="toggleChip(this,'${prefix}')">${z}</span>`).join('')
+  })
+  // RENDVAR - solo las 2 últimas zafras activas
+  const rv = document.getElementById('rv-chips-zafras')
+  rv.innerHTML = ZAFRAS_ORD.map((z,i)=>{
+    const activo = i >= ZAFRAS_ORD.length-2 ? 'activo' : ''
+    return `<span class="chip ${activo}" data-zafra="${z}" onclick="toggleChip(this,'rv')">${z}</span>`
+  }).join('')
+  // COMP - solo las 2 últimas
+  const cp = document.getElementById('cp-chips-zafras')
+  cp.innerHTML = ZAFRAS_ORD.map((z,i)=>{
+    const activo = i >= ZAFRAS_ORD.length-2 ? 'activo' : ''
+    return `<span class="chip ${activo}" data-zafra="${z}" onclick="toggleChipMax2(this,'cp')">${z}</span>`
+  }).join('')
+
+  // LISTENERS
+  ;['r-distrito','r-tercio','r-corte','r-variedad','r-riego'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.onchange=renderResumen
+  })
+  ;['rv-distrito','rv-finca','rv-riego','rv-corte','rv-tercio','rv-ciclo-min','rv-ciclo-max','rv-edad-min','rv-edad-max'].forEach(id=>{
+    const el=document.getElementById(id); if(el){ el.onchange=renderRendvar; if(el.tagName==='INPUT') el.oninput=renderRendvar }
+  })
+  ;['ev-tercio','ev-corte'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.onchange=renderEstudio
+  })
+  ;['cp-indicador','cp-distrito','cp-tercio','cp-riego'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.onchange=renderComp
+  })
+  ;['zv-variedad','zv-indicador','zv-corte','zv-riego'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.onchange=renderZafravar
+  })
+  ;['dv-distrito','dv-finca','dv-riego','dv-tenencia','dv-tercio','dv-corte'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.onchange=renderDistvar
+  })
+}
+
+// ── CHIPS DE ZAFRA ──
+function toggleChip(el, prefix){
+  el.classList.toggle('activo')
+  if(prefix==='r')  renderResumen()
+  if(prefix==='rv') renderRendvar()
+  if(prefix==='ev') renderEstudio()
+  if(prefix==='dv') renderDistvar()
+}
+function toggleChipMax2(el, prefix){
+  // Permite máximo 2 chips activos
+  if(!el.classList.contains('activo')){
+    const activos = document.querySelectorAll(`#${prefix}-chips-zafras .chip.activo`)
+    if(activos.length >= 2) activos[0].classList.remove('activo')
+  }
+  el.classList.toggle('activo')
+  if(prefix==='cp') renderComp()
+}
+function getZafrasActivas(prefix){
+  return [...document.querySelectorAll(`#${prefix}-chips-zafras .chip.activo`)].map(c=>c.dataset.zafra)
+}
+
+function limpiarFiltros(prefix){
+  document.querySelectorAll(`[id^="${prefix}-"]`).forEach(el=>{
+    if(el.tagName==='SELECT' && !el.multiple) el.value=''
+    if(el.tagName==='INPUT' && el.type==='number'){
+      if(el.id.endsWith('-min')) el.value = '0'
+      if(el.id.endsWith('-max')) el.value = el.id.includes('edad') ? '30' : '20'
+    }
+  })
+  // Reactivar todas las zafras
+  document.querySelectorAll(`#${prefix}-chips-zafras .chip`).forEach(c=>c.classList.add('activo'))
+  if(prefix==='r')  renderResumen()
+  if(prefix==='rv') renderRendvar()
+  if(prefix==='ev') renderEstudio()
+  if(prefix==='cp') renderComp()
+  if(prefix==='zv') renderZafravar()
+  if(prefix==='dv') renderDistvar()
+}
+
+// ════════════════════════════════════════════════════════════════
+// AGREGACIONES PONDERADAS
+// ════════════════════════════════════════════════════════════════
+// Agrega un conjunto de filas — ponderaciones por TM REAL para POL/BRIX/etc, por AREA para TCH/EDAD
+function agregar(filas){
+  const sumTM   = filas.reduce((s,d)=>s+(d.tm||0),0)
+  const sumArea = filas.reduce((s,d)=>s+(d.area||0),0)
+  const wTM = (campo) => sumTM ? filas.reduce((s,d)=>s+((d[campo]||0)*(d.tm||0)),0)/sumTM : 0
+  const wArea = (campo) => sumArea ? filas.reduce((s,d)=>s+((d[campo]||0)*(d.area||0)),0)/sumArea : 0
+  return {
+    n:        filas.length,
+    tm:       sumTM,
+    area:     sumArea,
+    tch:      sumArea ? sumTM/sumArea : 0,
+    pol:      wTM('pol'),
+    brix:     wTM('brix'),
+    pureza:   wTM('pureza'),
+    humedad:  wTM('humedad'),
+    tah:      wTM('tah'),
+    kg_az_tm: wTM('kg_az_tm'),
+    edad:     wArea('edad'),
+    ciclos:   wArea('ciclos')
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+// 1. RESUMEN GENERAL
+// ════════════════════════════════════════════════════════════════
+function renderResumen(){
+  const zafrasAct = getZafrasActivas('r')
+  const fDis = document.getElementById('r-distrito').value
+  const fTer = document.getElementById('r-tercio').value
+  const fCor = document.getElementById('r-corte').value
+  const fVar = document.getElementById('r-variedad').value
+  const fRie = document.getElementById('r-riego').value
+
+  const filtrar = (d) =>
+    zafrasAct.includes(d.zafra) &&
+    (!fDis || String(d.distrito)===fDis) &&
+    (!fTer || d.tercio===fTer) &&
+    (!fCor || d.corte===fCor) &&
+    (!fVar || d.variedad===fVar) &&
+    (!fRie || d.riego===fRie)
+
+  // ── Tabla resumen por zafra ──
+  let html = ''
+  zafrasAct.sort().forEach(z=>{
+    const filas = DATOS.filter(d=>d.zafra===z && filtrar(d))
+    if(!filas.length){
+      html += `<tr><td class="left"><strong>${z}</strong></td><td colspan="9" style="color:#bbb">Sin datos</td></tr>`
+      return
+    }
+    const a = agregar(filas)
+    html += `<tr>
+      <td class="left"><strong>${z}</strong></td>
+      <td>${fmt(a.tch)}</td>
+      <td>${fmt(a.pol)}</td>
+      <td>${fmt(a.brix)}</td>
+      <td>${fmt(a.tah)}</td>
+      <td>${fmt(a.humedad)}</td>
+      <td>${fmt(a.edad)}</td>
+      <td>${fmt(a.pureza)}</td>
+      <td>${fmt(a.ciclos)}</td>
+      <td>${fmt(a.kg_az_tm)}</td>
+    </tr>`
+  })
+  // Total
+  const todasFilas = DATOS.filter(filtrar)
+  if(todasFilas.length){
+    const a = agregar(todasFilas)
+    html += `<tr class="total-row">
+      <td class="left">TOTAL</td>
+      <td>${fmt(a.tch)}</td>
+      <td>${fmt(a.pol)}</td>
+      <td>${fmt(a.brix)}</td>
+      <td>${fmt(a.tah)}</td>
+      <td>${fmt(a.humedad)}</td>
+      <td>${fmt(a.edad)}</td>
+      <td>${fmt(a.pureza)}</td>
+      <td>${fmt(a.ciclos)}</td>
+      <td>${fmt(a.kg_az_tm)}</td>
+    </tr>`
+  }
+  document.querySelector('#tbl-resumen-zafra tbody').innerHTML = html || '<tr><td colspan="10" class="loading">Sin datos</td></tr>'
+
+  // ── Tabla histórica TCH por finca: matriz finca × zafra (TCH | Edad | Ciclos) ──
+  const fincas = [...new Set(todasFilas.map(d=>d.finca).filter(Boolean))].sort()
+  const zafras = zafrasAct.sort()
+
+  // Header
+  let theadHTML = '<tr><th rowspan="2" class="left">Nombre Finca</th>'
+  zafras.forEach(z=>{
+    theadHTML += `<th colspan="3">${z}</th>`
+  })
+  theadHTML += '</tr><tr>'
+  zafras.forEach(()=>{
+    theadHTML += '<th>TCH</th><th>EDAD</th><th>CICLOS</th>'
+  })
+  theadHTML += '</tr>'
+  document.getElementById('tbl-historico-finca-thead').innerHTML = theadHTML
+
+  // Body
+  let bodyHTML = ''
+  fincas.forEach(f=>{
+    bodyHTML += `<tr><td class="left"><strong>${f}</strong></td>`
+    zafras.forEach(z=>{
+      const filas = DATOS.filter(d=>d.zafra===z && d.finca===f && filtrar(d))
+      if(!filas.length){
+        bodyHTML += '<td>—</td><td>—</td><td>—</td>'
+      } else {
+        const a = agregar(filas)
+        bodyHTML += `<td>${fmt(a.tch)}</td><td>${fmt(a.edad)}</td><td>${fmt(a.ciclos)}</td>`
+      }
+    })
+    bodyHTML += '</tr>'
+  })
+  // Total
+  if(todasFilas.length){
+    bodyHTML += `<tr class="total-row"><td class="left">Total</td>`
+    zafras.forEach(z=>{
+      const filas = DATOS.filter(d=>d.zafra===z && filtrar(d))
+      if(!filas.length){
+        bodyHTML += '<td>—</td><td>—</td><td>—</td>'
+      } else {
+        const a = agregar(filas)
+        bodyHTML += `<td>${fmt(a.tch)}</td><td>${fmt(a.edad)}</td><td>${fmt(a.ciclos)}</td>`
+      }
+    })
+    bodyHTML += '</tr>'
+  }
+  document.querySelector('#tbl-historico-finca tbody').innerHTML = bodyHTML || '<tr><td class="loading">Sin datos</td></tr>'
+}
+
+// ════════════════════════════════════════════════════════════════
+// 2. ANÁLISIS REND. VARIETAL — heatmap matriz zafra × variedad
+// ════════════════════════════════════════════════════════════════
+function renderRendvar(){
+  const zafrasAct = getZafrasActivas('rv')
+  const fDis = document.getElementById('rv-distrito').value
+  const fFin = document.getElementById('rv-finca').value
+  const fRie = document.getElementById('rv-riego').value
+  const fCor = document.getElementById('rv-corte').value
+  const fTer = document.getElementById('rv-tercio').value
+  const cMin = parseFloat(document.getElementById('rv-ciclo-min').value)||0
+  const cMax = parseFloat(document.getElementById('rv-ciclo-max').value)||999
+  const eMin = parseFloat(document.getElementById('rv-edad-min').value)||0
+  const eMax = parseFloat(document.getElementById('rv-edad-max').value)||999
+
+  const filtrar = d =>
+    zafrasAct.includes(d.zafra) &&
+    (!fDis || String(d.distrito)===fDis) &&
+    (!fFin || d.finca===fFin) &&
+    (!fRie || d.riego===fRie) &&
+    (!fCor || d.corte===fCor) &&
+    (!fTer || d.tercio===fTer) &&
+    (d.ciclos!=null && d.ciclos>=cMin && d.ciclos<=cMax) &&
+    (d.edad!=null && d.edad>=eMin && d.edad<=eMax)
+
+  const filtradas = DATOS.filter(filtrar)
+  const variedades = [...new Set(filtradas.map(d=>d.variedad).filter(Boolean))].sort()
+  const zafras = zafrasAct.sort()
+
+  // Header
+  let theadHTML = '<tr><th class="left" rowspan="2">Variedad</th>'
+  zafras.forEach(z=>{ theadHTML += `<th colspan="9">${z}</th>` })
+  theadHTML += '</tr><tr>'
+  zafras.forEach(()=>{
+    theadHTML += '<th>HA</th><th>TCH</th><th>TAH</th><th>POL</th><th>BRIX</th><th>PUREZA</th><th>HUMEDAD</th><th>EDAD</th><th>CICLOS</th>'
+  })
+  theadHTML += '</tr>'
+  document.getElementById('tbl-rendvar-thead').innerHTML = theadHTML
+
+  // Recolectar TCH/TAH globales para heatmap thresholds
+  const allTCH = [], allTAH = []
+  variedades.forEach(v=>{
+    zafras.forEach(z=>{
+      const f = filtradas.filter(d=>d.variedad===v && d.zafra===z)
+      if(f.length){
+        const a = agregar(f)
+        if(a.tch>0) allTCH.push(a.tch)
+        if(a.tah>0) allTAH.push(a.tah)
+      }
+    })
+  })
+  const tch33 = quartile(allTCH, 0.33), tch66 = quartile(allTCH, 0.66)
+  const tah33 = quartile(allTAH, 0.33), tah66 = quartile(allTAH, 0.66)
+
+  const heatTCH = v => v==null||!v ? '' : (v >= tch66 ? 'heat-bueno' : v <= tch33 ? 'heat-malo' : 'heat-regular')
+  const heatTAH = v => v==null||!v ? '' : (v >= tah66 ? 'heat-bueno' : v <= tah33 ? 'heat-malo' : 'heat-regular')
+
+  // Body
+  let bodyHTML = ''
+  variedades.forEach(v=>{
+    bodyHTML += `<tr><td class="left"><strong>${v}</strong></td>`
+    zafras.forEach(z=>{
+      const f = filtradas.filter(d=>d.variedad===v && d.zafra===z)
+      if(!f.length){
+        bodyHTML += '<td>—</td>'.repeat(9)
+      } else {
+        const a = agregar(f)
+        bodyHTML += `
+          <td>${fmt(a.area)}</td>
+          <td class="${heatTCH(a.tch)}">${fmt(a.tch)}</td>
+          <td class="${heatTAH(a.tah)}">${fmt(a.tah)}</td>
+          <td>${fmt(a.pol)}</td>
+          <td>${fmt(a.brix)}</td>
+          <td>${fmt(a.pureza)}</td>
+          <td>${fmt(a.humedad)}</td>
+          <td>${fmt(a.edad)}</td>
+          <td>${fmt(a.ciclos)}</td>
+        `
+      }
+    })
+    bodyHTML += '</tr>'
+  })
+  // Total
+  if(filtradas.length){
+    bodyHTML += `<tr class="total-row"><td class="left">TOTAL</td>`
+    zafras.forEach(z=>{
+      const f = filtradas.filter(d=>d.zafra===z)
+      if(!f.length){
+        bodyHTML += '<td>—</td>'.repeat(9)
+      } else {
+        const a = agregar(f)
+        bodyHTML += `
+          <td>${fmt(a.area)}</td>
+          <td>${fmt(a.tch)}</td>
+          <td>${fmt(a.tah)}</td>
+          <td>${fmt(a.pol)}</td>
+          <td>${fmt(a.brix)}</td>
+          <td>${fmt(a.pureza)}</td>
+          <td>${fmt(a.humedad)}</td>
+          <td>${fmt(a.edad)}</td>
+          <td>${fmt(a.ciclos)}</td>
+        `
+      }
+    })
+    bodyHTML += '</tr>'
+  }
+  document.querySelector('#tbl-rendvar tbody').innerHTML = bodyHTML || '<tr><td colspan="20" class="loading">Sin datos</td></tr>'
+}
+
+function quartile(arr, q){
+  if(!arr.length) return 0
+  const s = [...arr].sort((a,b)=>a-b)
+  const idx = Math.floor(s.length*q)
+  return s[Math.min(idx, s.length-1)]
+}
+
+// ════════════════════════════════════════════════════════════════
+// 3. ESTUDIO DE VARIEDADES — KG/TM y TAH | TCH y HAS
+// ════════════════════════════════════════════════════════════════
+function renderEstudio(){
+  const zafrasAct = getZafrasActivas('ev')
+  const fTer = document.getElementById('ev-tercio').value
+  const fCor = document.getElementById('ev-corte').value
+
+  const filas = DATOS.filter(d=>
+    zafrasAct.includes(d.zafra) &&
+    (!fTer || d.tercio===fTer) &&
+    (!fCor || d.corte===fCor)
+  )
+
+  // Agregar por variedad
+  const porVar = {}
+  filas.forEach(d=>{
+    if(!d.variedad) return
+    if(!porVar[d.variedad]) porVar[d.variedad] = []
+    porVar[d.variedad].push(d)
+  })
+  const items = Object.entries(porVar).map(([k,arr])=>{
+    const a = agregar(arr)
+    return {variedad:k, ...a}
+  })
+
+  // ── Gráfica 1: KG/TM y TAH (línea + línea) ordenado por KG/TM desc ──
+  const items1 = items.filter(i=>i.kg_az_tm>0).sort((a,b)=>b.kg_az_tm-a.kg_az_tm)
+  destroyChart('chart-kgtm-tah')
+  CHARTS['chart-kgtm-tah'] = new Chart(document.getElementById('chart-kgtm-tah'),{
+    data:{
+      labels:items1.map(i=>i.variedad),
+      datasets:[
+        {type:'line', label:'KG.AZ/TM', data:items1.map(i=>i.kg_az_tm), borderColor:'#e8865c', backgroundColor:'#e8865c', borderWidth:2.5, pointRadius:5, pointBackgroundColor:'#e8865c', yAxisID:'y1', tension:0.2, datalabels:{display:true, color:'#1a1a2e', backgroundColor:'#fff', borderRadius:3, padding:3, font:{size:9,weight:'700'}, formatter:v=>fmt(v), align:'top', anchor:'end'}},
+        {type:'line', label:'TAH',       data:items1.map(i=>i.tah),       borderColor:'#e8a020', backgroundColor:'#e8a020', borderWidth:2.5, pointRadius:5, pointStyle:'rect', yAxisID:'y2', tension:0.2, datalabels:{display:true, color:'#1a1a2e', backgroundColor:'#fff', borderRadius:3, padding:3, font:{size:9,weight:'700'}, formatter:v=>fmt(v), align:'bottom', anchor:'start'}}
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:14}}},
+      scales:{
+        y1:{position:'left', title:{display:true, text:'KG.AZ/TM', font:{size:10,weight:'700'}}, ticks:{font:{size:10}}},
+        y2:{position:'right', title:{display:true, text:'TAH', font:{size:10,weight:'700'}}, ticks:{font:{size:10}}, grid:{display:false}},
+        x:{ticks:{font:{size:10}, maxRotation:60, minRotation:45}}
+      }
+    }
+  })
+
+  // ── Gráfica 2: TCH (línea) + HAs cosechadas (barras) ordenado por HA desc ──
+  const items2 = items.filter(i=>i.area>0).sort((a,b)=>b.area-a.area)
+  destroyChart('chart-tch-has')
+  CHARTS['chart-tch-has'] = new Chart(document.getElementById('chart-tch-has'),{
+    data:{
+      labels:items2.map(i=>i.variedad),
+      datasets:[
+        {type:'bar',  label:'Hectáreas', data:items2.map(i=>i.area), backgroundColor:'#7ba0d4', borderRadius:3, yAxisID:'y1', datalabels:{display:true, color:'#1e3f7a', anchor:'end', align:'top', font:{size:10,weight:'700'}, formatter:v=>fmt0(v)}},
+        {type:'line', label:'TCH',       data:items2.map(i=>i.tch),  borderColor:'#1e3f7a', backgroundColor:'#1e3f7a', borderWidth:2.5, pointRadius:5, yAxisID:'y2', tension:0.2, datalabels:{display:true, color:'#1e3f7a', backgroundColor:'#fff', borderRadius:3, padding:3, font:{size:9,weight:'700'}, formatter:v=>fmt(v), align:'top', anchor:'end'}}
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:14}}},
+      scales:{
+        y1:{position:'left', title:{display:true, text:'Hectáreas', font:{size:10,weight:'700'}}, ticks:{font:{size:10}, callback:v=>fmt0(v)}},
+        y2:{position:'right', title:{display:true, text:'TCH', font:{size:10,weight:'700'}}, ticks:{font:{size:10}}, grid:{display:false}},
+        x:{ticks:{font:{size:10}, maxRotation:60, minRotation:45}}
+      }
+    }
+  })
+}
+
+// ════════════════════════════════════════════════════════════════
+// 4. COMPARATIVO — 2 zafras, 1 indicador, eje X = variedades
+// ════════════════════════════════════════════════════════════════
+function renderComp(){
+  const zafrasAct = getZafrasActivas('cp').sort()
+  const ind = document.getElementById('cp-indicador').value
+  const fDis = document.getElementById('cp-distrito').value
+  const fTer = document.getElementById('cp-tercio').value
+  const fRie = document.getElementById('cp-riego').value
+
+  const filtrar = (d, z) => d.zafra===z &&
+    (!fDis || String(d.distrito)===fDis) &&
+    (!fTer || d.tercio===fTer) &&
+    (!fRie || d.riego===fRie)
+
+  // Variedades comunes a ambas zafras
+  const setVar = new Set()
+  zafrasAct.forEach(z=>{
+    DATOS.filter(d=>d.zafra===z).forEach(d=>{ if(d.variedad) setVar.add(d.variedad) })
+  })
+  const variedades = [...setVar].sort()
+
+  const indicadorMap = {TCH:'tch', POL:'pol', BRIX:'brix', PUREZA:'pureza', HUMEDAD:'humedad', TAH:'tah', KG_AZ_TM:'kg_az_tm', EDAD:'edad'}
+  const campo = indicadorMap[ind]
+
+  const datasets = zafrasAct.map((z,i)=>({
+    label: z,
+    data: variedades.map(v=>{
+      const f = DATOS.filter(d=>filtrar(d,z) && d.variedad===v)
+      if(!f.length) return null
+      return agregar(f)[campo]
+    }),
+    borderColor: i===0 ? '#7ba0d4' : '#1e3f7a',
+    backgroundColor: i===0 ? '#7ba0d4' : '#1e3f7a',
+    borderWidth: 2.5,
+    pointRadius: 5,
+    tension: 0.2,
+    datalabels:{display:true, color:'#1a1a2e', backgroundColor:'#fff', borderRadius:3, padding:3, font:{size:9,weight:'700'}, formatter:v=>v==null?'':fmt(v), align:i===0?'bottom':'top', anchor:i===0?'start':'end'}
+  }))
+
+  destroyChart('chart-comparativo')
+  CHARTS['chart-comparativo'] = new Chart(document.getElementById('chart-comparativo'),{
+    type:'line',
+    data:{labels:variedades, datasets},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{position:'bottom',labels:{font:{size:11},boxWidth:14}},
+        title:{display:true, text:`Comparativo ${ind} entre zafras`, font:{size:13, weight:'700'}, color:'#1e3f7a'}
+      },
+      scales:{
+        y:{ticks:{font:{size:10}}},
+        x:{ticks:{font:{size:10}, maxRotation:60, minRotation:45}}
+      },
+      spanGaps:true
+    }
+  })
+}
+
+// ════════════════════════════════════════════════════════════════
+// 5. ZAFRA / VARIEDAD — evolución temporal
+// ════════════════════════════════════════════════════════════════
+function renderZafravar(){
+  const zv = document.getElementById('zv-variedad')
+  const variedades = [...zv.selectedOptions].map(o=>o.value)
+  const ind = document.getElementById('zv-indicador').value
+  const fCor = document.getElementById('zv-corte').value
+  const fRie = document.getElementById('zv-riego').value
+
+  const indicadorMap = {TCH:'tch', POL:'pol', BRIX:'brix', PUREZA:'pureza', HUMEDAD:'humedad', TAH:'tah', KG_AZ_TM:'kg_az_tm', EDAD:'edad'}
+  const campo = indicadorMap[ind]
+
+  const datasets = variedades.map((v,i)=>({
+    label: v,
+    data: ZAFRAS_ORD.map(z=>{
+      const f = DATOS.filter(d=>d.zafra===z && d.variedad===v &&
+        (!fCor || d.corte===fCor) && (!fRie || d.riego===fRie))
+      if(!f.length) return null
+      return agregar(f)[campo]
+    }),
+    borderColor: PALETTE[i % PALETTE.length],
+    backgroundColor: PALETTE[i % PALETTE.length],
+    borderWidth: 2.5,
+    pointRadius: 5,
+    tension: 0.2,
+    datalabels:{display:variedades.length<=2, color:'#1a1a2e', backgroundColor:'#fff', borderRadius:3, padding:3, font:{size:9,weight:'700'}, formatter:v=>v==null?'':fmt(v), align:'top', anchor:'end'}
+  }))
+
+  destroyChart('chart-zafravar')
+  CHARTS['chart-zafravar'] = new Chart(document.getElementById('chart-zafravar'),{
+    type:'line',
+    data:{labels:ZAFRAS_ORD, datasets},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{position:'bottom',labels:{font:{size:11},boxWidth:14}},
+        title:{display:true, text:`Evolución de ${ind} por zafra`, font:{size:13,weight:'700'}, color:'#1e3f7a'}
+      },
+      scales:{
+        y:{ticks:{font:{size:10}}},
+        x:{ticks:{font:{size:11}}}
+      },
+      spanGaps:true
+    }
+  })
+}
+
+// ════════════════════════════════════════════════════════════════
+// 6. HISTÓRICO VARIEDADES — pie + tabla
+// ════════════════════════════════════════════════════════════════
+function renderDistvar(){
+  const zafrasAct = getZafrasActivas('dv')
+  const fDis = document.getElementById('dv-distrito').value
+  const fFin = document.getElementById('dv-finca').value
+  const fRie = document.getElementById('dv-riego').value
+  const fTen = document.getElementById('dv-tenencia').value
+  const fTer = document.getElementById('dv-tercio').value
+  const fCor = document.getElementById('dv-corte').value
+
+  const filas = DATOS.filter(d=>
+    zafrasAct.includes(d.zafra) &&
+    (!fDis || String(d.distrito)===fDis) &&
+    (!fFin || d.finca===fFin) &&
+    (!fRie || d.riego===fRie) &&
+    (!fTen || d.tenencia===fTen) &&
+    (!fTer || d.tercio===fTer) &&
+    (!fCor || d.corte===fCor)
+  )
+
+  const porVar = {}
+  filas.forEach(d=>{
+    if(!d.variedad) return
+    if(!porVar[d.variedad]) porVar[d.variedad] = []
+    porVar[d.variedad].push(d)
+  })
+  const items = Object.entries(porVar).map(([k,arr])=>{
+    const a = agregar(arr)
+    return {variedad:k, ...a}
+  }).sort((a,b)=>b.area-a.area)
+
+  const totalArea = items.reduce((s,i)=>s+i.area,0)
+
+  // Pie
+  const lab = items.map(i=>i.variedad)
+  const val = items.map(i=>i.area)
+  destroyChart('chart-distvar-pie')
+  CHARTS['chart-distvar-pie'] = new Chart(document.getElementById('chart-distvar-pie'),{
+    type:'pie',
+    data:{labels:lab, datasets:[{data:val, backgroundColor:lab.map((_,i)=>PALETTE[i%PALETTE.length]), borderColor:'#fff', borderWidth:1.5}]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      layout:{padding:{top:30,bottom:30,left:60,right:60}},
+      plugins:{
+        legend:{position:'left', labels:{boxWidth:10, font:{size:10}, padding:6}},
+        tooltip:{callbacks:{label:(ctx)=>{
+          const v=ctx.parsed
+          const pct = totalArea ? (v/totalArea*100).toFixed(2).replace('.',',') : '0'
+          return ` ${ctx.label}: ${fmt(v)} ha (${pct}%)`
+        }}},
+        datalabels:{
+          display:true, color:'#1a1a2e', textStrokeColor:'#fff', textStrokeWidth:3,
+          font:{size:11, weight:'700'}, anchor:'end', align:'end', offset:8,
+          formatter:(v,ctx)=>{
+            const pct = totalArea ? (v/totalArea*100) : 0
+            if(pct < 1.5) return ''
+            return ctx.chart.data.labels[ctx.dataIndex] + ' ' + pct.toFixed(2).replace('.',',')+'%'
+          }
+        }
+      }
+    }
+  })
+
+  // Tabla
+  let html = items.map(i=>`<tr>
+    <td class="left"><strong>${i.variedad}</strong></td>
+    <td>${fmt(i.tch)}</td>
+    <td>${fmt(i.area)}</td>
+    <td>${fmt(i.edad)}</td>
+    <td>${fmt(i.ciclos)}</td>
+  </tr>`).join('')
+  if(items.length){
+    const a = agregar(filas)
+    html += `<tr class="total-row">
+      <td class="left">Total</td>
+      <td>${fmt(a.tch)}</td>
+      <td>${fmt(a.area)}</td>
+      <td>${fmt(a.edad)}</td>
+      <td>${fmt(a.ciclos)}</td>
+    </tr>`
+  }
+  document.querySelector('#tbl-distvar tbody').innerHTML = html || '<tr><td colspan="5" class="loading">Sin datos</td></tr>'
+}
+
+// ════════════════════════════════════════════════════════════════
+// CHART HELPERS
+// ════════════════════════════════════════════════════════════════
+function destroyChart(id){ if(CHARTS[id]){ CHARTS[id].destroy(); delete CHARTS[id] } }
+
+// ── INIT ──
+async function init(){
+  const {data:{session}} = await sb.auth.getSession()
+  if(!session){
+    window.location.href = 'index.html'
+    return
+  }
+  document.getElementById('fecha-header').textContent =
+    new Date().toLocaleDateString('es-HN',{weekday:'long',year:'numeric',month:'long',day:'numeric'})
+  await cargarDatos()
+  irA('pag-menu')
+}
+init()
+</script>
+</body>
+</html>
