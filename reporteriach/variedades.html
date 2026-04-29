@@ -492,6 +492,10 @@ const fmt    = (n,d=2) => n==null||isNaN(n)?'—':Number(n).toLocaleString('es-H
 const fmt0   = n => n==null||isNaN(n)?'—':Number(n).toLocaleString('es-HN',{maximumFractionDigits:0})
 const fmtPct = n => n==null||isNaN(n)?'—':Number(n).toFixed(2).replace('.',',')+'%'
 
+// Helper para tratar 'EMPTY', '', null, undefined como vacío
+const esVacio = v => v==null || v==='' || (typeof v==='string' && v.trim().toUpperCase()==='EMPTY')
+const limpio = v => esVacio(v) ? null : v
+
 // Helper robusto para comparar zafras (tolera tipos mixtos)
 const zafraEq = (a, b) => String(a).trim() === String(b).trim()
 const enZafras = (z, lista) => lista.some(x => zafraEq(x, z))
@@ -534,21 +538,21 @@ async function cargarDatos(){
   }
   // Normalizar - mapear nombres con espacios/mayúsculas a una propiedad estable
   DATOS = FILAS.map(r=>({
-    zafra:    r['ZAFRA'],
+    zafra:    limpio(r['ZAFRA']),
     semana:   r['Semana'],
     fecha:    r['Fecha Corte'],
-    cod_finca:r['Cod finca'],
+    cod_finca:limpio(r['Cod finca']),
     lote:     r['Lote'],
-    finca_lote:r['Finca-Lote'],
-    finca:    r['NOMBRE FINCA'],
-    variedad: r['Variedad'],
+    finca_lote:limpio(r['Finca-Lote']),
+    finca:    limpio(r['NOMBRE FINCA']),
+    variedad: limpio(r['Variedad']),
     distrito: r['Distrito'],
     ciclos:   r['Ciclos'],
     area:     r['Area Cosecha'],
     area_total:r['Area total'],
-    riego:    r['Tipo de riego'],
-    corte:    r['Tipo Corte'],
-    tenencia: r['Tenencia'],
+    riego:    limpio(r['Tipo de riego']),
+    corte:    limpio(r['Tipo Corte']),
+    tenencia: limpio(r['Tenencia']),
     tch:      r['TCH REAL'],
     tch_est:  r['TCH ESTIMADO'],
     tm:       r['TM REAL'],
@@ -560,8 +564,8 @@ async function cargarDatos(){
     brix:     r['Brix %'],
     humedad:  r['Humedad'],
     edad:     r['Edad de Corte'],
-    tercio:   r['Tercio'],
-    rango_edad:r['RANGO EDAD']
+    tercio:   limpio(r['Tercio']),
+    rango_edad:limpio(r['RANGO EDAD'])
   }))
   console.log('Cargados',DATOS.length,'registros de rendimientos_historico')
   ZAFRAS_ORD = [...new Set(DATOS.map(d=>d.zafra).filter(Boolean))].sort()
@@ -919,6 +923,17 @@ function renderRendvar(){
   const eMin = parseFloat(document.getElementById('rv-edad-min').value)||0
   const eMax = parseFloat(document.getElementById('rv-edad-max').value)||999
 
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+  console.log('🟢 RENDVAR llamado')
+  console.log('   zafrasAct (chips activos):', zafrasAct)
+  console.log('   filtros:', {fDis,fFin,fRie,fCor,fTer,cMin,cMax,eMin,eMax})
+  // ¿Están todos los chips visualmente activos? Vamos a verlo
+  const chipsRaw = document.querySelectorAll('#rv-chips-zafras .chip')
+  console.log('   chips RV totales:', chipsRaw.length)
+  chipsRaw.forEach(c => {
+    console.log(`     chip "${c.dataset.zafra}" activo=${c.classList.contains('activo')}`)
+  })
+
   const filtrar = d =>
     enZafras(d.zafra, zafrasAct) &&
     (!fDis || String(d.distrito)===fDis) &&
@@ -934,6 +949,24 @@ function renderRendvar(){
   const filtradas = DATOS.filter(filtrar)
   const variedades = [...new Set(filtradas.map(d=>d.variedad).filter(Boolean))].sort()
   const zafras = zafrasAct.sort()
+
+  // DIAGNÓSTICO TEMPORAL
+  console.log('🔬 renderRendvar()')
+  console.log('   zafrasAct:', zafrasAct)
+  console.log('   filtros:', {fDis,fFin,fRie,fCor,fTer,cMin,cMax,eMin,eMax})
+  console.log('   filtradas total:', filtradas.length)
+  zafrasAct.forEach(z=>{
+    const cnt = filtradas.filter(d=>zafraEq(d.zafra,z)).length
+    const cntSinFiltros = DATOS.filter(d=>zafraEq(d.zafra,z)).length
+    console.log(`   ${z}: ${cnt} con filtros · ${cntSinFiltros} totales`)
+  })
+  // Ver muestra de filas excluidas para zafra 2023-2024
+  const z23 = DATOS.filter(d=>zafraEq(d.zafra,'2023-2024'))
+  if(z23.length > 0){
+    const sample = z23[0]
+    console.log('   muestra 2023-2024:', sample)
+    console.log('     ¿pasa filtro?', filtrar(sample), '· ciclos:', sample.ciclos, '· edad:', sample.edad)
+  }
 
   // Header
   let theadHTML = '<tr><th class="left" rowspan="2">Variedad</th>'
@@ -1259,11 +1292,6 @@ function renderDistvar(){
   const fTer = document.getElementById('dv-tercio').value
   const fCor = document.getElementById('dv-corte').value
 
-  // DIAGNÓSTICO
-  console.log('🔬 renderDistvar() llamada')
-  console.log('   zafrasAct:', JSON.stringify(zafrasAct))
-  console.log('   filtros:', {fDis, fFin, fRie, fTen, fTer, fCor})
-
   const filas = DATOS.filter(d=>
     enZafras(d.zafra, zafrasAct) &&
     (!fDis || String(d.distrito)===fDis) &&
@@ -1273,16 +1301,6 @@ function renderDistvar(){
     (!fTer || d.tercio===fTer) &&
     (!fCor || d.corte===fCor)
   )
-  console.log('   filas filtradas:', filas.length)
-  if(filas.length === 0){
-    // Test individual de cada filtro
-    const t1 = DATOS.filter(d=>enZafras(d.zafra, zafrasAct))
-    console.log('     solo zafra:', t1.length, '— primera fila:', t1[0])
-    if(t1.length){
-      console.log('     d.zafra primera:', JSON.stringify(t1[0].zafra), 'tipo:', typeof t1[0].zafra)
-      console.log('     d.variedad primera:', JSON.stringify(t1[0].variedad))
-    }
-  }
 
   const porVar = {}
   filas.forEach(d=>{
@@ -1294,6 +1312,29 @@ function renderDistvar(){
     const a = agregar(arr)
     return {variedad:k, ...a}
   }).sort((a,b)=>b.area-a.area)
+
+  // Aviso si hay filas pero ninguna tiene variedad asignada
+  const filasSinVariedad = filas.filter(d=>!d.variedad).length
+  const avisoSinVariedad = items.length === 0 && filas.length > 0
+    ? `<div style="background:#fef5f3;border-left:3px solid #c0392b;padding:9px 12px;border-radius:3px;font-size:11px;color:#a32d2d;margin-bottom:10px;">
+         ⚠ <strong>${filas.length} cortes</strong> en esta zafra/filtro <strong>NO tienen variedad asignada</strong> en SAP.
+         Estos lotes deben actualizarse en el maestro de plantíos.
+       </div>`
+    : (filasSinVariedad > 0
+        ? `<div style="background:#fef9e7;border-left:3px solid #c97d1a;padding:7px 10px;border-radius:3px;font-size:11px;color:#854f0b;margin-bottom:10px;">
+             ⓘ ${filasSinVariedad} de ${filas.length} cortes sin variedad asignada (no se incluyen en el gráfico).
+           </div>`
+        : '')
+
+  // Insertar aviso antes del pie
+  let avisoEl = document.getElementById('dv-aviso')
+  if(!avisoEl){
+    avisoEl = document.createElement('div')
+    avisoEl.id = 'dv-aviso'
+    const chartBox = document.querySelector('#pag-distvar .chart-box')
+    chartBox.parentElement.insertBefore(avisoEl, chartBox)
+  }
+  avisoEl.innerHTML = avisoSinVariedad
 
   const totalArea = items.reduce((s,i)=>s+i.area,0)
 
