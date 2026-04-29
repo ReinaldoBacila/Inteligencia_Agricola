@@ -113,6 +113,16 @@
   td.heat-regular{ background:#fef3c7; color:#854f0b; font-weight:700; }
   td.heat-malo   { background:#fcd5ce; color:#a32d2d; font-weight:700; }
 
+  /* DIFERENCIADOR VISUAL POR ZAFRA - bandas alternadas */
+  /* [EDITABLE] color de bandas alternadas */
+  .zafra-banda-a { background:#f8faff !important; }
+  .zafra-banda-b { background:#fffbf2 !important; }
+  /* Headers también con bandas */
+  thead th.zafra-banda-a { background:linear-gradient(180deg,#1e3f7a,#2a5298) !important; border-left:3px solid #4a9b5d; }
+  thead th.zafra-banda-b { background:linear-gradient(180deg,#1e3f7a,#2a5298) !important; border-left:3px solid #e8a020; }
+  tbody td.zafra-banda-a { border-left:1px solid #d6dff0; }
+  tbody td.zafra-banda-b { border-left:1px solid #f3dcb8; }
+
   /* GRID */
   .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
   .grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:16px; }
@@ -191,11 +201,12 @@
   </div>
 
   <!-- TABLA RESUMEN POR ZAFRA -->
-  <div class="seccion-titulo">Resumen general por zafra (POL, BRIX, KG.AZ/TM, TAH, PUREZA, HUMEDAD ponderados por TM REAL)</div>
+  <div class="seccion-titulo">Resumen general por zafra (POL, BRIX, KG.AZ/TM, TAH, PUREZA, HUMEDAD ponderados por TM REAL · siempre muestra todas las zafras)</div>
   <div class="tabla-wrap">
     <table id="tbl-resumen-zafra">
       <thead><tr>
         <th class="left">Zafra</th>
+        <th>HA</th>
         <th>TCH</th>
         <th>POL</th>
         <th>BRIX</th>
@@ -206,7 +217,7 @@
         <th>CICLOS</th>
         <th>KG AZ/TM</th>
       </tr></thead>
-      <tbody><tr><td colspan="10" class="loading">Cargando...</td></tr></tbody>
+      <tbody><tr><td colspan="11" class="loading">Cargando...</td></tr></tbody>
     </table>
   </div>
 
@@ -339,18 +350,18 @@
       <div class="chips-zafras" id="cp-chips-zafras"></div>
       <div style="font-size:10px;color:#888;margin-top:2px">Selecciona exactamente 2 zafras</div>
     </div>
-    <div class="filtro-grupo">
-      <label>Indicador</label>
-      <select id="cp-indicador">
-        <option value="TCH">TCH</option>
-        <option value="POL" selected>POL</option>
-        <option value="BRIX">BRIX</option>
-        <option value="PUREZA">PUREZA</option>
-        <option value="HUMEDAD">HUMEDAD</option>
-        <option value="TAH">TAH</option>
-        <option value="KG_AZ_TM">KG.AZ/TM</option>
-        <option value="EDAD">EDAD</option>
-      </select>
+    <div class="filtro-grupo" style="min-width:340px">
+      <label>Indicadores (selecciona 1 o más)</label>
+      <div class="chips-zafras" id="cp-indicadores">
+        <span class="chip activo" data-ind="TCH" onclick="toggleIndCp(this)">TCH</span>
+        <span class="chip"        data-ind="POL" onclick="toggleIndCp(this)">POL</span>
+        <span class="chip"        data-ind="BRIX" onclick="toggleIndCp(this)">BRIX</span>
+        <span class="chip"        data-ind="PUREZA" onclick="toggleIndCp(this)">PUREZA</span>
+        <span class="chip"        data-ind="HUMEDAD" onclick="toggleIndCp(this)">HUMEDAD</span>
+        <span class="chip"        data-ind="TAH" onclick="toggleIndCp(this)">TAH</span>
+        <span class="chip"        data-ind="KG_AZ_TM" onclick="toggleIndCp(this)">KG.AZ/TM</span>
+        <span class="chip"        data-ind="EDAD" onclick="toggleIndCp(this)">EDAD</span>
+      </div>
     </div>
     <div class="filtro-grupo"><label>Distrito</label><select id="cp-distrito"><option value="">Todos</option></select></div>
     <div class="filtro-grupo"><label>Tercio</label><select id="cp-tercio"><option value="">Todos</option><option>1er tercio</option><option>2do tercio</option><option>3er tercio</option></select></div>
@@ -382,10 +393,9 @@
   </div>
 
   <div class="filtros">
-    <div class="filtro-grupo" style="min-width:200px">
-      <label>Variedad (1 o más)</label>
-      <select id="zv-variedad" multiple style="height:90px;min-width:200px;font-size:11px">
-      </select>
+    <div class="filtro-grupo" style="min-width:340px">
+      <label>Variedades a graficar (1 o más)</label>
+      <div class="chips-zafras" id="zv-variedades-chips"></div>
     </div>
     <div class="filtro-grupo">
       <label>Indicador</label>
@@ -481,6 +491,10 @@ if(window.ChartDataLabels){ Chart.register(window.ChartDataLabels); Chart.defaul
 const fmt    = (n,d=2) => n==null||isNaN(n)?'—':Number(n).toLocaleString('es-HN',{minimumFractionDigits:d,maximumFractionDigits:d})
 const fmt0   = n => n==null||isNaN(n)?'—':Number(n).toLocaleString('es-HN',{maximumFractionDigits:0})
 const fmtPct = n => n==null||isNaN(n)?'—':Number(n).toFixed(2).replace('.',',')+'%'
+
+// Helper robusto para comparar zafras (tolera tipos mixtos)
+const zafraEq = (a, b) => String(a).trim() === String(b).trim()
+const enZafras = (z, lista) => lista.some(x => zafraEq(x, z))
 
 const PALETTE = ['#3a5fa8','#1e3f7a','#2d6e3e','#4a9b5d','#e8a020','#7ba0d4','#a4d4ad','#d68f1a','#5d4e75','#a93226','#88a8d8','#c4b59c','#6b8e23','#d4a574','#9c8aa5','#5a8fa3','#b2967d','#7a9e7e','#c08081','#a0826d']
 
@@ -585,9 +599,19 @@ function prepararFiltros(){
   // Comp
   fillOpts('cp-distrito', distritos)
   fillOpts('cp-riego', riegos)
-  // Zafravar - select multiple
-  const zv = document.getElementById('zv-variedad')
-  zv.innerHTML = variedades.map((v,i)=>`<option value="${v}"${i===0?' selected':''}>${v}</option>`).join('')
+  // Zafravar - chips de variedades (todas inactivas, top 3 activas por default)
+  const zvVar = document.getElementById('zv-variedades-chips')
+  // Top 3 variedades por área total
+  const totalArea = {}
+  DATOS.forEach(d=>{
+    if(!d.variedad) return
+    totalArea[d.variedad] = (totalArea[d.variedad]||0) + (d.area||0)
+  })
+  const top3 = Object.entries(totalArea).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([k])=>k)
+  zvVar.innerHTML = variedades.map(v=>{
+    const activo = top3.includes(v) ? 'activo' : ''
+    return `<span class="chip ${activo}" data-var="${v}" onclick="toggleVarZv(this)">${v}</span>`
+  }).join('')
   fillOpts('zv-corte', cortes)
   fillOpts('zv-riego', riegos)
   // Distvar
@@ -597,11 +621,24 @@ function prepararFiltros(){
   fillOpts('dv-tenencia', tenencias)
   fillOpts('dv-corte', cortes)
 
-  // CHIPS DE ZAFRAS - todas activas por defecto en cada página
-  ;['r','ev','dv'].forEach(prefix=>{
+  // CHIPS DE ZAFRAS
+  // Resumen general (r): todas activas
+  ;['r'].forEach(prefix=>{
     const cont = document.getElementById(prefix+'-chips-zafras')
     cont.innerHTML = ZAFRAS_ORD.map(z=>`<span class="chip activo" data-zafra="${z}" onclick="toggleChip(this,'${prefix}')">${z}</span>`).join('')
   })
+  // Estudio de variedades (ev): SOLO la última zafra activa por defecto
+  const evCont = document.getElementById('ev-chips-zafras')
+  evCont.innerHTML = ZAFRAS_ORD.map((z,i)=>{
+    const activo = i === ZAFRAS_ORD.length-1 ? 'activo' : ''
+    return `<span class="chip ${activo}" data-zafra="${z}" onclick="toggleChip(this,'ev')">${z}</span>`
+  }).join('')
+  // Distribución varietal (dv): SOLO la última zafra activa - SELECCIÓN ÚNICA
+  const dvCont = document.getElementById('dv-chips-zafras')
+  dvCont.innerHTML = ZAFRAS_ORD.map((z,i)=>{
+    const activo = i === ZAFRAS_ORD.length-1 ? 'activo' : ''
+    return `<span class="chip ${activo}" data-zafra="${z}" onclick="toggleChipUnico(this,'dv')">${z}</span>`
+  }).join('')
   // RENDVAR - solo las 2 últimas zafras activas
   const rv = document.getElementById('rv-chips-zafras')
   rv.innerHTML = ZAFRAS_ORD.map((z,i)=>{
@@ -625,10 +662,10 @@ function prepararFiltros(){
   ;['ev-tercio','ev-corte'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.onchange=renderEstudio
   })
-  ;['cp-indicador','cp-distrito','cp-tercio','cp-riego'].forEach(id=>{
+  ;['cp-distrito','cp-tercio','cp-riego'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.onchange=renderComp
   })
-  ;['zv-variedad','zv-indicador','zv-corte','zv-riego'].forEach(id=>{
+  ;['zv-indicador','zv-corte','zv-riego'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.onchange=renderZafravar
   })
   ;['dv-distrito','dv-finca','dv-riego','dv-tenencia','dv-tercio','dv-corte'].forEach(id=>{
@@ -653,6 +690,19 @@ function toggleChipMax2(el, prefix){
   el.classList.toggle('activo')
   if(prefix==='cp') renderComp()
 }
+function toggleChipUnico(el, prefix){
+  // Selección única - desactiva los demás y activa éste
+  document.querySelectorAll(`#${prefix}-chips-zafras .chip`).forEach(c=>c.classList.remove('activo'))
+  el.classList.add('activo')
+  if(prefix==='dv') renderDistvar()
+}
+function toggleVarZv(el){
+  el.classList.toggle('activo')
+  // Asegurar al menos 1 variedad activa
+  const activos = document.querySelectorAll('#zv-variedades-chips .chip.activo')
+  if(activos.length===0) el.classList.add('activo')
+  renderZafravar()
+}
 function getZafrasActivas(prefix){
   return [...document.querySelectorAll(`#${prefix}-chips-zafras .chip.activo`)].map(c=>c.dataset.zafra)
 }
@@ -665,8 +715,40 @@ function limpiarFiltros(prefix){
       if(el.id.endsWith('-max')) el.value = el.id.includes('edad') ? '30' : '20'
     }
   })
-  // Reactivar todas las zafras
-  document.querySelectorAll(`#${prefix}-chips-zafras .chip`).forEach(c=>c.classList.add('activo'))
+  // Reactivar zafras según política de cada página
+  if(prefix==='ev' || prefix==='dv'){
+    // Solo la última zafra activa
+    const chips = document.querySelectorAll(`#${prefix}-chips-zafras .chip`)
+    chips.forEach((c,i)=>{
+      c.classList.toggle('activo', i === chips.length-1)
+    })
+  } else if(prefix==='cp' || prefix==='rv'){
+    // Las 2 últimas zafras
+    const chips = document.querySelectorAll(`#${prefix}-chips-zafras .chip`)
+    chips.forEach((c,i)=>{
+      c.classList.toggle('activo', i >= chips.length-2)
+    })
+    // Para cp: reactivar solo TCH como indicador default
+    if(prefix==='cp'){
+      document.querySelectorAll('#cp-indicadores .chip').forEach(c=>{
+        c.classList.toggle('activo', c.dataset.ind==='TCH')
+      })
+    }
+  } else {
+    // Todas las zafras (r)
+    document.querySelectorAll(`#${prefix}-chips-zafras .chip`).forEach(c=>c.classList.add('activo'))
+  }
+  // Para zv: reset a top 3 variedades
+  if(prefix==='zv'){
+    const chips = document.querySelectorAll('#zv-variedades-chips .chip')
+    const totalArea = {}
+    DATOS.forEach(d=>{
+      if(!d.variedad) return
+      totalArea[d.variedad] = (totalArea[d.variedad]||0) + (d.area||0)
+    })
+    const top3 = Object.entries(totalArea).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([k])=>k)
+    chips.forEach(c=>c.classList.toggle('activo', top3.includes(c.dataset.var)))
+  }
   if(prefix==='r')  renderResumen()
   if(prefix==='rv') renderRendvar()
   if(prefix==='ev') renderEstudio()
@@ -712,24 +794,33 @@ function renderResumen(){
   const fRie = document.getElementById('r-riego').value
 
   const filtrar = (d) =>
-    zafrasAct.includes(d.zafra) &&
+    enZafras(d.zafra, zafrasAct) &&
     (!fDis || String(d.distrito)===fDis) &&
     (!fTer || d.tercio===fTer) &&
     (!fCor || d.corte===fCor) &&
     (!fVar || d.variedad===fVar) &&
     (!fRie || d.riego===fRie)
 
-  // ── Tabla resumen por zafra ──
+  // Filtro SIN restricción de zafras (para tabla resumen general que muestra TODAS)
+  const filtrarSinZafra = (d) =>
+    (!fDis || String(d.distrito)===fDis) &&
+    (!fTer || d.tercio===fTer) &&
+    (!fCor || d.corte===fCor) &&
+    (!fVar || d.variedad===fVar) &&
+    (!fRie || d.riego===fRie)
+
+  // ── Tabla resumen por zafra (siempre muestra TODAS las zafras, ignora chips) ──
   let html = ''
-  zafrasAct.sort().forEach(z=>{
-    const filas = DATOS.filter(d=>d.zafra===z && filtrar(d))
+  ZAFRAS_ORD.forEach(z=>{
+    const filas = DATOS.filter(d=>zafraEq(d.zafra,z) && filtrarSinZafra(d))
     if(!filas.length){
-      html += `<tr><td class="left"><strong>${z}</strong></td><td colspan="9" style="color:#bbb">Sin datos</td></tr>`
+      html += `<tr><td class="left"><strong>${z}</strong></td><td colspan="10" style="color:#bbb">Sin datos</td></tr>`
       return
     }
     const a = agregar(filas)
     html += `<tr>
       <td class="left"><strong>${z}</strong></td>
+      <td>${fmt(a.area)}</td>
       <td>${fmt(a.tch)}</td>
       <td>${fmt(a.pol)}</td>
       <td>${fmt(a.brix)}</td>
@@ -741,12 +832,13 @@ function renderResumen(){
       <td>${fmt(a.kg_az_tm)}</td>
     </tr>`
   })
-  // Total
-  const todasFilas = DATOS.filter(filtrar)
-  if(todasFilas.length){
-    const a = agregar(todasFilas)
+  // Total general (todas las zafras)
+  const todasFilasSinZafra = DATOS.filter(filtrarSinZafra)
+  if(todasFilasSinZafra.length){
+    const a = agregar(todasFilasSinZafra)
     html += `<tr class="total-row">
       <td class="left">TOTAL</td>
+      <td>${fmt(a.area)}</td>
       <td>${fmt(a.tch)}</td>
       <td>${fmt(a.pol)}</td>
       <td>${fmt(a.brix)}</td>
@@ -758,20 +850,23 @@ function renderResumen(){
       <td>${fmt(a.kg_az_tm)}</td>
     </tr>`
   }
-  document.querySelector('#tbl-resumen-zafra tbody').innerHTML = html || '<tr><td colspan="10" class="loading">Sin datos</td></tr>'
+  document.querySelector('#tbl-resumen-zafra tbody').innerHTML = html || '<tr><td colspan="11" class="loading">Sin datos</td></tr>'
 
-  // ── Tabla histórica TCH por finca: matriz finca × zafra (TCH | Edad | Ciclos) ──
+  // ── Tabla histórica TCH por finca: matriz finca × zafra (HA | TCH | EDAD | CICLOS) — sí respeta chips ──
+  const todasFilas = DATOS.filter(filtrar)
   const fincas = [...new Set(todasFilas.map(d=>d.finca).filter(Boolean))].sort()
   const zafras = zafrasAct.sort()
 
-  // Header
+  // Header con 4 columnas por zafra: HA, TCH, EDAD, CICLOS
   let theadHTML = '<tr><th rowspan="2" class="left">Nombre Finca</th>'
-  zafras.forEach(z=>{
-    theadHTML += `<th colspan="3">${z}</th>`
+  zafras.forEach((z,iz)=>{
+    const banda = iz % 2 === 0 ? 'zafra-banda-a' : 'zafra-banda-b'
+    theadHTML += `<th colspan="4" class="${banda}">${z}</th>`
   })
   theadHTML += '</tr><tr>'
-  zafras.forEach(()=>{
-    theadHTML += '<th>TCH</th><th>EDAD</th><th>CICLOS</th>'
+  zafras.forEach((z,iz)=>{
+    const banda = iz % 2 === 0 ? 'zafra-banda-a' : 'zafra-banda-b'
+    theadHTML += `<th class="${banda}">HA</th><th class="${banda}">TCH</th><th class="${banda}">EDAD</th><th class="${banda}">CICLOS</th>`
   })
   theadHTML += '</tr>'
   document.getElementById('tbl-historico-finca-thead').innerHTML = theadHTML
@@ -780,27 +875,28 @@ function renderResumen(){
   let bodyHTML = ''
   fincas.forEach(f=>{
     bodyHTML += `<tr><td class="left"><strong>${f}</strong></td>`
-    zafras.forEach(z=>{
-      const filas = DATOS.filter(d=>d.zafra===z && d.finca===f && filtrar(d))
+    zafras.forEach((z,iz)=>{
+      const banda = iz % 2 === 0 ? 'zafra-banda-a' : 'zafra-banda-b'
+      const filas = DATOS.filter(d=>zafraEq(d.zafra,z) && d.finca===f && filtrar(d))
       if(!filas.length){
-        bodyHTML += '<td>—</td><td>—</td><td>—</td>'
+        bodyHTML += `<td class="${banda}">—</td><td class="${banda}">—</td><td class="${banda}">—</td><td class="${banda}">—</td>`
       } else {
         const a = agregar(filas)
-        bodyHTML += `<td>${fmt(a.tch)}</td><td>${fmt(a.edad)}</td><td>${fmt(a.ciclos)}</td>`
+        bodyHTML += `<td class="${banda}">${fmt(a.area)}</td><td class="${banda}">${fmt(a.tch)}</td><td class="${banda}">${fmt(a.edad)}</td><td class="${banda}">${fmt(a.ciclos)}</td>`
       }
     })
     bodyHTML += '</tr>'
   })
-  // Total
+  // Total fila
   if(todasFilas.length){
     bodyHTML += `<tr class="total-row"><td class="left">Total</td>`
-    zafras.forEach(z=>{
-      const filas = DATOS.filter(d=>d.zafra===z && filtrar(d))
+    zafras.forEach((z,iz)=>{
+      const filas = DATOS.filter(d=>zafraEq(d.zafra,z) && filtrar(d))
       if(!filas.length){
-        bodyHTML += '<td>—</td><td>—</td><td>—</td>'
+        bodyHTML += '<td>—</td><td>—</td><td>—</td><td>—</td>'
       } else {
         const a = agregar(filas)
-        bodyHTML += `<td>${fmt(a.tch)}</td><td>${fmt(a.edad)}</td><td>${fmt(a.ciclos)}</td>`
+        bodyHTML += `<td>${fmt(a.area)}</td><td>${fmt(a.tch)}</td><td>${fmt(a.edad)}</td><td>${fmt(a.ciclos)}</td>`
       }
     })
     bodyHTML += '</tr>'
@@ -824,14 +920,16 @@ function renderRendvar(){
   const eMax = parseFloat(document.getElementById('rv-edad-max').value)||999
 
   const filtrar = d =>
-    zafrasAct.includes(d.zafra) &&
+    enZafras(d.zafra, zafrasAct) &&
     (!fDis || String(d.distrito)===fDis) &&
     (!fFin || d.finca===fFin) &&
     (!fRie || d.riego===fRie) &&
     (!fCor || d.corte===fCor) &&
     (!fTer || d.tercio===fTer) &&
-    (d.ciclos!=null && d.ciclos>=cMin && d.ciclos<=cMax) &&
-    (d.edad!=null && d.edad>=eMin && d.edad<=eMax)
+    // Rango ciclos: solo aplica si valor existe (null = no excluir)
+    (d.ciclos==null || (d.ciclos>=cMin && d.ciclos<=cMax)) &&
+    // Rango edad: solo aplica si valor existe (null = no excluir)
+    (d.edad==null || (d.edad>=eMin && d.edad<=eMax))
 
   const filtradas = DATOS.filter(filtrar)
   const variedades = [...new Set(filtradas.map(d=>d.variedad).filter(Boolean))].sort()
@@ -839,10 +937,14 @@ function renderRendvar(){
 
   // Header
   let theadHTML = '<tr><th class="left" rowspan="2">Variedad</th>'
-  zafras.forEach(z=>{ theadHTML += `<th colspan="9">${z}</th>` })
+  zafras.forEach((z,iz)=>{
+    const banda = iz % 2 === 0 ? 'zafra-banda-a' : 'zafra-banda-b'
+    theadHTML += `<th colspan="9" class="${banda}">${z}</th>`
+  })
   theadHTML += '</tr><tr>'
-  zafras.forEach(()=>{
-    theadHTML += '<th>HA</th><th>TCH</th><th>TAH</th><th>POL</th><th>BRIX</th><th>PUREZA</th><th>HUMEDAD</th><th>EDAD</th><th>CICLOS</th>'
+  zafras.forEach((z,iz)=>{
+    const banda = iz % 2 === 0 ? 'zafra-banda-a' : 'zafra-banda-b'
+    theadHTML += `<th class="${banda}">HA</th><th class="${banda}">TCH</th><th class="${banda}">TAH</th><th class="${banda}">POL</th><th class="${banda}">BRIX</th><th class="${banda}">PUREZA</th><th class="${banda}">HUMEDAD</th><th class="${banda}">EDAD</th><th class="${banda}">CICLOS</th>`
   })
   theadHTML += '</tr>'
   document.getElementById('tbl-rendvar-thead').innerHTML = theadHTML
@@ -851,7 +953,7 @@ function renderRendvar(){
   const allTCH = [], allTAH = []
   variedades.forEach(v=>{
     zafras.forEach(z=>{
-      const f = filtradas.filter(d=>d.variedad===v && d.zafra===z)
+      const f = filtradas.filter(d=>d.variedad===v && zafraEq(d.zafra,z))
       if(f.length){
         const a = agregar(f)
         if(a.tch>0) allTCH.push(a.tch)
@@ -869,22 +971,25 @@ function renderRendvar(){
   let bodyHTML = ''
   variedades.forEach(v=>{
     bodyHTML += `<tr><td class="left"><strong>${v}</strong></td>`
-    zafras.forEach(z=>{
-      const f = filtradas.filter(d=>d.variedad===v && d.zafra===z)
+    zafras.forEach((z,iz)=>{
+      const banda = iz % 2 === 0 ? 'zafra-banda-a' : 'zafra-banda-b'
+      const f = filtradas.filter(d=>d.variedad===v && zafraEq(d.zafra,z))
       if(!f.length){
-        bodyHTML += '<td>—</td>'.repeat(9)
+        bodyHTML += `<td class="${banda}">—</td>`.repeat(9)
       } else {
         const a = agregar(f)
+        const cTCH = heatTCH(a.tch)
+        const cTAH = heatTAH(a.tah)
         bodyHTML += `
-          <td>${fmt(a.area)}</td>
-          <td class="${heatTCH(a.tch)}">${fmt(a.tch)}</td>
-          <td class="${heatTAH(a.tah)}">${fmt(a.tah)}</td>
-          <td>${fmt(a.pol)}</td>
-          <td>${fmt(a.brix)}</td>
-          <td>${fmt(a.pureza)}</td>
-          <td>${fmt(a.humedad)}</td>
-          <td>${fmt(a.edad)}</td>
-          <td>${fmt(a.ciclos)}</td>
+          <td class="${banda}">${fmt(a.area)}</td>
+          <td class="${cTCH || banda}">${fmt(a.tch)}</td>
+          <td class="${cTAH || banda}">${fmt(a.tah)}</td>
+          <td class="${banda}">${fmt(a.pol)}</td>
+          <td class="${banda}">${fmt(a.brix)}</td>
+          <td class="${banda}">${fmt(a.pureza)}</td>
+          <td class="${banda}">${fmt(a.humedad)}</td>
+          <td class="${banda}">${fmt(a.edad)}</td>
+          <td class="${banda}">${fmt(a.ciclos)}</td>
         `
       }
     })
@@ -894,7 +999,7 @@ function renderRendvar(){
   if(filtradas.length){
     bodyHTML += `<tr class="total-row"><td class="left">TOTAL</td>`
     zafras.forEach(z=>{
-      const f = filtradas.filter(d=>d.zafra===z)
+      const f = filtradas.filter(d=>zafraEq(d.zafra,z))
       if(!f.length){
         bodyHTML += '<td>—</td>'.repeat(9)
       } else {
@@ -933,7 +1038,7 @@ function renderEstudio(){
   const fCor = document.getElementById('ev-corte').value
 
   const filas = DATOS.filter(d=>
-    zafrasAct.includes(d.zafra) &&
+    enZafras(d.zafra, zafrasAct) &&
     (!fTer || d.tercio===fTer) &&
     (!fCor || d.corte===fCor)
   )
@@ -957,16 +1062,17 @@ function renderEstudio(){
     data:{
       labels:items1.map(i=>i.variedad),
       datasets:[
-        {type:'line', label:'KG.AZ/TM', data:items1.map(i=>i.kg_az_tm), borderColor:'#e8865c', backgroundColor:'#e8865c', borderWidth:2.5, pointRadius:5, pointBackgroundColor:'#e8865c', yAxisID:'y1', tension:0.2, datalabels:{display:true, color:'#1a1a2e', backgroundColor:'#fff', borderRadius:3, padding:3, font:{size:9,weight:'700'}, formatter:v=>fmt(v), align:'top', anchor:'end'}},
-        {type:'line', label:'TAH',       data:items1.map(i=>i.tah),       borderColor:'#e8a020', backgroundColor:'#e8a020', borderWidth:2.5, pointRadius:5, pointStyle:'rect', yAxisID:'y2', tension:0.2, datalabels:{display:true, color:'#1a1a2e', backgroundColor:'#fff', borderRadius:3, padding:3, font:{size:9,weight:'700'}, formatter:v=>fmt(v), align:'bottom', anchor:'start'}}
+        {type:'line', label:'KG.AZ/TM', data:items1.map(i=>i.kg_az_tm), borderColor:'#c97d1a', backgroundColor:'#c97d1a', borderWidth:2.5, pointRadius:5, pointBackgroundColor:'#c97d1a', yAxisID:'y1', tension:0.2, datalabels:{display:true, color:'#c97d1a', backgroundColor:'transparent', font:{size:10,weight:'700'}, formatter:v=>fmt(v), align:'top', anchor:'end', clip:false, clamp:true}},
+        {type:'line', label:'TAH',       data:items1.map(i=>i.tah),       borderColor:'#1e5e2c', backgroundColor:'#1e5e2c', borderWidth:2.5, pointRadius:5, pointStyle:'rect', yAxisID:'y2', tension:0.2, datalabels:{display:true, color:'#1e5e2c', backgroundColor:'transparent', font:{size:10,weight:'700'}, formatter:v=>fmt(v), align:'bottom', anchor:'start', clip:false, clamp:true}}
       ]
     },
     options:{
       responsive:true, maintainAspectRatio:false,
+      layout:{padding:{top:25,bottom:10,left:10,right:10}},
       plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:14}}},
       scales:{
-        y1:{position:'left', title:{display:true, text:'KG.AZ/TM', font:{size:10,weight:'700'}}, ticks:{font:{size:10}}},
-        y2:{position:'right', title:{display:true, text:'TAH', font:{size:10,weight:'700'}}, ticks:{font:{size:10}}, grid:{display:false}},
+        y1:{position:'left', title:{display:true, text:'KG.AZ/TM', font:{size:10,weight:'700'},color:'#c97d1a'}, ticks:{font:{size:10},color:'#c97d1a'}},
+        y2:{position:'right', title:{display:true, text:'TAH', font:{size:10,weight:'700'},color:'#1e5e2c'}, ticks:{font:{size:10},color:'#1e5e2c'}, grid:{display:false}},
         x:{ticks:{font:{size:10}, maxRotation:60, minRotation:45}}
       }
     }
@@ -979,12 +1085,13 @@ function renderEstudio(){
     data:{
       labels:items2.map(i=>i.variedad),
       datasets:[
-        {type:'bar',  label:'Hectáreas', data:items2.map(i=>i.area), backgroundColor:'#7ba0d4', borderRadius:3, yAxisID:'y1', datalabels:{display:true, color:'#1e3f7a', anchor:'end', align:'top', font:{size:10,weight:'700'}, formatter:v=>fmt0(v)}},
-        {type:'line', label:'TCH',       data:items2.map(i=>i.tch),  borderColor:'#1e3f7a', backgroundColor:'#1e3f7a', borderWidth:2.5, pointRadius:5, yAxisID:'y2', tension:0.2, datalabels:{display:true, color:'#1e3f7a', backgroundColor:'#fff', borderRadius:3, padding:3, font:{size:9,weight:'700'}, formatter:v=>fmt(v), align:'top', anchor:'end'}}
+        {type:'bar',  label:'Hectáreas', data:items2.map(i=>i.area), backgroundColor:'#7ba0d4', borderRadius:3, yAxisID:'y1', datalabels:{display:true, color:'#1e3f7a', backgroundColor:'transparent', anchor:'end', align:'top', font:{size:10,weight:'700'}, formatter:v=>fmt0(v), clip:false}},
+        {type:'line', label:'TCH',       data:items2.map(i=>i.tch),  borderColor:'#1e3f7a', backgroundColor:'#1e3f7a', borderWidth:2.5, pointRadius:5, yAxisID:'y2', tension:0.2, datalabels:{display:true, color:'#1e3f7a', backgroundColor:'transparent', font:{size:10,weight:'700'}, formatter:v=>fmt(v), align:'top', anchor:'end', clip:false, clamp:true}}
       ]
     },
     options:{
       responsive:true, maintainAspectRatio:false,
+      layout:{padding:{top:25,bottom:10,left:10,right:10}},
       plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:14}}},
       scales:{
         y1:{position:'left', title:{display:true, text:'Hectáreas', font:{size:10,weight:'700'}}, ticks:{font:{size:10}, callback:v=>fmt0(v)}},
@@ -996,16 +1103,24 @@ function renderEstudio(){
 }
 
 // ════════════════════════════════════════════════════════════════
-// 4. COMPARATIVO — 2 zafras, 1 indicador, eje X = variedades
+// 4. COMPARATIVO — 2 zafras × N indicadores, eje X = variedades
 // ════════════════════════════════════════════════════════════════
+function toggleIndCp(el){
+  el.classList.toggle('activo')
+  // Asegurar al menos un indicador activo
+  const activos = document.querySelectorAll('#cp-indicadores .chip.activo')
+  if(activos.length===0) el.classList.add('activo')
+  renderComp()
+}
+
 function renderComp(){
   const zafrasAct = getZafrasActivas('cp').sort()
-  const ind = document.getElementById('cp-indicador').value
+  const indicadores = [...document.querySelectorAll('#cp-indicadores .chip.activo')].map(c=>c.dataset.ind)
   const fDis = document.getElementById('cp-distrito').value
   const fTer = document.getElementById('cp-tercio').value
   const fRie = document.getElementById('cp-riego').value
 
-  const filtrar = (d, z) => d.zafra===z &&
+  const filtrar = (d, z) => zafraEq(d.zafra,z) &&
     (!fDis || String(d.distrito)===fDis) &&
     (!fTer || d.tercio===fTer) &&
     (!fRie || d.riego===fRie)
@@ -1013,27 +1128,54 @@ function renderComp(){
   // Variedades comunes a ambas zafras
   const setVar = new Set()
   zafrasAct.forEach(z=>{
-    DATOS.filter(d=>d.zafra===z).forEach(d=>{ if(d.variedad) setVar.add(d.variedad) })
+    DATOS.filter(d=>zafraEq(d.zafra,z)).forEach(d=>{ if(d.variedad) setVar.add(d.variedad) })
   })
   const variedades = [...setVar].sort()
 
-  const indicadorMap = {TCH:'tch', POL:'pol', BRIX:'brix', PUREZA:'pureza', HUMEDAD:'humedad', TAH:'tah', KG_AZ_TM:'kg_az_tm', EDAD:'edad'}
-  const campo = indicadorMap[ind]
+  const indMap = {TCH:'tch', POL:'pol', BRIX:'brix', PUREZA:'pureza', HUMEDAD:'humedad', TAH:'tah', KG_AZ_TM:'kg_az_tm', EDAD:'edad'}
+  // Paleta para indicadores (cada indicador un color base)
+  const indColors = {
+    TCH:'#1e3f7a', POL:'#c97d1a', BRIX:'#2d6e3e', PUREZA:'#5d4e75',
+    HUMEDAD:'#7ba0d4', TAH:'#a93226', KG_AZ_TM:'#e8a020', EDAD:'#888'
+  }
+  // Diferenciar zafra A vs zafra B con tono claro/oscuro
+  const tonoZafra = (color, esZafraVieja) => {
+    if(!esZafraVieja) return color
+    // Versión clara: usar opacity en línea
+    return color
+  }
 
-  const datasets = zafrasAct.map((z,i)=>({
-    label: z,
-    data: variedades.map(v=>{
-      const f = DATOS.filter(d=>filtrar(d,z) && d.variedad===v)
-      if(!f.length) return null
-      return agregar(f)[campo]
-    }),
-    borderColor: i===0 ? '#7ba0d4' : '#1e3f7a',
-    backgroundColor: i===0 ? '#7ba0d4' : '#1e3f7a',
-    borderWidth: 2.5,
-    pointRadius: 5,
-    tension: 0.2,
-    datalabels:{display:true, color:'#1a1a2e', backgroundColor:'#fff', borderRadius:3, padding:3, font:{size:9,weight:'700'}, formatter:v=>v==null?'':fmt(v), align:i===0?'bottom':'top', anchor:i===0?'start':'end'}
-  }))
+  const datasets = []
+  zafrasAct.forEach((z, iz)=>{
+    indicadores.forEach(ind=>{
+      const campo = indMap[ind]
+      const baseColor = indColors[ind] || '#666'
+      // Zafra vieja = línea más clara (dashed); Zafra reciente = sólida más gruesa
+      const esVieja = iz === 0
+      datasets.push({
+        label: `${ind} · ${z}`,
+        data: variedades.map(v=>{
+          const f = DATOS.filter(d=>filtrar(d,z) && d.variedad===v)
+          if(!f.length) return null
+          return agregar(f)[campo]
+        }),
+        borderColor: baseColor,
+        backgroundColor: baseColor,
+        borderWidth: esVieja ? 2 : 2.8,
+        borderDash: esVieja ? [6,4] : [],
+        pointRadius: esVieja ? 4 : 5,
+        pointStyle: esVieja ? 'rectRot' : 'circle',
+        tension: 0.2,
+        // Solo mostrar etiquetas si hay ≤2 series totales
+        datalabels: indicadores.length*zafrasAct.length<=2 ? {
+          display:true, color:baseColor, backgroundColor:'transparent',
+          font:{size:10,weight:'700'}, formatter:v=>v==null?'':fmt(v),
+          align: esVieja?'bottom':'top', anchor: esVieja?'start':'end',
+          clip:false, clamp:true
+        } : {display:false}
+      })
+    })
+  })
 
   destroyChart('chart-comparativo')
   CHARTS['chart-comparativo'] = new Chart(document.getElementById('chart-comparativo'),{
@@ -1041,15 +1183,18 @@ function renderComp(){
     data:{labels:variedades, datasets},
     options:{
       responsive:true, maintainAspectRatio:false,
+      layout:{padding:{top:25,bottom:10,left:10,right:10}},
       plugins:{
-        legend:{position:'bottom',labels:{font:{size:11},boxWidth:14}},
-        title:{display:true, text:`Comparativo ${ind} entre zafras`, font:{size:13, weight:'700'}, color:'#1e3f7a'}
+        legend:{position:'bottom',labels:{font:{size:11},boxWidth:14, padding:8}},
+        title:{display:true, text:`Comparativo · ${indicadores.join(' · ')}`, font:{size:13, weight:'700'}, color:'#1e3f7a'},
+        tooltip:{mode:'index',intersect:false}
       },
       scales:{
         y:{ticks:{font:{size:10}}},
         x:{ticks:{font:{size:10}, maxRotation:60, minRotation:45}}
       },
-      spanGaps:true
+      spanGaps:true,
+      interaction:{mode:'nearest', intersect:false}
     }
   })
 }
@@ -1058,8 +1203,7 @@ function renderComp(){
 // 5. ZAFRA / VARIEDAD — evolución temporal
 // ════════════════════════════════════════════════════════════════
 function renderZafravar(){
-  const zv = document.getElementById('zv-variedad')
-  const variedades = [...zv.selectedOptions].map(o=>o.value)
+  const variedades = [...document.querySelectorAll('#zv-variedades-chips .chip.activo')].map(c=>c.dataset.var)
   const ind = document.getElementById('zv-indicador').value
   const fCor = document.getElementById('zv-corte').value
   const fRie = document.getElementById('zv-riego').value
@@ -1070,7 +1214,7 @@ function renderZafravar(){
   const datasets = variedades.map((v,i)=>({
     label: v,
     data: ZAFRAS_ORD.map(z=>{
-      const f = DATOS.filter(d=>d.zafra===z && d.variedad===v &&
+      const f = DATOS.filter(d=>zafraEq(d.zafra,z) && d.variedad===v &&
         (!fCor || d.corte===fCor) && (!fRie || d.riego===fRie))
       if(!f.length) return null
       return agregar(f)[campo]
@@ -1080,7 +1224,7 @@ function renderZafravar(){
     borderWidth: 2.5,
     pointRadius: 5,
     tension: 0.2,
-    datalabels:{display:variedades.length<=2, color:'#1a1a2e', backgroundColor:'#fff', borderRadius:3, padding:3, font:{size:9,weight:'700'}, formatter:v=>v==null?'':fmt(v), align:'top', anchor:'end'}
+    datalabels:{display:variedades.length<=3, color:PALETTE[i % PALETTE.length], backgroundColor:'transparent', font:{size:10,weight:'700'}, formatter:v=>v==null?'':fmt(v), align:'top', anchor:'end', clip:false, clamp:true}
   }))
 
   destroyChart('chart-zafravar')
@@ -1089,6 +1233,7 @@ function renderZafravar(){
     data:{labels:ZAFRAS_ORD, datasets},
     options:{
       responsive:true, maintainAspectRatio:false,
+      layout:{padding:{top:25,bottom:10,left:10,right:10}},
       plugins:{
         legend:{position:'bottom',labels:{font:{size:11},boxWidth:14}},
         title:{display:true, text:`Evolución de ${ind} por zafra`, font:{size:13,weight:'700'}, color:'#1e3f7a'}
@@ -1114,8 +1259,13 @@ function renderDistvar(){
   const fTer = document.getElementById('dv-tercio').value
   const fCor = document.getElementById('dv-corte').value
 
+  // DIAGNÓSTICO
+  console.log('🔬 renderDistvar() llamada')
+  console.log('   zafrasAct:', JSON.stringify(zafrasAct))
+  console.log('   filtros:', {fDis, fFin, fRie, fTen, fTer, fCor})
+
   const filas = DATOS.filter(d=>
-    zafrasAct.includes(d.zafra) &&
+    enZafras(d.zafra, zafrasAct) &&
     (!fDis || String(d.distrito)===fDis) &&
     (!fFin || d.finca===fFin) &&
     (!fRie || d.riego===fRie) &&
@@ -1123,6 +1273,16 @@ function renderDistvar(){
     (!fTer || d.tercio===fTer) &&
     (!fCor || d.corte===fCor)
   )
+  console.log('   filas filtradas:', filas.length)
+  if(filas.length === 0){
+    // Test individual de cada filtro
+    const t1 = DATOS.filter(d=>enZafras(d.zafra, zafrasAct))
+    console.log('     solo zafra:', t1.length, '— primera fila:', t1[0])
+    if(t1.length){
+      console.log('     d.zafra primera:', JSON.stringify(t1[0].zafra), 'tipo:', typeof t1[0].zafra)
+      console.log('     d.variedad primera:', JSON.stringify(t1[0].variedad))
+    }
+  }
 
   const porVar = {}
   filas.forEach(d=>{
