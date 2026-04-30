@@ -3,242 +3,472 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gerencia Agrícola | Chumbagua</title>
+<title>Inteligencia Agrícola | Chumbagua</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --azul:       #1e3f7a;
-    --azul-medio: #2a5298;
-    --azul-claro: #3d7abf;
-    --verde:      #2d6e3e;
-    --verde-claro:#3a8a4e;
-    --dorado:     #e8a020;
-    --naranja:    #c97d1a;
-    --rojo:       #c0392b;
-    --gris:       #f5f6f8;
-    --blanco:     #ffffff;
-    --texto:      #1a1a2e;
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased}
+  :root{
+    /* PALETA C — Mix Marca Chumbagua */
+    --brand:        #1e3f7a;       /* Azul Chumbagua */
+    --brand-dark:   #162e5a;
+    --brand-2:      #2d6e3e;       /* Verde Chumbagua */
+    --brand-2-dark: #1e5028;
+    --brand-soft:   #dde7f5;
+    --brand-2-soft: #dcebe0;
+    --brand-bg:     #f5f8fc;
+    --brand-2-bg:   #f4faf6;
+    --accent-1:     #e8a020;       /* Dorado */
+    --accent-2:     #a85d2c;       /* Tierra */
+    --accent-3:     #7d4ea8;       /* Lavanda */
+    --accent-4:     #0d8a9c;       /* Cyan */
+    --accent-5:     #c0594d;       /* Coral */
+    --pos:          #16a34a;
+    --pos-bg:       #f0fdf4;
+    --neg:          #dc2626;
+    --neg-bg:       #fef2f2;
+    --gris-fondo:   #fafafa;
+    --gris-borde:   #ededed;
+    --gris-borde-soft:#f4f4f5;
+    --texto:        #0a0a0a;
+    --texto-soft:   #666;
+    --texto-muted:  #999;
   }
 
-  * { margin:0; padding:0; box-sizing:border-box; }
-
-  body {
-    font-family:'Barlow', sans-serif;
-    background: var(--gris);
-    color: var(--texto);
-    min-height: 100vh;
+  body{
+    font-family:'Geist',-apple-system,BlinkMacSystemFont,sans-serif;
+    background:var(--gris-fondo);
+    color:var(--texto);
+    min-height:100vh;
+    font-size:14px;
   }
 
-  /* ── LOGIN ── */
-  #pag-login {
-    position:fixed; inset:0;
-    background:linear-gradient(135deg,#1e3f7a 0%,#2d6e3e 100%);
-    display:flex; align-items:center; justify-content:center; z-index:9999;
+  /* ────────────────────── LOGIN ────────────────────── */
+  #pag-login{
+    position:fixed;inset:0;z-index:9999;
+    background:linear-gradient(135deg,var(--brand) 0%,var(--brand-2) 100%);
+    display:flex;align-items:center;justify-content:center;
+    padding:20px;
   }
-  #pag-login.oculto { display:none; }
-  .login-box {
-    background:white; border-radius:12px; padding:40px 48px;
-    width:100%; max-width:380px; text-align:center;
+  #pag-login.oculto{display:none}
+  #pag-login::before{
+    content:'';position:absolute;top:-100px;right:-100px;
+    width:400px;height:400px;
+    background:radial-gradient(circle,rgba(255,255,255,0.1),transparent 70%);
+    border-radius:50%;
+  }
+  #pag-login::after{
+    content:'';position:absolute;bottom:-150px;left:-150px;
+    width:500px;height:500px;
+    background:radial-gradient(circle,rgba(255,255,255,0.08),transparent 70%);
+    border-radius:50%;
+  }
+  .login-box{
+    background:white;border-radius:16px;padding:40px 44px;
+    width:100%;max-width:400px;text-align:center;
     box-shadow:0 20px 60px rgba(0,0,0,0.3);
+    position:relative;z-index:1;
   }
-  .login-logo { font-family:"Barlow Condensed",sans-serif; font-size:32px; font-weight:800; color:var(--azul); margin-bottom:2px; }
-  .login-sub  { font-size:11px; color:var(--verde-claro); font-weight:700; margin-bottom:28px; letter-spacing:1.5px; text-transform:uppercase; }
-  .login-titulo { font-family:"Barlow Condensed",sans-serif; font-size:15px; font-weight:600; color:#888; margin-bottom:20px; }
-  .login-input { width:100%; padding:11px 14px; border:1px solid #e0e4ec; border-radius:6px; font-size:14px; margin-bottom:10px; outline:none; box-sizing:border-box; }
-  .login-input:focus { border-color:var(--azul-medio); }
-  .login-btn { width:100%; padding:12px; background:linear-gradient(135deg,#1e3f7a,#2d6e3e); color:white; border:none; border-radius:6px; font-family:"Barlow Condensed",sans-serif; font-size:16px; font-weight:700; cursor:pointer; margin-top:6px; }
-  .login-btn:hover { opacity:0.9; }
-  .login-btn:disabled { background:#aaa; cursor:not-allowed; }
-  .login-error { color:var(--rojo); font-size:13px; margin-top:10px; min-height:18px; }
-
-  /* ── HEADER ── */
-  .header {
-    background:#fff;
-    border-bottom:1px solid #e0e4ec;
-    padding:12px 36px;
-    display:flex; align-items:center; justify-content:space-between;
-    box-shadow:0 1px 4px rgba(30,63,122,0.06);
-    position:sticky; top:0; z-index:100;
+  .login-logo-wrap{
+    width:56px;height:56px;
+    background:linear-gradient(135deg,var(--brand),var(--brand-2));
+    border-radius:14px;
+    display:flex;align-items:center;justify-content:center;
+    color:white;font-weight:700;font-size:22px;
+    margin:0 auto 18px;
+    box-shadow:0 6px 20px rgba(30,63,122,0.3);
   }
-  .header-brand { display:flex; flex-direction:column; }
-  .hdr-name { font-family:'Barlow Condensed',sans-serif; font-size:20px; font-weight:700; color:#1e3f7a; letter-spacing:1px; }
-  .hdr-sub  { font-size:11px; color:#3a8a4e; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; margin-top:1px; }
-  .header-right { display:flex; flex-direction:column; align-items:flex-end; gap:5px; }
-  .header-depto { font-size:12px; font-weight:700; color:#fff; background:#2d6e3e; padding:3px 10px; border-radius:4px; }
-  .header-fecha { font-size:11px; color:#999; }
-  .logout-btn { background:none; border:1px solid #dde1ea; border-radius:4px; padding:4px 12px; font-size:11px; cursor:pointer; color:#888; }
+  .login-logo{font-size:24px;font-weight:600;color:var(--texto);letter-spacing:-0.5px}
+  .login-sub{font-size:11px;color:var(--brand-2);font-weight:600;margin-top:4px;margin-bottom:28px;letter-spacing:1.5px;text-transform:uppercase;font-family:'Geist Mono',monospace}
+  .login-titulo{font-size:13px;color:var(--texto-soft);margin-bottom:18px;text-align:left;font-weight:500}
+  .login-input{
+    width:100%;padding:11px 14px;
+    border:1px solid var(--gris-borde);border-radius:8px;
+    font-size:14px;margin-bottom:10px;outline:none;
+    font-family:inherit;
+    transition:border-color .15s, box-shadow .15s;
+  }
+  .login-input:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+  .login-btn{
+    width:100%;padding:12px;
+    background:linear-gradient(135deg,var(--brand),var(--brand-2));
+    color:white;border:none;border-radius:8px;
+    font-family:inherit;font-size:14px;font-weight:600;
+    cursor:pointer;margin-top:8px;
+    transition:transform .15s, box-shadow .15s;
+  }
+  .login-btn:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(30,63,122,0.25)}
+  .login-btn:disabled{background:#aaa;cursor:not-allowed;transform:none;box-shadow:none}
+  .login-error{color:var(--neg);font-size:12px;margin-top:10px;min-height:18px}
 
-  /* ── NAV TABS ── */
-  #portal { display:none; }
-  #portal.visible { display:block; }
+  /* ────────────────────── HEADER ────────────────────── */
+  .header{
+    background:white;
+    border-bottom:1px solid var(--gris-borde);
+    padding:14px 32px;
+    display:flex;align-items:center;justify-content:space-between;
+    position:sticky;top:0;z-index:100;
+  }
+  .brand-blk{display:flex;align-items:center;gap:12px}
+  .brand-logo{
+    width:36px;height:36px;
+    background:linear-gradient(135deg,var(--brand),var(--brand-2));
+    border-radius:9px;
+    display:flex;align-items:center;justify-content:center;
+    color:white;font-weight:700;font-size:14px;letter-spacing:-0.5px;
+    box-shadow:0 2px 6px rgba(30,63,122,0.25);
+  }
+  .brand-name{font-size:15px;font-weight:600;letter-spacing:-0.3px;color:var(--texto)}
+  .brand-name span{color:var(--texto-soft);font-weight:400;margin-left:6px;font-size:13px}
+  .header-actions{display:flex;align-items:center;gap:8px;position:relative}
+  .btn-icon{
+    width:34px;height:34px;border-radius:8px;
+    border:1px solid var(--gris-borde);background:white;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;color:var(--texto-soft);font-size:14px;
+    transition:all .15s;
+  }
+  .btn-icon:hover{background:var(--brand-bg);color:var(--brand);border-color:var(--brand-soft)}
+  .avatar{
+    width:34px;height:34px;border-radius:9px;
+    background:linear-gradient(135deg,var(--brand-2),#4a8e5d);
+    color:white;display:flex;align-items:center;justify-content:center;
+    font-weight:600;font-size:12px;cursor:pointer;
+    box-shadow:0 2px 6px rgba(45,110,62,0.25);
+    user-select:none;
+  }
+  .user-dropdown{
+    position:absolute;top:42px;right:0;
+    background:white;border:1px solid var(--gris-borde);
+    border-radius:10px;
+    box-shadow:0 8px 24px rgba(0,0,0,0.1);
+    padding:14px 16px 10px;min-width:240px;z-index:200;
+    display:none;
+  }
+  .user-dropdown.abierto{display:block}
+  .udd-header{padding-bottom:10px;border-bottom:1px solid var(--gris-borde-soft);margin-bottom:8px}
+  .udd-nombre{font-size:14px;font-weight:600;color:var(--texto);letter-spacing:-0.2px}
+  .udd-cargo{font-size:11px;color:var(--texto-soft);margin-top:2px}
+  .udd-email{font-size:10px;color:var(--texto-muted);margin-top:3px;font-family:'Geist Mono',monospace;word-break:break-all}
+  .udd-btn{
+    display:block;width:100%;padding:8px 10px;
+    background:none;border:1px solid var(--neg-bg);
+    color:var(--neg);border-radius:7px;
+    font-family:inherit;font-size:12px;font-weight:600;
+    cursor:pointer;text-align:center;
+    transition:all .15s;
+  }
+  .udd-btn:hover{background:var(--neg-bg);border-color:var(--neg)}
 
-  .nav-tabs {
-    background:#fff;
-    border-bottom:1px solid #e0e4ec;
+  /* ────────────────────── PORTAL ────────────────────── */
+  #portal{display:none}
+  #portal.visible{display:block}
+
+  /* TABS */
+  .nav-tabs{
+    background:white;
+    border-bottom:1px solid var(--gris-borde);
     display:flex;
-    padding:0 36px;
-    gap:0;
+    padding:0 32px;
+    overflow-x:auto;
   }
-  .nav-tab {
-    padding:12px 20px;
-    font-family:'Barlow Condensed',sans-serif;
-    font-size:13px; font-weight:700;
-    letter-spacing:0.5px; text-transform:uppercase;
-    color:#888; cursor:pointer;
-    border-bottom:3px solid transparent;
-    transition:all 0.15s;
+  .nav-tab{
+    padding:12px 18px;
+    font-size:13px;font-weight:500;color:var(--texto-soft);
+    cursor:pointer;
+    border-bottom:2px solid transparent;
+    transition:all .15s;
+    white-space:nowrap;
   }
-  .nav-tab:hover { color:var(--azul); }
-  .nav-tab.activo { color:var(--azul); border-bottom-color:var(--dorado); }
+  .nav-tab:hover{color:var(--brand)}
+  .nav-tab.activo{color:var(--brand);border-bottom-color:var(--brand);font-weight:600}
 
-  /* ── PÁGINAS ── */
-  .tab-page { display:none; }
-  .tab-page.activo { display:block; }
+  .tab-page{display:none}
+  .tab-page.activo{display:block}
 
-  /* ── INICIO ── */
-  .portal-hero {
-    background:linear-gradient(135deg, var(--azul) 0%, var(--azul-medio) 60%, var(--azul-claro) 100%);
-    padding:32px 40px 24px;
-    text-align:center; color:white;
+  /* ────────────────────── HERO ────────────────────── */
+  .portal-hero{
+    padding:28px 32px 24px;
+    background:linear-gradient(135deg,#fafafa,var(--brand-bg) 50%, var(--brand-2-bg));
+    border-bottom:1px solid var(--gris-borde);
+    position:relative;overflow:hidden;
   }
-  .portal-hero h1 {
-    font-family:"Barlow Condensed",sans-serif;
-    font-size:34px; font-weight:800; letter-spacing:1px;
-    text-transform:uppercase; margin-bottom:4px;
+  .portal-hero::before{
+    content:'';position:absolute;top:-50px;right:-50px;
+    width:300px;height:300px;
+    background:radial-gradient(circle,var(--brand-2-soft),transparent 70%);
+    opacity:0.5;
   }
-  .portal-hero p { font-size:13px; opacity:0.85; letter-spacing:2px; text-transform:uppercase; }
-
-  .portal-body { max-width:1100px; margin:0 auto; padding:28px 24px; }
-
-  .seccion { margin-bottom:28px; }
-  .seccion-titulo {
-    font-size:10px; font-weight:700; color:#1e3f7a;
-    text-transform:uppercase; letter-spacing:0.08em;
-    margin-bottom:10px; padding-bottom:6px;
-    border-bottom:2px solid var(--dorado);
+  .portal-hero::after{
+    content:'';position:absolute;bottom:-80px;left:-80px;
+    width:300px;height:300px;
+    background:radial-gradient(circle,var(--brand-soft),transparent 70%);
+    opacity:0.5;
+  }
+  .hero-eyebrow{
+    display:inline-flex;align-items:center;gap:6px;
+    font-family:'Geist Mono',monospace;font-size:11px;color:var(--brand-2);
+    background:white;padding:5px 12px;
+    border:1px solid var(--brand-2-soft);border-radius:100px;
+    margin-bottom:16px;font-weight:500;
+    position:relative;z-index:1;
+  }
+  .hero-eyebrow::before{
+    content:'';width:6px;height:6px;background:var(--brand-2);border-radius:50%;
+    animation:pulse 2s infinite;
+  }
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+  .portal-hero h1{
+    font-size:30px;font-weight:600;letter-spacing:-1.2px;line-height:1.1;
+    color:var(--texto);position:relative;z-index:1;
+  }
+  .portal-hero h1 .grad{
+    background:linear-gradient(90deg,var(--brand),var(--brand-2));
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    background-clip:text;
+  }
+  .portal-hero p{
+    font-size:13px;color:var(--texto-soft);
+    margin-top:10px;max-width:560px;line-height:1.5;
+    position:relative;z-index:1;
   }
 
-  .grid { display:grid; gap:10px; }
-  .grid-2 { grid-template-columns:repeat(2,1fr); }
-  .grid-3 { grid-template-columns:repeat(3,1fr); }
-  .grid-4 { grid-template-columns:repeat(4,1fr); }
+  /* ────────────────────── PORTAL BODY ────────────────────── */
+  .portal-body{padding:22px 32px 28px;max-width:1400px;margin:0 auto}
 
-  .portal-btn {
-    display:flex; flex-direction:column; align-items:flex-start; justify-content:center;
-    padding:18px 20px;
-    border:none; border-radius:8px;
-    font-family:"Barlow Condensed",sans-serif;
-    cursor:pointer; transition:all 0.15s;
-    text-decoration:none;
-    position:relative; overflow:hidden;
-    min-height:68px;
+  .seccion{margin-bottom:32px}
+  .seccion-titulo{
+    font-size:11px;font-weight:600;color:var(--texto-soft);
+    letter-spacing:1.5px;text-transform:uppercase;
+    margin-bottom:14px;padding-left:12px;
+    border-left:3px solid var(--brand);
+    display:flex;align-items:center;gap:10px;
   }
-  .portal-btn:hover { transform:translateY(-2px); filter:brightness(1.08); box-shadow:0 6px 20px rgba(0,0,0,0.15); }
-  .portal-btn .btn-label { font-size:15px; font-weight:700; letter-spacing:0.5px; color:white; text-transform:uppercase; line-height:1.2; }
-  .portal-btn .btn-sub   { font-size:11px; font-weight:400; color:rgba(255,255,255,0.78); margin-top:3px; }
-  .badge-nuevo { position:absolute; top:8px; right:8px; background:rgba(255,255,255,0.25); color:white; font-size:9px; font-weight:700; padding:2px 7px; border-radius:10px; letter-spacing:1px; }
+  .seccion:nth-child(1) .seccion-titulo{border-left-color:var(--brand-2)}
+  .seccion:nth-child(3) .seccion-titulo{border-left-color:var(--accent-3)}
+  .seccion:nth-child(4) .seccion-titulo{border-left-color:var(--accent-1)}
+  .seccion:nth-child(5) .seccion-titulo{border-left-color:var(--accent-2)}
+  .seccion:nth-child(6) .seccion-titulo{border-left-color:var(--accent-5)}
 
-  .btn-azul    { background:var(--azul-medio); }
-  .btn-verde   { background:var(--verde); }
-  .btn-naranja { background:var(--naranja); }
-  .btn-gris    { background:#7f8c8d; }
-  .btn-oscuro  { background:#34495e; }
-  .btn-rojo    { background:#a93226; }
-  .btn-pronto  { background:#b0bec5; cursor:default; }
-  .btn-pronto:hover { transform:none; filter:none; box-shadow:none; }
-  .btn-pronto .btn-label { color:rgba(255,255,255,0.7); }
-  .btn-pronto .btn-sub   { color:rgba(255,255,255,0.5); }
+  .grid{display:grid;gap:14px}
+  .grid-2{grid-template-columns:repeat(2,1fr)}
+  .grid-3{grid-template-columns:repeat(3,1fr)}
 
-  /* ── MAPA ── */
-  .mapa-wrap { padding:20px 36px 28px; }
-  .mapa-titulo { font-size:10px; font-weight:700; color:#1e3f7a; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:10px; padding-bottom:6px; border-bottom:2px solid var(--dorado); }
-  .mapa-iframe { width:100%; height:580px; border:none; border-radius:8px; border:1px solid #e0e4ec; box-shadow:0 2px 8px rgba(0,0,0,0.08); }
-
-  /* ── REPORTERÍA ── */
-  .rep-wrap { padding:20px 36px 28px; max-width:1100px; margin:0 auto; }
-
-  /* ── CONTACTO ── */
-  .contacto-wrap {
-    max-width:680px; margin:0 auto; padding:32px 24px;
+  /* ────────────────────── BOTONES PORTAL ────────────────────── */
+  .portal-btn{
+    background:white;border:1px solid #e0e4ec;border-radius:12px;
+    padding:18px 20px;text-decoration:none;color:var(--texto);
+    display:flex;flex-direction:column;gap:6px;
+    cursor:pointer;transition:all .2s;
+    position:relative;overflow:hidden;min-height:84px;
+    box-shadow:0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03);
   }
-  .contacto-titulo { font-family:'Barlow Condensed',sans-serif; font-size:28px; font-weight:700; color:var(--azul); margin-bottom:6px; }
-  .contacto-sub { font-size:13px; color:#888; margin-bottom:28px; }
-  .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }
-  .form-full { margin-bottom:14px; }
-  .form-label { font-size:11px; font-weight:700; color:#888; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:5px; display:block; }
-  .form-input {
-    width:100%; padding:11px 14px; border:1px solid #e0e4ec;
-    border-radius:6px; font-size:14px; font-family:'Barlow',sans-serif;
-    outline:none; background:#fff; color:var(--texto);
+  .portal-btn::before{
+    content:'';position:absolute;left:0;top:0;bottom:0;width:4px;
+    background:var(--brand);opacity:0.6;transition:all .2s;
   }
-  .form-input:focus { border-color:var(--azul-medio); }
-  textarea.form-input { resize:vertical; min-height:120px; }
-  .form-btn {
-    background:linear-gradient(135deg,#1e3f7a,#2d6e3e);
-    color:white; border:none; border-radius:6px;
-    padding:12px 32px; font-family:'Barlow Condensed',sans-serif;
-    font-size:15px; font-weight:700; cursor:pointer; letter-spacing:0.5px;
+  .portal-btn::after{
+    content:'';position:absolute;inset:0;border-radius:12px;
+    background:linear-gradient(135deg,transparent 60%,rgba(30,63,122,0.025));
+    pointer-events:none;
   }
-  .form-btn:hover { opacity:0.9; }
-  .form-msg { margin-top:10px; font-size:13px; min-height:18px; }
-  .contacto-info { margin-top:28px; padding-top:20px; border-top:1px solid #e0e4ec; display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px; }
-  .contacto-info-item { font-size:12px; color:#666; }
-  .contacto-info-item strong { display:block; color:var(--azul); font-weight:700; font-size:13px; }
+  .portal-btn:hover{
+    transform:translateY(-3px);
+    border-color:var(--brand);
+    box-shadow:0 8px 20px rgba(30,63,122,0.12), 0 2px 4px rgba(0,0,0,0.05);
+  }
+  .portal-btn:hover::before{opacity:1;width:5px}
+  .portal-btn .btn-icon-wrap{
+    width:34px;height:34px;border-radius:9px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:18px;margin-bottom:4px;
+  }
+  .portal-btn .btn-label{font-size:14px;font-weight:600;letter-spacing:-0.2px}
+  .portal-btn .btn-sub{font-size:12px;color:var(--texto-soft);line-height:1.4}
+  .portal-btn .btn-arrow{
+    margin-top:8px;font-size:12px;color:var(--brand);font-weight:600;
+    display:flex;align-items:center;gap:4px;
+  }
+  .portal-btn .btn-arrow::after{content:'→';transition:transform .15s}
+  .portal-btn:hover .btn-arrow::after{transform:translateX(3px)}
 
-  /* ── PIE ── */
-  .portal-footer {
-    text-align:center; padding:16px;
-    font-size:11px; color:#aaa;
-    border-top:1px solid #e0e0e0;
+  /* Variantes de color para botones */
+  .portal-btn.btn-verde::before{background:var(--brand-2);opacity:0.7}
+  .portal-btn.btn-verde .btn-icon-wrap{background:var(--brand-2-soft);color:var(--brand-2)}
+  .portal-btn.btn-verde .btn-arrow{color:var(--brand-2)}
+  .portal-btn.btn-verde:hover{border-color:var(--brand-2-soft)}
+
+  .portal-btn.btn-azul::before{background:var(--brand);opacity:0.7}
+  .portal-btn.btn-azul .btn-icon-wrap{background:var(--brand-soft);color:var(--brand)}
+  .portal-btn.btn-azul .btn-arrow{color:var(--brand)}
+
+  .portal-btn.btn-naranja::before{background:var(--accent-1);opacity:0.7}
+  .portal-btn.btn-naranja .btn-icon-wrap{background:#fcefd8;color:var(--accent-1)}
+  .portal-btn.btn-naranja .btn-arrow{color:var(--accent-1)}
+  .portal-btn.btn-naranja:hover{border-color:#fcefd8}
+
+  .portal-btn.btn-rojo::before{background:var(--accent-5);opacity:0.7}
+  .portal-btn.btn-rojo .btn-icon-wrap{background:#fce8e4;color:var(--accent-5)}
+  .portal-btn.btn-rojo .btn-arrow{color:var(--accent-5)}
+  .portal-btn.btn-rojo:hover{border-color:#fce8e4}
+
+  .portal-btn.btn-morado::before{background:var(--accent-3);opacity:0.7}
+  .portal-btn.btn-morado .btn-icon-wrap{background:#e8dff0;color:var(--accent-3)}
+  .portal-btn.btn-morado .btn-arrow{color:var(--accent-3)}
+  .portal-btn.btn-morado:hover{border-color:#e8dff0}
+
+  .portal-btn.btn-cyan::before{background:var(--accent-4);opacity:0.7}
+  .portal-btn.btn-cyan .btn-icon-wrap{background:#d8f0f3;color:var(--accent-4)}
+  .portal-btn.btn-cyan .btn-arrow{color:var(--accent-4)}
+  .portal-btn.btn-cyan:hover{border-color:#d8f0f3}
+
+  /* Botón gris (próximamente / inactivo) */
+  .portal-btn.btn-gris{opacity:0.65;cursor:not-allowed;box-shadow:none}
+  .portal-btn.btn-gris::before{background:#bbb;opacity:0.5}
+  .portal-btn.btn-gris:hover{transform:none;box-shadow:none;border-color:var(--gris-borde)}
+  .portal-btn.btn-gris .btn-icon-wrap{background:var(--gris-borde);color:var(--texto-muted)}
+  .portal-btn.btn-gris .btn-arrow{color:var(--texto-muted)}
+  .portal-btn.btn-gris .btn-arrow::after{content:'·'}
+
+  .badge-nuevo{
+    position:absolute;top:14px;right:14px;
+    font-family:'Geist Mono',monospace;
+    background:var(--pos-bg);color:var(--pos);
+    font-size:9px;font-weight:600;
+    padding:2px 7px;border-radius:5px;
+    letter-spacing:0.5px;
+  }
+
+  /* ────────────────────── REPORTERÍA ────────────────────── */
+  .rep-wrap{padding:24px 32px 28px;max-width:1400px;margin:0 auto}
+
+  /* ────────────────────── MAPA ────────────────────── */
+  .mapa-wrap{padding:24px 32px 28px;max-width:1400px;margin:0 auto}
+  .mapa-titulo{
+    font-size:18px;font-weight:600;letter-spacing:-0.3px;color:var(--texto);
+    margin-bottom:14px;display:flex;align-items:center;gap:10px;
+  }
+  .mapa-titulo::before{content:'';width:4px;height:18px;background:linear-gradient(to bottom,var(--brand),var(--brand-2));border-radius:2px}
+  .mapa-iframe{
+    width:100%;height:75vh;border:1px solid var(--gris-borde);border-radius:12px;
+  }
+
+  /* ────────────────────── CONTACTO ────────────────────── */
+  .contacto-wrap{
+    padding:48px 28px;max-width:780px;margin:0 auto;
+  }
+  .contacto-titulo{
+    font-size:32px;font-weight:600;letter-spacing:-1px;color:var(--texto);
+  }
+  .contacto-titulo .grad{
+    background:linear-gradient(90deg,var(--brand),var(--brand-2));
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    background-clip:text;
+  }
+  .contacto-sub{font-size:14px;color:var(--texto-soft);margin-top:6px;margin-bottom:28px}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+  .form-full{margin-bottom:14px}
+  .form-label{display:block;font-size:12px;font-weight:500;color:var(--texto-soft);margin-bottom:6px}
+  .form-input{
+    width:100%;padding:10px 14px;
+    border:1px solid var(--gris-borde);border-radius:8px;
+    font-family:inherit;font-size:14px;outline:none;
+    transition:border-color .15s, box-shadow .15s;
+  }
+  .form-input:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+  textarea.form-input{min-height:100px;resize:vertical}
+  .form-btn{
+    padding:11px 22px;
+    background:linear-gradient(135deg,var(--brand),var(--brand-2));
+    color:white;border:none;border-radius:8px;
+    font-family:inherit;font-size:14px;font-weight:600;
+    cursor:pointer;
+    transition:transform .15s, box-shadow .15s;
+  }
+  .form-btn:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(30,63,122,0.25)}
+  .form-msg{margin-top:12px;font-size:13px;min-height:18px}
+  .contacto-info{
+    margin-top:36px;padding-top:24px;
+    border-top:1px solid var(--gris-borde);
+    display:grid;grid-template-columns:repeat(3,1fr);gap:18px;font-size:12px;color:var(--texto-soft);
+  }
+  .contacto-info-item strong{display:block;color:var(--texto);font-weight:600;font-size:13px;margin-bottom:3px}
+
+  /* ────────────────────── FOOTER ────────────────────── */
+  .portal-footer{
+    text-align:center;font-size:12px;color:var(--texto-muted);
+    padding:24px;border-top:1px solid var(--gris-borde);
+    margin-top:24px;background:white;
+  }
+  .portal-footer strong{color:var(--brand);font-weight:600}
+
+  /* ────────────────────── RESPONSIVE ────────────────────── */
+  @media (max-width:768px){
+    .portal-hero h1{font-size:28px}
+    .grid-3,.grid-2{grid-template-columns:1fr}
+    .form-grid{grid-template-columns:1fr}
+    .contacto-info{grid-template-columns:1fr}
+    .portal-body,.rep-wrap,.contacto-wrap{padding:18px}
   }
 </style>
 </head>
 <body>
 
-<!-- LOGIN -->
+<!-- ════════════════════════ LOGIN ════════════════════════ -->
 <div id="pag-login">
   <div class="login-box">
-    <div class="login-logo">CHUMBAGUA</div>
-    <div class="login-sub">Azúcar · Energía · Honduras</div>
-    <div class="login-titulo">Acceso al Sistema</div>
+    <div class="login-logo-wrap">CH</div>
+    <div class="login-logo">Chumbagua</div>
+    <div class="login-sub">Inteligencia Agrícola</div>
+    <div class="login-titulo">Acceso al sistema</div>
     <input class="login-input" type="email" id="login-email" placeholder="Correo electrónico"/>
     <input class="login-input" type="password" id="login-pass" placeholder="Contraseña" onkeydown="if(event.key==='Enter')doLogin()"/>
-    <button class="login-btn" id="login-btn" onclick="doLogin()">INGRESAR</button>
+    <button class="login-btn" id="login-btn" onclick="doLogin()">Ingresar</button>
     <div class="login-error" id="login-error"></div>
   </div>
 </div>
 
-<!-- HEADER -->
-<div class="header">
-  <div class="header-brand">
-    <span class="hdr-name">CHUMBAGUA</span>
-    <span class="hdr-sub">Azúcar · Energía · Honduras</span>
+<!-- ════════════════════════ HEADER ════════════════════════ -->
+<div class="header" style="display:none" id="hdr">
+  <div class="brand-blk">
+    <div class="brand-logo">C</div>
+    <div class="brand-name">Chumbagua <span>· Inteligencia Agrícola</span></div>
   </div>
-  <div class="header-right">
-    <span class="header-depto">Depto. de Estadística Agrícola</span>
-    <span class="header-fecha" id="fecha-header">—</span>
-    <button class="logout-btn" onclick="doLogout()">Cerrar sesión</button>
+  <div class="header-actions">
+    <button class="btn-icon" title="Buscar">⌘</button>
+    <button class="btn-icon" title="Ayuda">?</button>
+    <div class="avatar" id="user-avatar" onclick="toggleUserDropdown()" title="Mi sesión">RB</div>
+    <div class="user-dropdown" id="user-dropdown">
+      <div class="udd-header">
+        <div class="udd-nombre" id="udd-nombre">Cargando...</div>
+        <div class="udd-cargo" id="udd-cargo">—</div>
+        <div class="udd-email" id="udd-email">—</div>
+      </div>
+      <button class="udd-btn" onclick="doLogout()">Cerrar sesión</button>
+    </div>
   </div>
 </div>
 
-<!-- PORTAL -->
+<!-- ════════════════════════ PORTAL ════════════════════════ -->
 <div id="portal">
 
   <!-- TABS -->
   <div class="nav-tabs">
-    <div class="nav-tab activo" onclick="irTab('inicio')">Inicio</div>
-    <div class="nav-tab" onclick="irTab('reporteria')">Reportería</div>
+    <div class="nav-tab activo" onclick="irTab('modulos')">Módulos</div>
     <div class="nav-tab" onclick="irTab('mapa')">Mapa</div>
     <div class="nav-tab" onclick="irTab('contacto')">Contacto</div>
   </div>
 
-  <!-- TAB: INICIO -->
-  <div id="tab-inicio" class="tab-page activo">
+
+  <!-- TAB: MÓDULOS -->
+  <div id="tab-modulos" class="tab-page activo">
+
     <div class="portal-hero">
-      <h1>Gerencia Agrícola</h1>
-      <p>Sistema de Inteligencia Agrícola · Zafra 2025-2026</p>
+      <div class="hero-eyebrow">Sistema en línea · Zafra 2025–2026</div>
+      <h1>Datos que <span class="grad">cultivan decisiones</span></h1>
+      <p>Plataforma centralizada de análisis y reportería para los procesos agrícolas. Tableros interactivos con datos en tiempo real desde SAP y control granular de acceso.</p>
     </div>
+
     <div class="portal-body">
 
       <div class="seccion">
@@ -246,16 +476,22 @@
         <div class="grid grid-3">
           <a href="cosecha.html" class="portal-btn btn-verde">
             <span class="badge-nuevo">NUEVO</span>
+            <div class="btn-icon-wrap">🌾</div>
             <span class="btn-label">Avance de Cosecha</span>
-            <span class="btn-sub">Resumen, frescura, escenarios</span>
+            <span class="btn-sub">Resumen, frescura, escenarios de molienda</span>
+            <span class="btn-arrow">Abrir módulo</span>
           </a>
           <a href="#" class="portal-btn btn-gris">
+            <div class="btn-icon-wrap">📅</div>
             <span class="btn-label">Prog. Cosecha</span>
             <span class="btn-sub">Programa diario</span>
+            <span class="btn-arrow">Próximamente</span>
           </a>
           <a href="#" class="portal-btn btn-gris">
+            <div class="btn-icon-wrap">⚙️</div>
             <span class="btn-label">Eficiencias Cosecha</span>
             <span class="btn-sub">Indicadores operativos</span>
+            <span class="btn-arrow">Próximamente</span>
           </a>
         </div>
       </div>
@@ -265,16 +501,23 @@
         <div class="grid grid-3">
           <a href="rendimientos.html" class="portal-btn btn-azul">
             <span class="badge-nuevo">NUEVO</span>
+            <div class="btn-icon-wrap">📊</div>
             <span class="btn-label">Rendimientos Zafra</span>
-            <span class="btn-sub">Fincas, lotes, variedades</span>
+            <span class="btn-sub">TCH por finca, lote y variedad</span>
+            <span class="btn-arrow">Abrir módulo</span>
           </a>
-          <a href="#" class="portal-btn btn-gris">
+          <a href="variedades.html" class="portal-btn btn-morado">
+            <span class="badge-nuevo">NUEVO</span>
+            <div class="btn-icon-wrap">🧬</div>
             <span class="btn-label">Análisis de Variedades</span>
             <span class="btn-sub">Comportamiento TCH por ciclo</span>
+            <span class="btn-arrow">Abrir módulo</span>
           </a>
           <a href="#" class="portal-btn btn-gris">
+            <div class="btn-icon-wrap">💧</div>
             <span class="btn-label">Análisis Riegos</span>
             <span class="btn-sub">Seguimiento sistemas de riego</span>
+            <span class="btn-arrow">Próximamente</span>
           </a>
         </div>
       </div>
@@ -283,13 +526,17 @@
         <div class="seccion-titulo">Planificación & Labores</div>
         <div class="grid grid-2">
           <a href="#" class="portal-btn btn-gris">
+            <div class="btn-icon-wrap">📋</div>
             <span class="btn-label">Planificación de Labores</span>
             <span class="btn-sub">Programación agrícola</span>
+            <span class="btn-arrow">Próximamente</span>
           </a>
-          <a href="plantios.html" class="portal-btn btn-azul">
+          <a href="plantios.html" class="portal-btn btn-cyan">
             <span class="badge-nuevo">NUEVO</span>
+            <div class="btn-icon-wrap">🗺️</div>
             <span class="btn-label">Maestro de Plantíos</span>
             <span class="btn-sub">Catálogo · Variedades · Mapa interactivo</span>
+            <span class="btn-arrow">Abrir módulo</span>
           </a>
         </div>
       </div>
@@ -298,12 +545,16 @@
         <div class="seccion-titulo">Costos & Finanzas</div>
         <div class="grid grid-2">
           <a href="#" class="portal-btn btn-naranja">
+            <div class="btn-icon-wrap">💰</div>
             <span class="btn-label">Costos por Distrito</span>
             <span class="btn-sub">Análisis de costos distritales</span>
+            <span class="btn-arrow">Próximamente</span>
           </a>
           <a href="#" class="portal-btn btn-naranja">
+            <div class="btn-icon-wrap">📈</div>
             <span class="btn-label">Costos Gerencia Agrícola</span>
             <span class="btn-sub">Consolidado gerencial</span>
+            <span class="btn-arrow">Próximamente</span>
           </a>
         </div>
       </div>
@@ -311,17 +562,23 @@
       <div class="seccion">
         <div class="seccion-titulo">Operaciones & Maquinaria</div>
         <div class="grid grid-3">
-          <a href="#" class="portal-btn btn-oscuro">
+          <a href="#" class="portal-btn btn-gris">
+            <div class="btn-icon-wrap">🚜</div>
             <span class="btn-label">Maquinaria y Operaciones</span>
             <span class="btn-sub">Control de equipos</span>
+            <span class="btn-arrow">Próximamente</span>
           </a>
-          <a href="#" class="portal-btn btn-oscuro">
+          <a href="https://chumbaguastevenleon.wixsite.com/tallermecnico" target="_blank" class="portal-btn btn-cyan">
+            <div class="btn-icon-wrap">🔧</div>
             <span class="btn-label">Plataforma Taller Mecánico</span>
             <span class="btn-sub">Mantenimiento y reparaciones</span>
+            <span class="btn-arrow">Abrir externo</span>
           </a>
-          <a href="#" class="portal-btn btn-oscuro">
+          <a href="https://beta.naxsolutions.com/" target="_blank" class="portal-btn btn-cyan">
+            <div class="btn-icon-wrap">🔌</div>
             <span class="btn-label">NAX Solutions</span>
             <span class="btn-sub">Integración NAX</span>
+            <span class="btn-arrow">Abrir externo</span>
           </a>
         </div>
       </div>
@@ -329,68 +586,28 @@
       <div class="seccion">
         <div class="seccion-titulo">Programación & Seguridad</div>
         <div class="grid grid-2">
-          <a href="#" class="portal-btn btn-verde">
+          <a href="#" class="portal-btn btn-gris">
+            <div class="btn-icon-wrap">📆</div>
             <span class="btn-label">Programación Diaria</span>
             <span class="btn-sub">Reporte operativo del día</span>
+            <span class="btn-arrow">Próximamente</span>
           </a>
           <a href="cosecha.html#quemas" class="portal-btn btn-rojo">
+            <div class="btn-icon-wrap">🔥</div>
             <span class="btn-label">Quemas Criminales</span>
-            <span class="btn-sub">Registro histórico</span>
+            <span class="btn-sub">Registro histórico de incidentes</span>
+            <span class="btn-arrow">Abrir módulo</span>
           </a>
         </div>
       </div>
 
     </div>
+
     <div class="portal-footer">
-      Depto. de Estadística Agrícola &nbsp;|&nbsp; Compañía Azucarera Chumbagua &nbsp;|&nbsp; Zafra 2025-2026
+      by <strong>Departamento de Estadística Agrícola</strong> &nbsp;|&nbsp; Compañía Azucarera Chumbagua &nbsp;|&nbsp; Zafra 2025–2026
     </div>
   </div>
 
-  <!-- TAB: REPORTERÍA -->
-  <div id="tab-reporteria" class="tab-page">
-    <div class="portal-hero">
-      <h1>Reportería</h1>
-      <p>Módulos de análisis y seguimiento agrícola</p>
-    </div>
-    <div class="rep-wrap">
-      <div class="grid grid-3" style="margin-top:8px;">
-        <a href="cosecha.html" class="portal-btn btn-verde" style="min-height:90px;">
-          <span class="badge-nuevo">NUEVO</span>
-          <span class="btn-label">Avance de Cosecha</span>
-          <span class="btn-sub">Resumen, frescura, quemas, escenarios molienda</span>
-        </a>
-        <a href="rendimientos.html" class="portal-btn btn-azul" style="min-height:90px;">
-          <span class="badge-nuevo">NUEVO</span>
-          <span class="btn-label">Rendimientos Zafra</span>
-          <span class="btn-sub">TCH por finca, lote y variedad</span>
-        </a>
-        <a href="plantios.html" class="portal-btn btn-azul" style="min-height:90px;">
-          <span class="badge-nuevo">NUEVO</span>
-          <span class="btn-label">Maestro de Plantíos</span>
-          <span class="btn-sub">Catálogo · Variedades · Mapa interactivo</span>
-        </a>
-        <a href="#" class="portal-btn btn-gris" style="min-height:90px;">
-          <span class="btn-label">Prog. Cosecha</span>
-          <span class="btn-sub">Programa diario de cosecha</span>
-        </a>
-        <a href="#" class="portal-btn btn-gris" style="min-height:90px;">
-          <span class="btn-label">Eficiencias Cosecha</span>
-          <span class="btn-sub">Indicadores operativos</span>
-        </a>
-        <a href="#" class="portal-btn btn-naranja" style="min-height:90px;">
-          <span class="btn-label">Costos por Distrito</span>
-          <span class="btn-sub">Análisis de costos distritales</span>
-        </a>
-        <a href="#" class="portal-btn btn-oscuro" style="min-height:90px;">
-          <span class="btn-label">Maquinaria y Operaciones</span>
-          <span class="btn-sub">Control de equipos</span>
-        </a>
-      </div>
-    </div>
-    <div class="portal-footer">
-      Depto. de Estadística Agrícola &nbsp;|&nbsp; Compañía Azucarera Chumbagua &nbsp;|&nbsp; Zafra 2025-2026
-    </div>
-  </div>
 
   <!-- TAB: MAPA -->
   <div id="tab-mapa" class="tab-page">
@@ -403,15 +620,15 @@
       </iframe>
     </div>
     <div class="portal-footer">
-      Depto. de Estadística Agrícola &nbsp;|&nbsp; Compañía Azucarera Chumbagua &nbsp;|&nbsp; Zafra 2025-2026
+      by <strong>Departamento de Estadística Agrícola</strong> &nbsp;|&nbsp; Compañía Azucarera Chumbagua &nbsp;|&nbsp; Zafra 2025–2026
     </div>
   </div>
 
   <!-- TAB: CONTACTO -->
   <div id="tab-contacto" class="tab-page">
     <div class="contacto-wrap">
-      <div class="contacto-titulo">Ponte en contacto.</div>
-      <div class="contacto-sub">Depto. de Estadística Agrícola — Compañía Azucarera Chumbagua</div>
+      <div class="contacto-titulo">Ponte en <span class="grad">contacto</span>.</div>
+      <div class="contacto-sub">Departamento de Estadística Agrícola · Compañía Azucarera Chumbagua</div>
 
       <div class="form-grid">
         <div>
@@ -443,9 +660,9 @@
           <strong>Cel. 9455-8288</strong>
           Estadística Agrícola
         </div>
-        <div class="contacto-info-item" style="text-align:right;">
+        <div class="contacto-info-item">
           <strong>Depto. Estadística Agrícola</strong>
-          Zafra 2025-2026
+          Zafra 2025–2026
         </div>
       </div>
     </div>
@@ -454,11 +671,17 @@
 </div>
 
 <script>
+// ═══════════════════════════════════════════════════════
+// SUPABASE CLIENT
+// ═══════════════════════════════════════════════════════
 const SUPABASE_URL      = 'https://dhbyjqmdcezdiucxeqpp.supabase.co'
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRoYnlqcW1kY2V6ZGl1Y3hlcXBwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMzI2NjEsImV4cCI6MjA5MjcwODY2MX0.TwRDctpOab02EsGo6q6-Zx0vtdLPlxn_mhowxu93EF0'
 const sb = supabase.createClient ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
-async function doLogin() {
+// ═══════════════════════════════════════════════════════
+// LOGIN / LOGOUT
+// ═══════════════════════════════════════════════════════
+async function doLogin(){
   const email = document.getElementById('login-email').value.trim()
   const pass  = document.getElementById('login-pass').value
   const btn   = document.getElementById('login-btn')
@@ -466,47 +689,95 @@ async function doLogin() {
   if(!email||!pass){err.textContent='Ingresa tu correo y contraseña.';return}
   btn.disabled=true; btn.textContent='Ingresando...'; err.textContent=''
   const {error} = await sb.auth.signInWithPassword({email,password:pass})
-  if(error){err.textContent='Credenciales incorrectas.';btn.disabled=false;btn.textContent='INGRESAR'}
+  if(error){err.textContent='Credenciales incorrectas.';btn.disabled=false;btn.textContent='Ingresar'}
   else mostrarPortal()
 }
 
-async function doLogout() {
+async function doLogout(){
   await sb.auth.signOut()
   document.getElementById('pag-login').classList.remove('oculto')
   document.getElementById('portal').classList.remove('visible')
+  document.getElementById('hdr').style.display='none'
 }
 
-function mostrarPortal() {
+async function mostrarPortal(){
   document.getElementById('pag-login').classList.add('oculto')
   document.getElementById('portal').classList.add('visible')
-  document.getElementById('fecha-header').textContent =
-    new Date().toLocaleDateString('es-HN',{weekday:'long',year:'numeric',month:'long',day:'numeric'})
+  document.getElementById('hdr').style.display='flex'
+  // Cargar perfil de usuario
+  const {data:{session}} = await sb.auth.getSession()
+  if(session) await cargarPerfilUsuario(session.user.email)
 }
 
-function irTab(tab) {
+// ═══════════════════════════════════════════════════════
+// PERFIL DE USUARIO
+// ═══════════════════════════════════════════════════════
+async function cargarPerfilUsuario(email){
+  document.getElementById('udd-email').textContent = email
+  try{
+    const {data, error} = await sb.from('user_perfiles').select('*').eq('email', email).maybeSingle()
+    if(error) throw error
+    if(data){
+      document.getElementById('user-avatar').textContent = data.iniciales || email.substring(0,2).toUpperCase()
+      if(data.color_avatar) document.getElementById('user-avatar').style.background = data.color_avatar
+      document.getElementById('udd-nombre').textContent = data.nombre_completo || email
+      document.getElementById('udd-cargo').textContent  = data.cargo || '—'
+    } else {
+      const ini = email.substring(0,2).toUpperCase()
+      document.getElementById('user-avatar').textContent = ini
+      document.getElementById('udd-nombre').textContent  = email.split('@')[0]
+      document.getElementById('udd-cargo').textContent   = 'Sin perfil asignado'
+    }
+  } catch(e){
+    console.warn('No se pudo cargar perfil:', e)
+    document.getElementById('udd-nombre').textContent = email.split('@')[0]
+    document.getElementById('udd-cargo').textContent  = '—'
+  }
+}
+
+function toggleUserDropdown(){
+  document.getElementById('user-dropdown').classList.toggle('abierto')
+}
+document.addEventListener('click', (e)=>{
+  const wrap = document.querySelector('.header-actions')
+  if(wrap && !wrap.contains(e.target)){
+    document.getElementById('user-dropdown').classList.remove('abierto')
+  }
+})
+
+// ═══════════════════════════════════════════════════════
+// NAVEGACIÓN TABS
+// ═══════════════════════════════════════════════════════
+function irTab(tab){
   document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('activo'))
   document.querySelectorAll('.tab-page').forEach(p=>p.classList.remove('activo'))
   document.querySelector(`[onclick="irTab('${tab}')"]`).classList.add('activo')
   document.getElementById('tab-'+tab).classList.add('activo')
+  window.scrollTo({top:0,behavior:'smooth'})
 }
 
-function enviarContacto() {
+// ═══════════════════════════════════════════════════════
+// CONTACTO
+// ═══════════════════════════════════════════════════════
+function enviarContacto(){
   const nombre  = document.getElementById('c-nombre').value.trim()
   const email   = document.getElementById('c-email').value.trim()
   const telefono= document.getElementById('c-telefono').value.trim()
   const mensaje = document.getElementById('c-mensaje').value.trim()
   const msg     = document.getElementById('form-msg')
-  if(!email||!mensaje){msg.style.color='#c0392b';msg.textContent='Por favor completa el email y el mensaje.';return}
-  // Construir mailto
+  if(!email||!mensaje){msg.style.color='var(--neg)';msg.textContent='Por favor completa el email y el mensaje.';return}
   const subject = encodeURIComponent('Mensaje desde portal Chumbagua')
   const body    = encodeURIComponent(`Nombre: ${nombre}\nTeléfono: ${telefono}\n\n${mensaje}`)
   window.location.href = `mailto:reinaldo.bacila@chumbagua.com?subject=${subject}&body=${body}`
-  msg.style.color='#2d6e3e'
+  msg.style.color='var(--brand-2)'
   msg.textContent='Abriendo cliente de correo...'
 }
 
-async function init() {
-  const { data:{session} } = await sb.auth.getSession()
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+async function init(){
+  const {data:{session}} = await sb.auth.getSession()
   if(session) mostrarPortal()
 }
 init()
