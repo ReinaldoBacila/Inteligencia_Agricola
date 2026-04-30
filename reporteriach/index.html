@@ -120,7 +120,56 @@
   }
   .brand-name{font-size:15px;font-weight:600;letter-spacing:-0.3px;color:var(--texto)}
   .brand-name span{color:var(--texto-soft);font-weight:400;margin-left:6px;font-size:13px}
-  .header-actions{display:flex;align-items:center;gap:8px;position:relative}
+  .header-actions{display:flex;align-items:center;gap:10px;position:relative}
+
+  /* ─── Barra de búsqueda inteligente ─── */
+  .search-wrap{position:relative;width:280px}
+  .search-input{
+    width:100%;height:34px;padding:0 12px 0 32px;
+    border:1px solid var(--gris-borde);border-radius:8px;
+    background:var(--brand-bg);
+    font-size:13px;font-family:inherit;color:var(--texto);
+    transition:all .15s;outline:none;
+  }
+  .search-input::placeholder{color:var(--texto-muted)}
+  .search-input:focus{
+    border-color:var(--brand);background:white;
+    box-shadow:0 0 0 3px rgba(30,63,122,0.08);
+  }
+  .search-icon{
+    position:absolute;left:10px;top:50%;transform:translateY(-50%);
+    color:var(--texto-muted);font-size:13px;pointer-events:none;
+  }
+  .search-results{
+    display:none;position:absolute;top:40px;left:0;right:0;
+    background:white;border:1px solid var(--gris-borde);
+    border-radius:10px;box-shadow:0 8px 24px rgba(30,40,60,0.12);
+    max-height:380px;overflow-y:auto;z-index:200;
+  }
+  .search-results.visible{display:block}
+  .sr-empty{padding:14px;text-align:center;color:var(--texto-muted);font-size:12px}
+  .sr-item{
+    display:flex;align-items:center;gap:10px;padding:10px 12px;
+    border-bottom:1px solid var(--gris-borde-soft,#f0f0f3);
+    cursor:pointer;transition:background .12s;text-decoration:none;color:inherit;
+  }
+  .sr-item:last-child{border-bottom:none}
+  .sr-item:hover,.sr-item.activo{background:var(--brand-bg)}
+  .sr-icon{
+    width:30px;height:30px;border-radius:7px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:15px;flex-shrink:0;background:var(--brand-soft);color:var(--brand);
+  }
+  .sr-text{flex:1;min-width:0}
+  .sr-titulo{font-size:13px;font-weight:600;color:var(--texto);margin-bottom:1px}
+  .sr-sub{font-size:11px;color:var(--texto-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .sr-arrow{color:var(--texto-muted);font-size:12px;flex-shrink:0}
+  .sr-badge{
+    font-size:9px;padding:2px 6px;border-radius:10px;
+    background:#fce8e4;color:var(--accent-5);font-weight:600;text-transform:uppercase;letter-spacing:.4px;
+    margin-left:6px;
+  }
+
   .btn-icon{
     width:34px;height:34px;border-radius:8px;
     border:1px solid var(--gris-borde);background:white;
@@ -182,13 +231,19 @@
   }
   .nav-tab:hover{color:var(--brand)}
   .nav-tab.activo{color:var(--brand);border-bottom-color:var(--brand);font-weight:600}
+  .nav-deptos{
+    margin-left:auto;
+    padding:12px 4px;
+    font-size:13px;font-weight:500;color:var(--texto-soft);
+    letter-spacing:-0.1px;white-space:nowrap;
+  }
 
   .tab-page{display:none}
   .tab-page.activo{display:block}
 
   /* ────────────────────── HERO ────────────────────── */
   .portal-hero{
-    padding:28px 32px 24px;
+    padding:24px 32px 22px;
     background:linear-gradient(135deg,#fafafa,var(--brand-bg) 50%, var(--brand-2-bg));
     border-bottom:1px solid var(--gris-borde);
     position:relative;overflow:hidden;
@@ -431,12 +486,16 @@
 <!-- ════════════════════════ HEADER ════════════════════════ -->
 <div class="header" style="display:none" id="hdr">
   <div class="brand-blk">
-    <div class="brand-logo">C</div>
+    <div class="brand-logo">CH</div>
     <div class="brand-name">Chumbagua <span>· Inteligencia Agrícola</span></div>
   </div>
   <div class="header-actions">
-    <button class="btn-icon" title="Buscar">⌘</button>
-    <button class="btn-icon" title="Ayuda">?</button>
+    <div class="search-wrap">
+      <span class="search-icon">🔎</span>
+      <input type="text" class="search-input" id="search-input" placeholder="Buscar módulo o reporte..." autocomplete="off"
+             oninput="hacerBusqueda()" onfocus="hacerBusqueda()" onkeydown="navegarBusqueda(event)">
+      <div class="search-results" id="search-results"></div>
+    </div>
     <div class="avatar" id="user-avatar" onclick="toggleUserDropdown()" title="Mi sesión">RB</div>
     <div class="user-dropdown" id="user-dropdown">
       <div class="udd-header">
@@ -457,6 +516,7 @@
     <div class="nav-tab activo" onclick="irTab('modulos')">Módulos</div>
     <div class="nav-tab" onclick="irTab('mapa')">Mapa</div>
     <div class="nav-tab" onclick="irTab('contacto')">Contacto</div>
+    <div class="nav-deptos">Departamento de Estadística Agrícola</div>
   </div>
 
 
@@ -464,15 +524,15 @@
   <div id="tab-modulos" class="tab-page activo">
 
     <div class="portal-hero">
-      <div class="hero-eyebrow">Sistema en línea · Zafra 2025–2026</div>
-      <h1>Datos que <span class="grad">cultivan decisiones</span></h1>
-      <p>Plataforma centralizada de análisis y reportería para los procesos agrícolas. Tableros interactivos con datos en tiempo real desde SAP y control granular de acceso.</p>
+      <h1>Módulos de <span class="grad">Inteligencia Agrícola</span></h1>
+      <p>Plataforma centralizada de análisis y reportes para los procesos agrícolas.</p>
     </div>
 
     <div class="portal-body">
 
+      <!-- ─── COSECHA ─── -->
       <div class="seccion">
-        <div class="seccion-titulo">Cosecha & Molienda</div>
+        <div class="seccion-titulo">Cosecha</div>
         <div class="grid grid-3">
           <a href="cosecha.html" class="portal-btn btn-verde">
             <span class="badge-nuevo">NUEVO</span>
@@ -483,19 +543,18 @@
           </a>
           <a href="#" class="portal-btn btn-gris">
             <div class="btn-icon-wrap">📅</div>
-            <span class="btn-label">Prog. Cosecha</span>
-            <span class="btn-sub">Programa diario</span>
-            <span class="btn-arrow">Próximamente</span>
+            <span class="btn-label">Prog. Cosecha Diario</span>
+            <span class="btn-sub">Programa diario de cosecha</span>
           </a>
           <a href="#" class="portal-btn btn-gris">
             <div class="btn-icon-wrap">⚙️</div>
             <span class="btn-label">Eficiencias Cosecha</span>
             <span class="btn-sub">Indicadores operativos</span>
-            <span class="btn-arrow">Próximamente</span>
           </a>
         </div>
       </div>
 
+      <!-- ─── RENDIMIENTOS AGRÍCOLAS ─── -->
       <div class="seccion">
         <div class="seccion-titulo">Rendimientos Agrícolas</div>
         <div class="grid grid-3">
@@ -515,21 +574,20 @@
           </a>
           <a href="#" class="portal-btn btn-gris">
             <div class="btn-icon-wrap">💧</div>
-            <span class="btn-label">Análisis Riegos</span>
+            <span class="btn-label">Análisis de Riego</span>
             <span class="btn-sub">Seguimiento sistemas de riego</span>
-            <span class="btn-arrow">Próximamente</span>
           </a>
         </div>
       </div>
 
+      <!-- ─── PLANIFICACIÓN & LABORES ─── -->
       <div class="seccion">
         <div class="seccion-titulo">Planificación & Labores</div>
-        <div class="grid grid-2">
+        <div class="grid grid-3">
           <a href="#" class="portal-btn btn-gris">
             <div class="btn-icon-wrap">📋</div>
             <span class="btn-label">Planificación de Labores</span>
             <span class="btn-sub">Programación agrícola</span>
-            <span class="btn-arrow">Próximamente</span>
           </a>
           <a href="plantios.html" class="portal-btn btn-cyan">
             <span class="badge-nuevo">NUEVO</span>
@@ -538,9 +596,15 @@
             <span class="btn-sub">Catálogo · Variedades · Mapa interactivo</span>
             <span class="btn-arrow">Abrir módulo</span>
           </a>
+          <a href="#" class="portal-btn btn-gris">
+            <div class="btn-icon-wrap">📆</div>
+            <span class="btn-label">Programación Diaria de Labores</span>
+            <span class="btn-sub">Reporte operativo del día</span>
+          </a>
         </div>
       </div>
 
+      <!-- ─── COSTOS & FINANZAS ─── -->
       <div class="seccion">
         <div class="seccion-titulo">Costos & Finanzas</div>
         <div class="grid grid-2">
@@ -548,25 +612,23 @@
             <div class="btn-icon-wrap">💰</div>
             <span class="btn-label">Costos por Distrito</span>
             <span class="btn-sub">Análisis de costos distritales</span>
-            <span class="btn-arrow">Próximamente</span>
           </a>
           <a href="#" class="portal-btn btn-naranja">
             <div class="btn-icon-wrap">📈</div>
             <span class="btn-label">Costos Gerencia Agrícola</span>
             <span class="btn-sub">Consolidado gerencial</span>
-            <span class="btn-arrow">Próximamente</span>
           </a>
         </div>
       </div>
 
+      <!-- ─── OPERACIONES & MAQUINARIA ─── -->
       <div class="seccion">
         <div class="seccion-titulo">Operaciones & Maquinaria</div>
-        <div class="grid grid-3">
+        <div class="grid grid-2">
           <a href="#" class="portal-btn btn-gris">
             <div class="btn-icon-wrap">🚜</div>
             <span class="btn-label">Maquinaria y Operaciones</span>
             <span class="btn-sub">Control de equipos</span>
-            <span class="btn-arrow">Próximamente</span>
           </a>
           <a href="https://chumbaguastevenleon.wixsite.com/tallermecnico" target="_blank" class="portal-btn btn-cyan">
             <div class="btn-icon-wrap">🔧</div>
@@ -574,29 +636,28 @@
             <span class="btn-sub">Mantenimiento y reparaciones</span>
             <span class="btn-arrow">Abrir externo</span>
           </a>
-          <a href="https://beta.naxsolutions.com/" target="_blank" class="portal-btn btn-cyan">
-            <div class="btn-icon-wrap">🔌</div>
-            <span class="btn-label">NAX Solutions</span>
-            <span class="btn-sub">Integración NAX</span>
-            <span class="btn-arrow">Abrir externo</span>
-          </a>
         </div>
       </div>
 
+      <!-- ─── NAX SOLUTIONS ─── -->
       <div class="seccion">
-        <div class="seccion-titulo">Programación & Seguridad</div>
-        <div class="grid grid-2">
-          <a href="#" class="portal-btn btn-gris">
-            <div class="btn-icon-wrap">📆</div>
-            <span class="btn-label">Programación Diaria</span>
-            <span class="btn-sub">Reporte operativo del día</span>
-            <span class="btn-arrow">Próximamente</span>
+        <div class="seccion-titulo">NAX Solutions</div>
+        <div class="grid grid-3">
+          <a href="https://beta.naxsolutions.com/" target="_blank" class="portal-btn btn-cyan">
+            <div class="btn-icon-wrap">🔌</div>
+            <span class="btn-label">Link Plataforma</span>
+            <span class="btn-sub">Acceso a la plataforma NAX</span>
+            <span class="btn-arrow">Abrir externo</span>
           </a>
-          <a href="cosecha.html#quemas" class="portal-btn btn-rojo">
-            <div class="btn-icon-wrap">🔥</div>
-            <span class="btn-label">Quemas Criminales</span>
-            <span class="btn-sub">Registro histórico de incidentes</span>
-            <span class="btn-arrow">Abrir módulo</span>
+          <a href="#" class="portal-btn btn-gris">
+            <div class="btn-icon-wrap">⚠️</div>
+            <span class="btn-label">Anomalías · Tareas</span>
+            <span class="btn-sub">Gestión de anomalías y tareas</span>
+          </a>
+          <a href="#" class="portal-btn btn-gris">
+            <div class="btn-icon-wrap">🌱</div>
+            <span class="btn-label">Seguimiento de Biomasa</span>
+            <span class="btn-sub">Monitoreo de biomasa por lote</span>
           </a>
         </div>
       </div>
@@ -755,6 +816,189 @@ function irTab(tab){
   document.getElementById('tab-'+tab).classList.add('activo')
   window.scrollTo({top:0,behavior:'smooth'})
 }
+
+// ═══════════════════════════════════════════════════════
+// BÚSQUEDA INTELIGENTE DE MÓDULOS
+// ═══════════════════════════════════════════════════════
+const MODULOS_INDICE = [
+  { titulo:'Avance de Cosecha', sub:'Resumen, frescura y escenarios de molienda', icon:'🌾',
+    keywords:['cosecha','avance','frescura','escenario','molienda','tm cosechado','tm estimado','manual','mecanizado','frente','distancia','pendiente','tipo de corte','origen caña'],
+    url:'cosecha.html', activo:true },
+  { titulo:'Frescura', sub:'Análisis de frescura por frente, día y semana', icon:'🌡️',
+    keywords:['frescura','horas','rangos','calidad caña','demora','tiempo'],
+    url:'cosecha.html#frescura', activo:true },
+  { titulo:'Quemas Criminales', sub:'Histórico de incidentes y mapa heatmap', icon:'🔥',
+    keywords:['quema','quemas','criminal','incendio','fuego','histórico','heatmap','mapa','zona afectada'],
+    url:'cosecha.html#quemas', activo:true },
+  { titulo:'Cosechado por Frente', sub:'Avance por frente y zona geográfica', icon:'🚜',
+    keywords:['frente','zona geográfica','distrito','cosechado','avance frente'],
+    url:'cosecha.html#frentes', activo:true },
+  { titulo:'Prog. Cosecha Diario', sub:'Programa diario de cosecha', icon:'📅',
+    keywords:['programa','prog','plan','secuencia','plan zafra','calendario cosecha','programa diario','cosecha diaria'],
+    url:'#', activo:false, label:'Próximamente' },
+  { titulo:'Eficiencias Cosecha', sub:'Indicadores operativos', icon:'⚙️',
+    keywords:['eficiencia','indicadores','operativo','kpi'],
+    url:'#', activo:false, label:'Próximamente' },
+  { titulo:'Rendimientos Zafra', sub:'TCH histórico por finca, lote y variedad', icon:'📊',
+    keywords:['rendimiento','tch','toneladas','finca','lote','histórico','zafra','rendimientos','rendimientos históricos','tercio'],
+    url:'rendimientos.html', activo:true },
+  { titulo:'Análisis de Variedades', sub:'Comportamiento TCH por variedad y ciclo', icon:'🧬',
+    keywords:['variedad','variedades','genética','tch variedad','rb','cp','mex','comportamiento','rendimiento histórico variedades','rendimiento de variedades'],
+    url:'variedades.html', activo:true },
+  { titulo:'Análisis de Riego', sub:'Seguimiento de sistemas de riego', icon:'💧',
+    keywords:['riego','riegos','aspersión','goteo','gravedad','pivote','secano'],
+    url:'#', activo:false, label:'Próximamente' },
+  { titulo:'Maestro de Plantíos', sub:'Catálogo, variedades y mapa interactivo', icon:'🗺️',
+    keywords:['plantio','plantíos','maestro','catálogo','mapa','finca lote'],
+    url:'plantios.html', activo:true },
+  { titulo:'Planificación de Labores', sub:'Programación agrícola', icon:'📋',
+    keywords:['planificación','labores','agrícola','programación'],
+    url:'#', activo:false, label:'Próximamente' },
+  { titulo:'Costos por Distrito', sub:'Análisis de costos distritales', icon:'💰',
+    keywords:['costo','costos','distrito','presupuesto','gasto'],
+    url:'#', activo:false, label:'Próximamente' },
+  { titulo:'Costos Gerencia Agrícola', sub:'Consolidado gerencial', icon:'📈',
+    keywords:['costo gerencial','gerencia','consolidado'],
+    url:'#', activo:false, label:'Próximamente' },
+  { titulo:'Maquinaria y Operaciones', sub:'Control de equipos', icon:'🚜',
+    keywords:['maquinaria','equipo','equipos','operación','tractor','cosechadora'],
+    url:'#', activo:false, label:'Próximamente' },
+  { titulo:'Plataforma Taller Mecánico', sub:'Mantenimiento y reparaciones', icon:'🔧',
+    keywords:['taller','mecánico','mantenimiento','reparación','vehículo'],
+    url:'https://chumbaguastevenleon.wixsite.com/tallermecnico', activo:true, externo:true },
+  { titulo:'NAX Solutions · Plataforma', sub:'Acceso a la plataforma NAX', icon:'🔌',
+    keywords:['nax','solutions','plataforma','integración','link','enlace'],
+    url:'https://beta.naxsolutions.com/', activo:true, externo:true },
+  { titulo:'NAX · Anomalías y Tareas', sub:'Gestión de anomalías y tareas en NAX', icon:'⚠️',
+    keywords:['anomalía','anomalia','tarea','tareas','nax','gestión','incidencia','reportar'],
+    url:'#', activo:false, label:'Próximamente' },
+  { titulo:'NAX · Seguimiento de Biomasa', sub:'Monitoreo de biomasa por lote', icon:'🌱',
+    keywords:['biomasa','seguimiento','monitoreo','vegetación','ndvi','satélite','satelital','lote','crecimiento'],
+    url:'#', activo:false, label:'Próximamente' },
+  { titulo:'Programación Diaria de Labores', sub:'Reporte operativo del día', icon:'📆',
+    keywords:['programación','diaria','labores','reporte diario','operativo','día'],
+    url:'#', activo:false, label:'Próximamente' },
+]
+
+let busquedaActivos = []
+let busquedaIdx = -1
+
+function normalizar(s){
+  return (s||'').toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'') // quita acentos
+    .replace(/[^a-z0-9 ]/g,' ')
+    .replace(/\s+/g,' ').trim()
+}
+
+function puntuarModulo(mod, terminos){
+  if(!terminos.length) return 0
+  const titN = normalizar(mod.titulo)
+  const subN = normalizar(mod.sub)
+  const kwN  = mod.keywords.map(normalizar)
+  let score = 0
+  for(const t of terminos){
+    if(!t) continue
+    if(titN===t)             score += 100
+    else if(titN.startsWith(t)) score += 60
+    else if(titN.includes(t))   score += 40
+    if(subN.includes(t))     score += 12
+    for(const k of kwN){
+      if(k===t)            score += 30
+      else if(k.includes(t)) score += 15
+    }
+  }
+  return score
+}
+
+function hacerBusqueda(){
+  const inp = document.getElementById('search-input')
+  const cont = document.getElementById('search-results')
+  const q = normalizar(inp.value)
+  busquedaIdx = -1
+
+  if(!q){
+    // mostrar TOP 6 sugerencias activas
+    busquedaActivos = MODULOS_INDICE.filter(m=>m.activo).slice(0,6)
+    cont.innerHTML = '<div class="sr-empty" style="text-align:left;padding:8px 12px;font-weight:600;color:var(--texto)">Sugerencias</div>'
+      + busquedaActivos.map((m,i)=>renderItem(m,i)).join('')
+    cont.classList.add('visible')
+    return
+  }
+
+  const terminos = q.split(' ').filter(t=>t.length>=2)
+  const ranking = MODULOS_INDICE
+    .map(m=>({m, score:puntuarModulo(m, terminos)}))
+    .filter(x=>x.score>0)
+    .sort((a,b)=>b.score-a.score)
+    .slice(0,8)
+
+  busquedaActivos = ranking.map(x=>x.m)
+
+  if(!busquedaActivos.length){
+    cont.innerHTML = '<div class="sr-empty">No encontramos un módulo para esa búsqueda.<br><span style="font-size:11px">Probá con: cosecha, frescura, rendimiento, variedades, quemas...</span></div>'
+  } else {
+    cont.innerHTML = busquedaActivos.map((m,i)=>renderItem(m,i)).join('')
+  }
+  cont.classList.add('visible')
+}
+
+function renderItem(m, i){
+  const badge = m.activo ? '' : `<span class="sr-badge">${m.label||'Próximamente'}</span>`
+  const flecha = m.activo ? (m.externo?'↗':'→') : ''
+  return `<a class="sr-item" data-idx="${i}" onclick="abrirResultado(${i});return false;" href="${m.url}">
+    <div class="sr-icon">${m.icon}</div>
+    <div class="sr-text">
+      <div class="sr-titulo">${m.titulo}${badge}</div>
+      <div class="sr-sub">${m.sub}</div>
+    </div>
+    <div class="sr-arrow">${flecha}</div>
+  </a>`
+}
+
+function abrirResultado(i){
+  const m = busquedaActivos[i]
+  if(!m || !m.activo){
+    // próximamente: cerramos dropdown sin más
+    document.getElementById('search-results').classList.remove('visible')
+    return
+  }
+  if(m.externo){ window.open(m.url,'_blank') }
+  else { window.location.href = m.url }
+}
+
+function navegarBusqueda(ev){
+  const cont = document.getElementById('search-results')
+  if(!cont.classList.contains('visible')) return
+  const items = cont.querySelectorAll('.sr-item')
+  if(ev.key==='ArrowDown'){
+    ev.preventDefault()
+    busquedaIdx = Math.min(busquedaIdx+1, items.length-1)
+    actualizarFoco(items)
+  } else if(ev.key==='ArrowUp'){
+    ev.preventDefault()
+    busquedaIdx = Math.max(busquedaIdx-1, 0)
+    actualizarFoco(items)
+  } else if(ev.key==='Enter'){
+    ev.preventDefault()
+    const i = busquedaIdx>=0 ? busquedaIdx : 0
+    if(busquedaActivos[i]) abrirResultado(i)
+  } else if(ev.key==='Escape'){
+    cont.classList.remove('visible')
+    document.getElementById('search-input').blur()
+  }
+}
+function actualizarFoco(items){
+  items.forEach((it,j)=>it.classList.toggle('activo', j===busquedaIdx))
+  if(busquedaIdx>=0 && items[busquedaIdx]) items[busquedaIdx].scrollIntoView({block:'nearest'})
+}
+
+// Cerrar dropdown al click fuera
+document.addEventListener('click', (e)=>{
+  const wrap = document.querySelector('.search-wrap')
+  if(wrap && !wrap.contains(e.target)){
+    document.getElementById('search-results').classList.remove('visible')
+  }
+})
 
 // ═══════════════════════════════════════════════════════
 // CONTACTO

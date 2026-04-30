@@ -9,9 +9,35 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  :root {
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased}
+  :root{
+    /* PALETA C — Mix Marca Chumbagua */
+    --brand:        #1e3f7a;       /* Azul Chumbagua */
+    --brand-dark:   #162e5a;
+    --brand-2:      #2d6e3e;       /* Verde Chumbagua */
+    --brand-2-dark: #1e5028;
+    --brand-soft:   #dde7f5;
+    --brand-2-soft: #dcebe0;
+    --brand-bg:     #f5f8fc;
+    --brand-2-bg:   #f4faf6;
+    --accent-1:     #e8a020;       /* Dorado */
+    --accent-2:     #a85d2c;       /* Tierra */
+    --accent-3:     #7d4ea8;       /* Lavanda */
+    --accent-4:     #0d8a9c;       /* Cyan */
+    --accent-5:     #c0594d;       /* Coral */
+    --pos:          #16a34a;
+    --pos-bg:       #f0fdf4;
+    --neg:          #dc2626;
+    --neg-bg:       #fef2f2;
+    --gris-fondo:   #fafafa;
+    --gris-borde:   #ededed;
+    --gris-borde-soft:#f4f4f5;
+    --texto:        #0a0a0a;
+    --texto-soft:   #666;
+    --texto-muted:  #999;
+    /* Aliases para retrocompatibilidad con código existente */
     --azul: #1e3f7a;
     --azul-medio: #2a5298;
     --azul-claro: #3d7abf;
@@ -20,141 +46,449 @@
     --dorado: #e8a020;
     --naranja: #c97d1a;
     --rojo: #c0392b;
-    --gris: #f5f6f8;
+    --gris: #fafafa;
     --blanco: #ffffff;
-    --texto: #1a1a2e;
   }
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family:'Barlow',sans-serif; background:var(--gris); color:var(--texto); min-height:100vh; }
+  body{
+    font-family:'Geist',-apple-system,BlinkMacSystemFont,sans-serif;
+    background:var(--gris-fondo);
+    color:var(--texto);
+    min-height:100vh;
+    font-size:14px;
+  }
 
-  /* HEADER */
-  /* [EDITABLE] Header principal */
-  .header { background:#fff; border-bottom:1px solid #e0e4ec; padding:12px 36px; display:flex; align-items:center; justify-content:space-between; }
-  .header-brand { display:flex; flex-direction:column; }
-  /* [EDITABLE] Nombre empresa */
-  .hdr-name { font-family:'Barlow Condensed',sans-serif; font-size:24px; font-weight:700; color:#1e3f7a; letter-spacing:1.5px; }
-  /* [EDITABLE] Subtítulo empresa */
-  .hdr-sub { font-size:11px; color:#3a8a4e; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; margin-top:1px; }
-  .header-right { display:flex; flex-direction:column; align-items:flex-end; gap:5px; }
-  /* [EDITABLE] Badge departamento */
-  .header-depto { font-size:13px; font-weight:700; color:#fff; background:#2d6e3e; padding:5px 14px; border-radius:4px; }
-  .header-fecha { font-size:12px; color:#999; }
-  .logout-btn { background:none; border:1px solid #dde1ea; border-radius:4px; padding:5px 14px; font-size:12px; cursor:pointer; color:#888; }
+  /* ────────────────────── LOGIN ────────────────────── */
+  #pag-login{
+    position:fixed;inset:0;z-index:9999;
+    background:linear-gradient(135deg,var(--brand) 0%,var(--brand-2) 100%);
+    display:flex;align-items:center;justify-content:center;padding:20px;
+  }
+  #pag-login.oculto{display:none}
+  #pag-login::before{
+    content:'';position:absolute;top:-100px;right:-100px;
+    width:400px;height:400px;
+    background:radial-gradient(circle,rgba(255,255,255,0.1),transparent 70%);border-radius:50%;
+  }
+  #pag-login::after{
+    content:'';position:absolute;bottom:-150px;left:-150px;
+    width:500px;height:500px;
+    background:radial-gradient(circle,rgba(255,255,255,0.08),transparent 70%);border-radius:50%;
+  }
+  .login-box{
+    background:white;border-radius:16px;padding:40px 44px;
+    width:100%;max-width:400px;text-align:center;
+    box-shadow:0 20px 60px rgba(0,0,0,0.3);position:relative;z-index:1;
+  }
+  .login-logo-wrap{
+    width:56px;height:56px;
+    background:linear-gradient(135deg,var(--brand),var(--brand-2));
+    border-radius:14px;display:flex;align-items:center;justify-content:center;
+    color:white;font-weight:700;font-size:22px;margin:0 auto 18px;
+    box-shadow:0 6px 20px rgba(30,63,122,0.3);
+  }
+  .login-logo{font-size:24px;font-weight:600;color:var(--texto);letter-spacing:-0.5px}
+  .login-sub{font-size:11px;color:var(--brand-2);font-weight:600;margin-top:4px;margin-bottom:28px;letter-spacing:1.5px;text-transform:uppercase;font-family:'Geist Mono',monospace}
+  .login-titulo{font-size:13px;color:var(--texto-soft);margin-bottom:18px;text-align:left;font-weight:500}
+  .login-input{
+    width:100%;padding:11px 14px;border:1px solid var(--gris-borde);border-radius:8px;
+    font-size:14px;margin-bottom:10px;outline:none;font-family:inherit;
+    transition:border-color .15s, box-shadow .15s;
+  }
+  .login-input:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+  .login-btn{
+    width:100%;padding:12px;background:linear-gradient(135deg,var(--brand),var(--brand-2));
+    color:white;border:none;border-radius:8px;font-family:inherit;font-size:14px;font-weight:600;
+    cursor:pointer;margin-top:8px;transition:transform .15s, box-shadow .15s;
+  }
+  .login-btn:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(30,63,122,0.25)}
+  .login-btn:disabled{background:#aaa;cursor:not-allowed;transform:none;box-shadow:none}
+  .login-error{color:var(--neg);font-size:12px;margin-top:10px;min-height:18px}
 
-  /* LOGIN */
-  #pag-login { position:fixed; inset:0; background:linear-gradient(135deg,#1e3f7a 0%,#2d6e3e 100%); display:flex; align-items:center; justify-content:center; z-index:9999; }
-  #pag-login.oculto { display:none; }
-  .login-box { background:white; border-radius:12px; padding:40px 48px; width:100%; max-width:380px; text-align:center; }
-  /* [EDITABLE] Nombre en login */
-  .login-logo { font-family:"Barlow Condensed",sans-serif; font-size:32px; font-weight:800; color:var(--azul); margin-bottom:2px; }
-  /* [EDITABLE] Subtítulo en login */
-  .login-sub { font-size:11px; color:var(--verde-claro); font-weight:700; margin-bottom:28px; letter-spacing:1.5px; text-transform:uppercase; }
-  .login-titulo { font-family:"Barlow Condensed",sans-serif; font-size:17px; font-weight:700; color:var(--azul); margin-bottom:20px; }
-  .login-input { width:100%; padding:11px 14px; border:1.5px solid #ddd; border-radius:6px; font-size:14px; margin-bottom:10px; outline:none; box-sizing:border-box; }
-  .login-input:focus { border-color:var(--azul-medio); }
-  .login-btn { width:100%; padding:12px; background:linear-gradient(135deg,#1e3f7a,#2d6e3e); color:white; border:none; border-radius:6px; font-family:"Barlow Condensed",sans-serif; font-size:16px; font-weight:700; cursor:pointer; margin-top:6px; }
-  .login-btn:hover { opacity:0.9; }
-  .login-btn:disabled { background:#aaa; cursor:not-allowed; }
-  .login-error { color:var(--rojo); font-size:13px; margin-top:10px; min-height:18px; }
+  /* ────────────────────── HEADER ────────────────────── */
+  .header{
+    background:white;border-bottom:1px solid var(--gris-borde);
+    padding:12px 28px;display:flex;align-items:center;justify-content:space-between;
+    position:sticky;top:0;z-index:100;gap:18px;min-height:62px;
+  }
+  .brand-blk{display:flex;align-items:center;gap:12px;flex-shrink:0}
+  .brand-logo{
+    width:36px;height:36px;
+    background:linear-gradient(135deg,var(--brand),var(--brand-2));
+    border-radius:9px;display:flex;align-items:center;justify-content:center;
+    color:white;font-weight:700;font-size:14px;letter-spacing:-0.5px;
+    box-shadow:0 2px 6px rgba(30,63,122,0.25);
+  }
+  .brand-name{font-size:15px;font-weight:600;letter-spacing:-0.3px;color:var(--texto)}
+  .brand-name span{color:var(--texto-soft);font-weight:400;margin-left:6px;font-size:13px}
 
-  /* PÁGINAS */
-  .page { display:none; padding:28px 40px; }
-  .page.active { display:block; }
+  .header-pagina{flex:1;text-align:center;min-width:0}
+  .header-pagina-titulo{
+    font-size:20px;font-weight:600;color:var(--texto);
+    letter-spacing:-0.5px;line-height:1.15;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .header-pagina-sub{font-size:11.5px;color:var(--texto-soft);margin-top:2px;line-height:1;font-weight:500}
 
-  /* MENÚ */
-  .menu-page { max-width:1400px; margin:52px auto; text-align:center; padding:0 32px; }
-  /* [EDITABLE] Título del menú principal */
-  .menu-banner { background:linear-gradient(135deg,#1e3f7a 0%,#2d6e3e 100%); color:white; font-family:'Barlow Condensed',sans-serif; font-size:53px; font-weight:700; letter-spacing:3px; padding:43px; border-radius:10px; margin-bottom:32px; }
-  .menu-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:28px; }
-  /* [EDITABLE] Botones menú */
-  .menu-btn { padding:53px 34px; border:none; border-radius:12px; font-family:'Barlow Condensed',sans-serif; font-size:29px; font-weight:700; letter-spacing:0.5px; cursor:pointer; transition:all 0.15s; color:white; }
-  .menu-btn:hover { filter:brightness(1.1); transform:translateY(-2px); }
-  .menu-btn .sub { display:block; font-size:18px; font-weight:400; margin-top:8px; opacity:0.85; }
-  .menu-btn.azul { background:#2a5298; }
-  /* [EDITABLE] Color botones verdes menú */
-  .menu-btn.verde { background:#2d6e3e; }
-  /* [EDITABLE] Color botones dorados menú */
-  .menu-btn.naranja { background:#c97d1a; }
+  .header-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;position:relative}
+  .btn-icon-h{
+    width:34px;height:34px;border-radius:8px;
+    border:1px solid var(--gris-borde);background:white;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;color:var(--texto-soft);font-size:14px;transition:all .15s;
+  }
+  .btn-icon-h:hover{background:var(--brand-bg);color:var(--brand);border-color:var(--brand-soft)}
+  .btn-portal{
+    padding:6px 12px;font-size:12px;font-weight:500;
+    border:1px solid var(--gris-borde);border-radius:7px;background:white;
+    color:var(--texto);cursor:pointer;font-family:inherit;
+    display:inline-flex;align-items:center;gap:4px;transition:all .15s;
+  }
+  .btn-portal:hover{background:var(--brand-bg);border-color:var(--brand-soft);color:var(--brand)}
+  /* Icono de portal (casa) - junto al avatar */
+  .btn-portal-icon{
+    width:34px;height:34px;border-radius:8px;
+    border:1px solid var(--gris-borde);background:white;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;color:var(--texto-soft);transition:all .15s;
+    padding:0;
+  }
+  .btn-portal-icon:hover{background:var(--brand-bg);color:var(--brand);border-color:var(--brand-soft)}
+  /* Botón Atrás en el header (lado izquierdo) - aparece solo en páginas internas */
+  .btn-atras-hdr{
+    display:flex;align-items:center;gap:5px;
+    padding:6px 12px 6px 9px;
+    border:1px solid var(--gris-borde);border-radius:7px;background:white;
+    font-family:inherit;font-size:12px;font-weight:600;
+    color:var(--brand);cursor:pointer;transition:all .15s;
+    flex-shrink:0;
+  }
+  .btn-atras-hdr:hover{background:var(--brand-bg);border-color:var(--brand);color:var(--brand-dark)}
+  .btn-atras-hdr svg{flex-shrink:0}
+  .avatar{
+    width:34px;height:34px;border-radius:9px;
+    background:linear-gradient(135deg,var(--brand-2),#4a8e5d);
+    color:white;display:flex;align-items:center;justify-content:center;
+    font-weight:600;font-size:12px;cursor:pointer;
+    box-shadow:0 2px 6px rgba(45,110,62,0.25);user-select:none;
+  }
+  .user-dropdown{
+    position:absolute;top:42px;right:0;
+    background:white;border:1px solid var(--gris-borde);border-radius:10px;
+    box-shadow:0 8px 24px rgba(0,0,0,0.1);
+    padding:14px 16px 10px;min-width:240px;z-index:200;display:none;
+  }
+  .user-dropdown.abierto{display:block}
+  .udd-header{padding-bottom:10px;border-bottom:1px solid var(--gris-borde-soft);margin-bottom:8px}
+  .udd-nombre{font-size:14px;font-weight:600;color:var(--texto);letter-spacing:-0.2px}
+  .udd-cargo{font-size:11px;color:var(--texto-soft);margin-top:2px}
+  .udd-email{font-size:10px;color:var(--texto-muted);margin-top:3px;font-family:'Geist Mono',monospace;word-break:break-all}
+  .udd-btn{
+    display:block;width:100%;padding:8px 10px;
+    background:none;border:1px solid var(--neg-bg);color:var(--neg);
+    border-radius:7px;font-family:inherit;font-size:12px;font-weight:600;
+    cursor:pointer;text-align:center;transition:all .15s;
+  }
+  .udd-btn:hover{background:var(--neg-bg);border-color:var(--neg)}
 
-  /* BACK */
-  .back-btn { display:inline-flex; align-items:center; gap:6px; background:none; color:#1e3f7a; border:1px solid #ccd3e0; border-radius:5px; padding:6px 14px; font-family:'Barlow Condensed',sans-serif; font-size:12px; font-weight:700; cursor:pointer; }
-  .back-btn:hover { background:#f0f4ff; }
-  /* Page header: título izq, acciones der */
-  .pag-hdr { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; gap:12px; flex-wrap:wrap; }
-  /* [EDITABLE] Título de página interna */
-  .pag-hdr-titulo { font-family:'Barlow Condensed',sans-serif; font-size:17px; font-weight:700; color:#1e3f7a; text-transform:uppercase; letter-spacing:0.5px; }
-  /* [EDITABLE] Subtítulo empresa bajo título */
-  .pag-hdr-sub { font-size:11px; color:#888; margin-top:2px; }
-  .pag-hdr-actions { display:flex; align-items:center; gap:10px; flex-shrink:0; }
-  /* [EDITABLE] Badge depto en páginas internas */
-  .depto-badge { font-size:11px; font-weight:700; color:#fff; background:#2d6e3e; padding:4px 10px; border-radius:4px; white-space:nowrap; }
+  /* ────────────────────── PÁGINAS ────────────────────── */
+  .page{display:none;padding:20px 32px 24px}
+  .page.active{display:block}
 
-  /* FILTROS */
-  .filtros { display:flex; gap:14px; flex-wrap:wrap; margin-bottom:16px; background:#fff; padding:12px 16px; border-radius:8px; border:1px solid #e0e4ec; align-items:flex-end; }
-  .filtro-grupo { display:flex; flex-direction:column; gap:4px; }
-  .filtro-grupo label { font-size:10px; font-weight:700; color:#aaa; text-transform:uppercase; letter-spacing:0.6px; }
-  .filtro-grupo select { border:1px solid #dde2ec; border-radius:4px; padding:5px 10px; font-size:12px; min-width:130px; background:white; color:#1e3f7a; }
+  /* ────────────────────── MENÚ ────────────────────── */
+  .menu-page{max-width:1400px;margin:0 auto;padding:0}
+  .menu-hero{
+    padding:32px 36px 30px;
+    background:linear-gradient(135deg,#fafafa,var(--brand-bg) 50%, var(--brand-2-bg));
+    border-radius:16px;margin-bottom:24px;
+    position:relative;overflow:hidden;text-align:left;
+    border:1px solid var(--gris-borde);
+  }
+  .menu-hero-zafra{
+    display:inline-block;font-family:'Geist Mono',monospace;
+    font-size:12px;color:var(--brand);background:white;
+    padding:5px 12px;border:1px solid var(--brand-soft);border-radius:100px;
+    margin-top:8px;font-weight:600;letter-spacing:0.5px;
+    position:relative;z-index:1;
+  }
+  .menu-hero::before{
+    content:'';position:absolute;top:-50px;right:-50px;width:300px;height:300px;
+    background:radial-gradient(circle,var(--brand-2-soft),transparent 70%);opacity:0.5;
+  }
+  .menu-hero::after{
+    content:'';position:absolute;bottom:-80px;left:-80px;width:300px;height:300px;
+    background:radial-gradient(circle,var(--brand-soft),transparent 70%);opacity:0.5;
+  }
+  .menu-hero-eyebrow{
+    display:inline-flex;align-items:center;gap:6px;
+    font-family:'Geist Mono',monospace;font-size:11px;color:var(--brand-2);
+    background:white;padding:5px 12px;border:1px solid var(--brand-2-soft);
+    border-radius:100px;margin-bottom:14px;font-weight:500;position:relative;z-index:1;
+  }
+  .menu-hero-eyebrow::before{
+    content:'';width:6px;height:6px;background:var(--brand-2);border-radius:50%;
+    animation:pulse 2s infinite;
+  }
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+  .menu-hero h1{
+    font-size:48px;font-weight:600;letter-spacing:-2px;line-height:1.05;
+    color:var(--texto);position:relative;z-index:1;
+  }
+  .menu-hero h1 .grad{
+    background:linear-gradient(90deg,var(--brand),var(--brand-2));
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  }
+  .menu-hero p{
+    font-size:13px;color:var(--texto-soft);margin-top:14px;
+    max-width:600px;line-height:1.5;position:relative;z-index:1;
+  }
 
-  /* KPIs */
-  .kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-bottom:20px; }
-  .kpi-card { background:white; border-radius:8px; padding:14px 16px; border:1px solid #e8edf5; border-top:3px solid var(--azul-medio); }
-  .kpi-card.verde { border-top-color:var(--verde-claro); }
-  .kpi-card.naranja { border-top-color:var(--dorado); }
-  .kpi-card.rojo { border-top-color:var(--rojo); }
-  /* [EDITABLE] Etiquetas KPI */
-  .kpi-label { font-size:10px; font-weight:700; color:#aaa; text-transform:uppercase; letter-spacing:0.6px; margin-bottom:4px; }
-  .kpi-valor { font-family:'Barlow Condensed',sans-serif; font-size:26px; font-weight:700; color:var(--azul); }
-  .kpi-sub { font-size:11px; color:#aaa; margin-top:2px; }
+  .menu-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:28px}
+  .menu-btn{
+    background:white;border:1px solid #e0e4ec;border-radius:12px;
+    padding:24px;text-align:left;cursor:pointer;
+    transition:all .2s;font-family:inherit;color:var(--texto);
+    position:relative;overflow:hidden;display:flex;flex-direction:column;gap:6px;
+    box-shadow:0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03);
+  }
+  .menu-btn::before{
+    content:'';position:absolute;left:0;top:0;bottom:0;width:4px;
+    background:var(--brand);opacity:0.7;transition:all .2s;
+  }
+  .menu-btn::after{
+    content:'';position:absolute;inset:0;border-radius:12px;
+    background:linear-gradient(135deg,transparent 60%,rgba(30,63,122,0.025));
+    pointer-events:none;
+  }
+  .menu-btn:hover{
+    transform:translateY(-3px);border-color:var(--brand);
+    box-shadow:0 8px 20px rgba(30,63,122,0.12), 0 2px 4px rgba(0,0,0,0.05);
+  }
+  .menu-btn:hover::before{opacity:1;width:5px}
+  .menu-btn-icon{
+    width:38px;height:38px;border-radius:10px;
+    display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:6px;
+  }
+  .menu-btn-titulo{font-size:16px;font-weight:600;letter-spacing:-0.3px}
+  .menu-btn .sub{font-size:13px;color:var(--texto-soft);font-weight:400;line-height:1.4}
+  .menu-btn-arrow{
+    margin-top:8px;font-size:12px;font-weight:600;color:var(--brand);
+    display:flex;align-items:center;gap:4px;
+  }
+  .menu-btn-arrow::after{content:'→';transition:transform .15s}
+  .menu-btn:hover .menu-btn-arrow::after{transform:translateX(3px)}
+  /* Variantes color */
+  .menu-btn.azul::before{background:var(--brand);opacity:0.7}
+  .menu-btn.azul .menu-btn-icon{background:var(--brand-soft);color:var(--brand)}
+  .menu-btn.azul .menu-btn-arrow{color:var(--brand)}
+  .menu-btn.verde::before{background:var(--brand-2);opacity:0.7}
+  .menu-btn.verde .menu-btn-icon{background:var(--brand-2-soft);color:var(--brand-2)}
+  .menu-btn.verde .menu-btn-arrow{color:var(--brand-2)}
+  .menu-btn.verde:hover{border-color:var(--brand-2-soft)}
+  .menu-btn.naranja::before{background:var(--accent-1);opacity:0.7}
+  .menu-btn.naranja .menu-btn-icon{background:#fcefd8;color:var(--accent-1)}
+  .menu-btn.naranja .menu-btn-arrow{color:var(--accent-1)}
+  .menu-btn.naranja:hover{border-color:#fcefd8}
+  .menu-btn.morado::before{background:var(--accent-3);opacity:0.7}
+  .menu-btn.morado .menu-btn-icon{background:#e8dff0;color:var(--accent-3)}
+  .menu-btn.morado .menu-btn-arrow{color:var(--accent-3)}
+  .menu-btn.morado:hover{border-color:#e8dff0}
+  .menu-btn.rojo::before{background:var(--accent-5);opacity:0.7}
+  .menu-btn.rojo .menu-btn-icon{background:#fce8e4;color:var(--accent-5)}
+  .menu-btn.rojo .menu-btn-arrow{color:var(--accent-5)}
+  .menu-btn.rojo:hover{border-color:#fce8e4}
 
-  /* PROGRESS BAR */
-  .progress-wrap { background:#eef0f4; border-radius:10px; height:6px; margin-top:8px; overflow:hidden; }
-  .progress-bar { height:100%; border-radius:10px; background:var(--verde-claro); transition:width 0.5s; }
+  /* Botón atrás */
+  .back-btn{
+    background:white;border:1px solid var(--gris-borde);border-radius:6px;
+    padding:5px 11px;font-family:inherit;font-size:11.5px;font-weight:600;
+    color:var(--brand);cursor:pointer;
+    display:inline-flex;align-items:center;gap:3px;transition:all .15s;
+  }
+  .back-btn:hover{background:var(--brand-bg);border-color:var(--brand);color:var(--brand-dark)}
 
-  /* SECCIÓN */
-  /* [EDITABLE] Títulos de sección/tabla */
-  .seccion-titulo { font-size:10px; font-weight:700; color:#1e3f7a; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:8px; padding-bottom:6px; border-bottom:2px solid #e8a020; }
+  /* Cabecera de página interna */
+  /* Barra delgada con depto + back, debajo del header */
+  .pag-actions-bar{
+    display:flex;align-items:center;justify-content:flex-end;
+    gap:8px;margin-bottom:14px;
+  }
+  .depto-badge{
+    font-size:10.5px;font-weight:600;color:var(--brand-2);
+    background:var(--brand-2-soft);padding:4px 9px;border-radius:5px;white-space:nowrap;
+    font-family:'Geist Mono',monospace;letter-spacing:0.3px;
+  }
 
-  /* TABLAS */
-  .tabla-wrap { overflow-x:auto; margin-bottom:14px; border-radius:6px; border:1px solid #e8edf5; }
-  table { width:100%; border-collapse:collapse; font-size:12px; background:white; }
-  thead tr { background:linear-gradient(90deg,#1e3f7a,#2a5298); color:white; }
-  thead th { font-size:11px; font-weight:700; padding:7px 10px; text-align:center; border-right:1px solid rgba(255,255,255,0.1); letter-spacing:0.04em; }
-  tbody tr { border-bottom:1px solid #f0f3f8; }
-  tbody tr:hover { background:#f5f7fc; }
-  tbody td { padding:5px 10px; text-align:center; color:#1a1a1a; }
-  tbody tr.total-row { background:linear-gradient(90deg,#1e3f7a,#2a5298) !important; color:white; font-weight:700; }
-  tbody tr.total-row td { color:white; }
+  /* ────────────────────── FILTROS ────────────────────── */
+  .filtros{
+    display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;
+    background:white;padding:12px 16px;border-radius:10px;
+    border:1px solid var(--gris-borde);align-items:flex-end;
+  }
+  .filtro-grupo{display:flex;flex-direction:column;gap:4px}
+  .filtro-grupo label{font-size:11px;font-weight:600;color:var(--texto-soft);letter-spacing:0.3px}
+  .filtro-grupo select, .filtro-grupo input{
+    border:1px solid var(--gris-borde);border-radius:7px;padding:7px 11px;
+    font-size:13px;min-width:140px;background:white;color:var(--texto);
+    font-family:inherit;font-weight:500;outline:none;
+    transition:border-color .15s, box-shadow .15s;
+  }
+  .filtro-grupo select:focus, .filtro-grupo input:focus{
+    border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft);
+  }
 
-  /* SEMÁFORO FRESCURA */
-  .badge { display:inline-block; padding:3px 8px; border-radius:3px; font-size:12px; font-weight:700; color:white; }
-  .badge-verde { background:#eaf3de; color:#2d6e3e; }
-  .badge-amarillo { background:#faeeda; color:#854f0b; }
-  .badge-rojo { background:#fcebeb; color:#a32d2d; }
+  /* ────────────────────── KPIs ────────────────────── */
+  .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:18px}
+  .kpi-card{
+    background:white;border-radius:10px;padding:14px 16px;
+    border:1px solid #e0e4ec;border-top:3px solid var(--brand);
+    transition:transform .15s, box-shadow .15s;
+    box-shadow:0 1px 3px rgba(0,0,0,0.04);
+    display:flex;flex-direction:column;justify-content:space-between;
+    min-height:108px;
+  }
+  .kpi-card:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,0.06)}
+  .kpi-card.verde{border-top-color:var(--brand-2)}
+  .kpi-card.naranja{border-top-color:var(--accent-1)}
+  .kpi-card.rojo{border-top-color:var(--accent-5)}
+  .kpi-card.morado{border-top-color:var(--accent-3)}
+  .kpi-card.cyan{border-top-color:var(--accent-4)}
+  /* Etiqueta más prominente con color */
+  .kpi-label{
+    font-size:11px;font-weight:600;color:var(--brand);
+    letter-spacing:0.4px;margin-bottom:0;text-transform:uppercase;
+  }
+  .kpi-card.verde .kpi-label{color:var(--brand-2)}
+  .kpi-card.naranja .kpi-label{color:var(--accent-1)}
+  .kpi-card.rojo .kpi-label{color:var(--accent-5)}
+  .kpi-card.morado .kpi-label{color:var(--accent-3)}
+  .kpi-card.cyan .kpi-label{color:var(--accent-4)}
+  .kpi-valor{
+    font-size:30px;font-weight:700;color:var(--texto);
+    letter-spacing:-1.2px;line-height:1;font-variant-numeric:tabular-nums;
+    margin-top:8px;
+  }
+  .kpi-sub{font-size:11.5px;color:var(--texto-soft);margin-top:6px;display:flex;align-items:center;gap:6px;font-weight:500}
+  .badge-up{
+    color:var(--pos);background:var(--pos-bg);padding:2px 7px;border-radius:5px;
+    font-weight:600;font-size:11px;font-family:'Geist Mono',monospace;
+  }
+  .badge-down{
+    color:var(--neg);background:var(--neg-bg);padding:2px 7px;border-radius:5px;
+    font-weight:600;font-size:11px;font-family:'Geist Mono',monospace;
+  }
+  .badge-neutral{
+    color:var(--brand);background:var(--brand-soft);padding:2px 7px;border-radius:5px;
+    font-weight:600;font-size:11px;font-family:'Geist Mono',monospace;
+  }
 
-  /* GRID DOS COLUMNAS */
-  .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
-  .grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:16px; }
+  /* ────────────────────── PROGRESS ────────────────────── */
+  .progress-wrap{background:#eef0f4;border-radius:10px;height:6px;margin-top:8px;overflow:hidden}
+  .progress-bar{height:100%;border-radius:10px;background:linear-gradient(90deg,var(--brand-2),#4a8e5d);transition:width 0.5s}
 
-  /* CANVAS */
-  .chart-box { background:white; border-radius:8px; border:1px solid #e8edf5; padding:14px 16px; }
-  /* [EDITABLE] Títulos de gráficas */
-  .chart-title { font-size:10px; font-weight:700; color:#1e3f7a; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:8px; }
+  /* ────────────────────── SECCIÓN ────────────────────── */
+  .seccion-titulo{
+    font-size:11px;font-weight:600;color:var(--texto-soft);
+    letter-spacing:1.2px;text-transform:uppercase;
+    margin-bottom:10px;margin-top:14px;padding-left:10px;
+    border-left:3px solid var(--brand);
+    display:flex;align-items:center;gap:8px;
+  }
 
-  /* ESCENARIO */
-  .escenario-input { display:flex; align-items:center; gap:10px; background:white; padding:12px 20px; border-radius:8px; border:1px solid #ddd; margin-bottom:20px; }
-  .escenario-input label { font-size:13px; font-weight:600; color:var(--azul); }
-  .escenario-input input { border:1.5px solid var(--azul-medio); border-radius:4px; padding:6px 12px; font-size:16px; font-weight:700; width:120px; text-align:center; }
-  .escenario-input button { background:var(--azul); color:white; border:none; border-radius:4px; padding:7px 16px; font-size:13px; font-weight:700; cursor:pointer; }
+  /* ────────────────────── TABLAS ────────────────────── */
+  .tabla-wrap{
+    overflow-x:auto;margin-bottom:12px;
+    border-radius:10px;border:1px solid var(--gris-borde);background:white;
+  }
+  table{width:100%;border-collapse:collapse;font-size:13px;background:white}
+  /* Encabezados con más color: gradient azul→verde sutil + texto en color marca */
+  thead tr{background:linear-gradient(90deg,var(--brand-soft),var(--brand-2-soft));border-bottom:2px solid var(--brand)}
+  thead th{
+    font-size:11px;font-weight:700;padding:10px 12px;text-align:center;
+    color:var(--brand);letter-spacing:0.6px;text-transform:uppercase;
+    background:transparent;
+  }
+  thead th:first-child{border-radius:10px 0 0 0;text-align:left;padding-left:14px}
+  thead th:last-child{border-radius:0 10px 0 0;padding-right:14px}
+  /* Filas con separador suave gris entre cada una */
+  tbody tr{border-bottom:1px solid #eef0f4;background:white;transition:background .12s}
+  tbody tr:nth-child(even){background:#fbfcfd}
+  tbody tr:hover{background:var(--brand-bg) !important}
+  tbody td{padding:8px 12px;text-align:center;color:var(--texto);font-weight:500;font-variant-numeric:tabular-nums}
+  tbody td:first-child{text-align:left;padding-left:14px;font-weight:500}
+  tbody td:last-child{padding-right:14px}
+  /* TOTAL: resalte suave bajo gris-azulado, NO gradient fuerte */
+  tbody tr.total-row{background:#eef2f8 !important;color:var(--brand);font-weight:700;border-top:2px solid var(--brand)}
+  tbody tr.total-row td{color:var(--brand);font-weight:700;font-size:13.5px}
+  tbody tr.total-row td:first-child{color:var(--brand);font-weight:800}
 
-  .dias-box { background:linear-gradient(135deg,#2d6e3e,#3a8a4e); color:white; border-radius:8px; padding:18px; text-align:center; }
-  .dias-num { font-family:'Barlow Condensed',sans-serif; font-size:56px; font-weight:800; line-height:1; }
-  .dias-label { font-size:13px; font-weight:600; margin-top:4px; opacity:0.9; }
-  .fecha-box { background:linear-gradient(135deg,#1e3f7a,#2a5298); color:white; border-radius:8px; padding:18px; text-align:center; }
-  .fecha-num { font-family:'Barlow Condensed',sans-serif; font-size:34px; font-weight:800; line-height:1.2; }
-  .fecha-label { font-size:13px; font-weight:600; margin-top:4px; opacity:0.9; }
+  /* ────────────────────── BADGES SEMÁFORO FRESCURA ────────────────────── */
+  .badge{display:inline-block;padding:3px 9px;border-radius:5px;font-size:11px;font-weight:600;font-family:'Geist Mono',monospace}
+  .badge-verde{background:var(--pos-bg);color:var(--pos)}
+  .badge-amarillo{background:#fef3c7;color:#92400e}
+  .badge-rojo{background:var(--neg-bg);color:var(--neg)}
 
-  .loading { text-align:center; padding:28px; color:#bbb; font-size:13px; }
-  .pie-pagina { text-align:right; font-size:11px; color:#bbb; font-style:italic; margin-top:14px; }
+  /* ────────────────────── GRID ────────────────────── */
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+  .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px}
+
+  /* ────────────────────── CHARTS ────────────────────── */
+  .chart-box{background:white;border-radius:10px;border:1px solid var(--gris-borde);padding:14px 16px}
+  .chart-title{
+    font-size:12px;font-weight:600;color:var(--texto);
+    margin-bottom:10px;display:flex;align-items:center;gap:8px;
+  }
+  .chart-title::before{content:'';width:3px;height:14px;background:linear-gradient(to bottom,var(--brand),var(--brand-2));border-radius:2px}
+
+  /* ────────────────────── ESCENARIO ────────────────────── */
+  .escenario-input{
+    display:flex;align-items:center;gap:12px;background:white;
+    padding:14px 20px;border-radius:10px;border:1px solid var(--gris-borde);margin-bottom:18px;
+  }
+  .escenario-input label{font-size:13px;font-weight:600;color:var(--texto)}
+  .escenario-input input{
+    border:1px solid var(--gris-borde);border-radius:7px;padding:7px 12px;
+    font-size:15px;font-weight:600;width:120px;text-align:center;outline:none;
+    color:var(--brand);font-family:inherit;
+  }
+  .escenario-input input:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+  .escenario-input button{
+    background:linear-gradient(135deg,var(--brand),var(--brand-2));
+    color:white;border:none;border-radius:7px;padding:8px 18px;
+    font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;
+    transition:transform .15s, box-shadow .15s;
+  }
+  .escenario-input button:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(30,63,122,0.2)}
+
+  .dias-box{
+    background:linear-gradient(135deg,var(--brand-2),#4a8e5d);
+    color:white;border-radius:10px;padding:20px;text-align:center;
+    box-shadow:0 4px 12px rgba(45,110,62,0.15);
+  }
+  .dias-num{font-size:50px;font-weight:700;line-height:1;letter-spacing:-2px;font-variant-numeric:tabular-nums}
+  .dias-label{font-size:13px;font-weight:500;margin-top:4px;opacity:0.9}
+  .fecha-box{
+    background:linear-gradient(135deg,var(--brand),#3a5fa8);
+    color:white;border-radius:10px;padding:20px;text-align:center;
+    box-shadow:0 4px 12px rgba(30,63,122,0.15);
+  }
+  .fecha-num{font-size:30px;font-weight:700;line-height:1.2;letter-spacing:-1px}
+  .fecha-label{font-size:13px;font-weight:500;margin-top:4px;opacity:0.9}
+
+  .loading{text-align:center;padding:28px;color:var(--texto-muted);font-size:13px}
+  .pie-pagina{
+    text-align:right;font-size:12px;color:var(--texto-soft);
+    margin-top:18px;padding-top:14px;border-top:1px solid var(--gris-borde);font-weight:500;
+  }
+  .pie-pagina strong{color:var(--brand);font-weight:600}
+
+  /* Chips zafras (para quemas) */
+  .chip-zafra{
+    padding:5px 11px;border:1px solid var(--gris-borde);border-radius:6px;
+    background:white;font-size:11px;font-weight:600;cursor:pointer;
+    color:var(--texto);transition:all .15s;font-family:'Geist Mono',monospace;letter-spacing:0.3px;
+  }
+  .chip-zafra:hover{border-color:var(--brand-soft);background:var(--brand-bg)}
+  .chip-zafra.activo{background:var(--brand);color:white;border-color:var(--brand)}
 </style>
 </head>
 <body>
@@ -162,62 +496,102 @@
 <!-- LOGIN -->
 <div id="pag-login">
   <div class="login-box">
-    <!-- [EDITABLE] Nombre y subtítulo en pantalla de login -->
-    <div class="login-logo">CHUMBAGUA</div>
-    <div class="login-sub">Azúcar · Energía · Honduras</div>
-    <div class="login-titulo">Acceso al Sistema</div>
+    <div class="login-logo-wrap">CH</div>
+    <div class="login-logo">Chumbagua</div>
+    <div class="login-sub">Inteligencia Agrícola</div>
+    <div class="login-titulo">Acceso al sistema</div>
     <input class="login-input" type="email" id="login-email" placeholder="Correo electrónico"/>
     <input class="login-input" type="password" id="login-pass" placeholder="Contraseña" onkeydown="if(event.key==='Enter')doLogin()"/>
-    <button class="login-btn" id="login-btn" onclick="doLogin()">INGRESAR</button>
+    <button class="login-btn" id="login-btn" onclick="doLogin()">Ingresar</button>
     <div class="login-error" id="login-error"></div>
   </div>
 </div>
 
 <!-- HEADER -->
-<!-- [EDITABLE] Header: nombre empresa, subtítulo, departamento -->
-<div class="header">
-  <div class="header-brand">
-    <span class="hdr-name">CHUMBAGUA</span>
-    <span class="hdr-sub">Azúcar · Energía · Honduras</span>
+<div class="header" id="hdr">
+  <div class="brand-blk">
+    <div class="brand-logo">C</div>
+    <div class="brand-name">Chumbagua <span>· Inteligencia Agrícola</span></div>
   </div>
-  <div class="header-right">
-    <span class="header-depto">Depto. de Estadística Agrícola</span>
-    <span class="header-fecha" id="fecha-header">—</span>
-    <button class="logout-btn" onclick="doLogout()">Cerrar sesión</button>
+  <div class="header-pagina">
+    <div class="header-pagina-titulo" id="hdr-titulo">Avance de Cosecha</div>
+    <div class="header-pagina-sub" id="hdr-subtitulo">Compañía Azucarera Chumbagua</div>
+  </div>
+  <div class="header-actions">
+    <!-- Botón Atrás dinámico (visible solo en páginas internas) -->
+    <button class="btn-atras-hdr" id="btn-atras-hdr" onclick="irA('pag-menu')" title="Volver al menú" style="display:none">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      <span>Atrás</span>
+    </button>
+    <button class="btn-portal-icon" onclick="window.location.href='index.html'" title="Ir al portal">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    </button>
+    <div class="avatar" id="user-avatar" onclick="toggleUserDropdown()" title="Mi sesión">RB</div>
+    <div class="user-dropdown" id="user-dropdown">
+      <div class="udd-header">
+        <div class="udd-nombre" id="udd-nombre">Cargando...</div>
+        <div class="udd-cargo" id="udd-cargo">—</div>
+        <div class="udd-email" id="udd-email">—</div>
+      </div>
+      <button class="udd-btn" onclick="doLogout()">Cerrar sesión</button>
+    </div>
   </div>
 </div>
 
 <!-- MENÚ -->
 <div id="pag-menu" class="page active">
   <div class="menu-page">
-    <!-- [EDITABLE] Título del menú principal -->
-    <div class="menu-banner">AVANCE DE COSECHA — ZAFRA 2025-2026</div>
-    <div class="menu-grid">
-      <button class="menu-btn azul" onclick="irA('pag-resumen')">RESUMEN COSECHA<span class="sub">Dashboard general</span></button>
-      <button class="menu-btn azul" onclick="irA('pag-frescura')">FRESCURA<span class="sub">Horas por frente</span></button>
-      <button class="menu-btn azul" onclick="irA('pag-escenarios')">ESCENARIOS MOLIENDA<span class="sub">Proyecciones TM/Día</span></button>
-      <button class="menu-btn verde" onclick="irA('pag-frentes')">COSECHADO POR FRENTE<span class="sub">Avance por frente</span></button>
-      <button class="menu-btn verde" onclick="irA('pag-zonas')">ZONAS GEOGRÁFICAS<span class="sub">Avance por zona</span></button>
-      <button class="menu-btn naranja" onclick="irA('pag-quemas')">QUEMAS CRIMINALES<span class="sub">Registro histórico</span></button>
+    <div class="menu-hero">
+      <h1>Avance de <span class="grad">Cosecha</span></h1>
+      <div class="menu-hero-zafra">Zafra 2025–2026</div>
+      <p>Dashboard integral de seguimiento operativo: resumen de báscula, frescura por frente, escenarios de molienda, avance por zonas y registro histórico de quemas criminales.</p>
     </div>
-    <p class="pie-pagina">Depto. de Estadística Agrícola | Zafra 2025-2026</p>
+    <div class="menu-grid">
+      <button class="menu-btn azul" onclick="irA('pag-resumen')">
+        <div class="menu-btn-icon">📊</div>
+        <div class="menu-btn-titulo">Resumen Cosecha</div>
+        <span class="sub">Dashboard general con KPIs, lotes abiertos, avance y comparativos</span>
+        <span class="menu-btn-arrow">Abrir módulo</span>
+      </button>
+      <button class="menu-btn verde" onclick="irA('pag-frescura')">
+        <div class="menu-btn-icon">🌡️</div>
+        <div class="menu-btn-titulo">Frescura</div>
+        <span class="sub">Horas de quemado a molienda por frente y día</span>
+        <span class="menu-btn-arrow">Abrir módulo</span>
+      </button>
+      <button class="menu-btn azul" onclick="irA('pag-escenarios')">
+        <div class="menu-btn-icon">📈</div>
+        <div class="menu-btn-titulo">Escenarios Molienda</div>
+        <span class="sub">Proyecciones de TM/día y fecha estimada de fin</span>
+        <span class="menu-btn-arrow">Abrir módulo</span>
+      </button>
+      <button class="menu-btn morado" onclick="irA('pag-frentes')">
+        <div class="menu-btn-icon">🚜</div>
+        <div class="menu-btn-titulo">Cosechado por Frente</div>
+        <span class="sub">Avance por frente y zona geográfica</span>
+        <span class="menu-btn-arrow">Abrir módulo</span>
+      </button>
+      <!-- [EDITABLE] URL del Programa de Cosecha -->
+      <button class="menu-btn verde" onclick="window.open('https://reinaldobacila.github.io/Inteligencia_Agricola/reporteriach/programa_cosecha.html','_self')">
+        <div class="menu-btn-icon">📋</div>
+        <div class="menu-btn-titulo">Programa de Cosecha</div>
+        <span class="sub">Plan de zafra y secuencia de cortes</span>
+        <span class="menu-btn-arrow">Abrir módulo</span>
+      </button>
+      <button class="menu-btn rojo" onclick="irA('pag-quemas')">
+        <div class="menu-btn-icon">🔥</div>
+        <div class="menu-btn-titulo">Quemas Criminales</div>
+        <span class="sub">Registro histórico de incidentes con mapa interactivo</span>
+        <span class="menu-btn-arrow">Abrir módulo</span>
+      </button>
+    </div>
+    <p class="pie-pagina">by <strong>Departamento de Estadística Agrícola</strong> &nbsp;|&nbsp; Compañía Azucarera Chumbagua &nbsp;|&nbsp; Zafra 2025–2026</p>
   </div>
 </div>
 
 <!-- RESUMEN COSECHA -->
 <div id="pag-resumen" class="page">
   <!-- [EDITABLE] Título página Resumen Cosecha -->
-  <div class="pag-hdr">
-    <div>
-      <div class="pag-hdr-titulo">Avance de Cosecha</div>
-      <div class="pag-hdr-sub">Compañía Azucarera Chumbagua | Zafra 2025-2026</div>
-    </div>
-    <div class="pag-hdr-actions">
-      <span class="depto-badge">Depto. Estadística Agrícola</span>
-      <button class="back-btn" onclick="irA('pag-menu')">← Ir al menú</button>
-    </div>
-  </div>
-
   <div class="filtros">
     <div class="filtro-grupo">
       <label>Mes</label>
@@ -242,6 +616,24 @@
   </div>
 
   <div class="kpi-grid" id="kpis-resumen"><div class="loading">Cargando...</div></div>
+
+  <!-- DONUTS visuales: distribución por tipo de corte y origen de caña -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0;">
+    <div class="chart-box" style="padding:12px 14px;">
+      <div class="chart-title" style="font-size:11px;margin-bottom:6px;">DISTRIBUCIÓN MANUAL VS MECANIZADO</div>
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div style="flex:0 0 160px;height:160px;"><canvas id="donut-corte"></canvas></div>
+        <div id="leyenda-corte" style="flex:1;font-size:12px;"></div>
+      </div>
+    </div>
+    <div class="chart-box" style="padding:12px 14px;">
+      <div class="chart-title" style="font-size:11px;margin-bottom:6px;">DISTRIBUCIÓN CAÑA QUEMADA VS CRUDA</div>
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div style="flex:0 0 160px;height:160px;"><canvas id="donut-origen"></canvas></div>
+        <div id="leyenda-origen" style="flex:1;font-size:12px;"></div>
+      </div>
+    </div>
+  </div>
 
   <div class="grid-3">
     <div>
@@ -317,23 +709,12 @@
     </div>
   </div>
 
-  <p class="pie-pagina">Depto. de Estadística Agrícola | Zafra 2025-2026</p>
+  <p class="pie-pagina">by <strong>Departamento de Estadística Agrícola</strong> &nbsp;|&nbsp; Compañía Azucarera Chumbagua</p>
 </div>
 
 <!-- FRESCURA -->
 <div id="pag-frescura" class="page">
   <!-- [EDITABLE] Título página Frescura -->
-  <div class="pag-hdr">
-    <div>
-      <div class="pag-hdr-titulo">Comparativo de Frescura</div>
-      <div class="pag-hdr-sub">Compañía Azucarera Chumbagua | Zafra 2025-2026</div>
-    </div>
-    <div class="pag-hdr-actions">
-      <span class="depto-badge">Depto. Estadística Agrícola</span>
-      <button class="back-btn" onclick="irA('pag-menu')">← Ir al menú</button>
-    </div>
-  </div>
-
   <!-- FILTRO DÍA ZAFRA -->
   <div class="filtros" style="margin-bottom:16px;">
     <div class="filtro-grupo">
@@ -352,20 +733,37 @@
     </div>
   </div>
 
-  <!-- FILA 1: KPI compacto + Rangos por frente -->
-  <div style="display:grid;grid-template-columns:180px 1fr;gap:16px;margin-bottom:16px;align-items:start;">
-    <div class="kpi-card" style="text-align:center;padding:14px 10px;">
+  <!-- FILA 1: KPIs frescura -->
+  <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px">
+    <div class="kpi-card">
       <div class="kpi-label">FRESCURA PROMEDIO</div>
-      <div class="kpi-valor" style="font-size:36px;" id="frescura-global">—</div>
-      <div class="kpi-sub">Horas promedio zafra</div>
+      <div class="kpi-valor" id="frescura-global">—</div>
+      <div class="kpi-sub">Horas ponderado por TM zafra</div>
     </div>
-    <div>
-      <div class="seccion-titulo">FRESCURA ACUMULADA POR RANGOS</div>
-      <div class="tabla-wrap"><table id="tbl-frescura-rangos">
-        <thead><tr><th>Fte. Corte</th><th>Peso Ton</th><th>% 0-36 hrs</th><th>% 37-48 hrs</th><th>% 49+ hrs</th></tr></thead>
-        <tbody><tr><td colspan="5" class="loading">Cargando...</td></tr></tbody>
-      </table></div>
+    <div class="kpi-card verde">
+      <div class="kpi-label">MEJOR SEMANA</div>
+      <div class="kpi-valor" id="frescura-mejor-sem">—</div>
+      <div class="kpi-sub" id="frescura-mejor-sem-sub">—</div>
     </div>
+    <div class="kpi-card naranja">
+      <div class="kpi-label">PEOR SEMANA</div>
+      <div class="kpi-valor" id="frescura-peor-sem">—</div>
+      <div class="kpi-sub" id="frescura-peor-sem-sub">—</div>
+    </div>
+    <div class="kpi-card cyan">
+      <div class="kpi-label">FRENTE MÁS FRESCO</div>
+      <div class="kpi-valor" style="font-size:18px;letter-spacing:-0.5px" id="frescura-mejor-fte">—</div>
+      <div class="kpi-sub" id="frescura-mejor-fte-sub">—</div>
+    </div>
+  </div>
+
+  <!-- FILA 2: Tabla rangos por frente (con columna frescura promedio) -->
+  <div style="margin-bottom:16px;">
+    <div class="seccion-titulo">FRESCURA ACUMULADA POR FRENTE</div>
+    <div class="tabla-wrap"><table id="tbl-frescura-rangos">
+      <thead><tr><th>Fte. Corte</th><th>Peso Ton</th><th>Fresc. Prom (hrs)</th><th>% 0-36 hrs</th><th>% 37-48 hrs</th><th>% 49+ hrs</th></tr></thead>
+      <tbody><tr><td colspan="6" class="loading">Cargando...</td></tr></tbody>
+    </table></div>
   </div>
 
   <!-- FILA 2: Gráfica por día -->
@@ -412,64 +810,57 @@
     </div>
   </div>
 
-  <p class="pie-pagina">Depto. de Estadística Agrícola | Zafra 2025-2026</p>
+  <p class="pie-pagina">by <strong>Departamento de Estadística Agrícola</strong> &nbsp;|&nbsp; Compañía Azucarera Chumbagua</p>
 </div>
 
 <!-- ESCENARIOS -->
 <div id="pag-escenarios" class="page">
-  <!-- [EDITABLE] Título página Escenarios -->
-  <div class="pag-hdr">
-    <div>
-      <div class="pag-hdr-titulo">Escenarios Molienda</div>
-      <div class="pag-hdr-sub">Compañía Azucarera Chumbagua | Zafra 2025-2026</div>
+  <!-- Selector escenario + KPIs grandes en una sola fila -->
+  <div class="filtros" style="margin-bottom:14px">
+    <div class="filtro-grupo">
+      <label>Molienda diaria (TM)</label>
+      <input type="number" id="molienda-input" value="6800" min="1000" max="12000" step="100" oninput="calcularEscenario()"/>
     </div>
-    <div class="pag-hdr-actions">
-      <span class="depto-badge">Depto. Estadística Agrícola</span>
-      <button class="back-btn" onclick="irA('pag-menu')">← Ir al menú</button>
-    </div>
-  </div>
-
-  <!-- Header estilo PBI -->
-  <div style="background:white;border:1px solid #ddd;border-radius:8px;padding:16px 24px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
-    <div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:var(--azul);">AVANCE DE COSECHA — ESCENARIO <span id="esc-titulo-molienda">6,800</span> MOLIENDA PROM.</div>
-      <div style="font-size:12px;color:#888;">COMPAÑÍA AZUCARERA CHUMBAGUA</div>
-    </div>
-    <div style="display:flex;align-items:center;gap:10px;">
-      <label style="font-size:12px;font-weight:600;color:var(--azul);">Seleccionar Escenario</label>
-      <input type="number" id="molienda-input" value="6800" min="1000" max="12000" step="100"
-        style="border:1.5px solid var(--azul-medio);border-radius:4px;padding:6px 10px;font-size:14px;font-weight:700;width:100px;text-align:center;"
-        oninput="calcularEscenario()"/>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--texto-soft)">
+      <span>Escenario actual:</span>
+      <strong style="color:var(--brand);font-family:'Geist Mono',monospace" id="esc-titulo-molienda">6,800</strong>
+      <span>TM/día</span>
     </div>
   </div>
 
   <!-- KPIs grandes -->
-  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px;">
-    <div style="background:white;border:1px solid #ddd;border-radius:8px;padding:14px 16px;border-top:3px solid var(--azul-claro);">
-      <div style="font-size:10px;font-weight:600;color:#888;text-transform:uppercase;margin-bottom:4px;">Tm Estimado</div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;color:var(--azul);" id="esc-kpi-est">—</div>
+  <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr);margin-bottom:14px">
+    <div class="kpi-card">
+      <div class="kpi-label">TM ESTIMADO</div>
+      <div class="kpi-valor" id="esc-kpi-est">—</div>
+      <div class="kpi-sub">Total zafra</div>
     </div>
-    <div style="background:white;border:1px solid #ddd;border-radius:8px;padding:14px 16px;border-top:3px solid var(--verde);">
-      <div style="font-size:10px;font-weight:600;color:#888;text-transform:uppercase;margin-bottom:4px;">Tm Cosechado</div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;color:var(--verde);" id="esc-kpi-cos">—</div>
+    <div class="kpi-card verde">
+      <div class="kpi-label">TM COSECHADO</div>
+      <div class="kpi-valor" id="esc-kpi-cos">—</div>
+      <div class="kpi-sub" id="esc-kpi-avance-sub">— del estimado</div>
     </div>
-    <div style="background:white;border:1px solid #ddd;border-radius:8px;padding:14px 16px;border-top:3px solid var(--rojo);">
-      <div style="font-size:10px;font-weight:600;color:#888;text-transform:uppercase;margin-bottom:4px;">Tm Pendiente</div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;color:var(--rojo);" id="esc-kpi-pend">—</div>
+    <div class="kpi-card rojo">
+      <div class="kpi-label">TM PENDIENTE</div>
+      <div class="kpi-valor" id="esc-kpi-pend">—</div>
+      <div class="kpi-sub">Por cosechar</div>
     </div>
-    <div style="background:white;border:1px solid #ddd;border-radius:8px;padding:14px 16px;border-top:3px solid var(--naranja);">
-      <div style="font-size:10px;font-weight:600;color:#888;text-transform:uppercase;margin-bottom:4px;">Molienda Proyectada</div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;color:var(--naranja);" id="esc-kpi-mol">—</div>
+    <div class="kpi-card naranja">
+      <div class="kpi-label">MOLIENDA</div>
+      <div class="kpi-valor" id="esc-kpi-mol">—</div>
+      <div class="kpi-sub">TM/día</div>
     </div>
-    <div style="background:white;border:1px solid #ddd;border-radius:8px;padding:14px 16px;border-top:3px solid var(--azul-medio);">
-      <div style="font-size:10px;font-weight:600;color:#888;text-transform:uppercase;margin-bottom:4px;">Avance Cosecha</div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:800;color:var(--azul-medio);" id="esc-kpi-avance">—</div>
+    <div class="kpi-card cyan">
+      <div class="kpi-label">AVANCE</div>
+      <div class="kpi-valor" id="esc-kpi-avance">—</div>
+      <div class="kpi-sub">Cosechado / estimado</div>
     </div>
   </div>
 
-  <!-- Tabla frentes + cajas días/fecha -->
-  <div style="display:grid;grid-template-columns:1fr 280px;gap:16px;margin-bottom:16px;align-items:start;">
+  <!-- FILA: Tabla frentes + cajas días/fecha (compactas, alineadas) -->
+  <div style="display:grid;grid-template-columns:1fr 240px;gap:14px;margin-bottom:14px;align-items:stretch;">
     <div>
+      <div class="seccion-titulo">AVANCE POR FRENTE</div>
       <div class="tabla-wrap" style="margin-bottom:0">
         <table id="tbl-escenario-frentes">
           <thead><tr><th>Nombre Frente</th><th>KM</th><th>Tm. Estimado</th><th>Tm. Cosechado</th><th>Tm. Pendiente</th><th>Cuota</th><th>%</th></tr></thead>
@@ -477,23 +868,23 @@
         </table>
       </div>
     </div>
-    <div style="display:flex;flex-direction:column;gap:10px;">
-      <div style="background:var(--verde);color:white;border-radius:8px;padding:16px;text-align:center;">
-        <div style="font-size:11px;font-weight:700;opacity:0.9;margin-bottom:4px;">DÍAS PARA FINALIZACIÓN</div>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:44px;font-weight:800;line-height:1;" id="dias-finalizacion">—</div>
+    <div style="display:flex;flex-direction:column;gap:10px;justify-content:flex-start;">
+      <div class="dias-box-c" style="background:linear-gradient(135deg,var(--brand-2),#4a8e5d);color:white;border-radius:10px;padding:14px 16px;text-align:center;box-shadow:0 4px 12px rgba(45,110,62,0.18);">
+        <div style="font-size:10.5px;font-weight:600;opacity:0.92;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:4px;">Días para finalización</div>
+        <div style="font-size:38px;font-weight:700;line-height:1;letter-spacing:-1.5px;font-variant-numeric:tabular-nums;" id="dias-finalizacion">—</div>
       </div>
-      <div style="background:var(--azul);color:white;border-radius:8px;padding:16px;text-align:center;">
-        <div style="font-size:11px;font-weight:700;opacity:0.9;margin-bottom:4px;">FECHA ESTIMADA DE FINALIZACIÓN</div>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;line-height:1.3;" id="fecha-finalizacion">—</div>
+      <div class="fecha-box-c" style="background:linear-gradient(135deg,var(--brand),#3a5fa8);color:white;border-radius:10px;padding:14px 16px;text-align:center;box-shadow:0 4px 12px rgba(30,63,122,0.18);">
+        <div style="font-size:10.5px;font-weight:600;opacity:0.92;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:6px;">Fecha estimada fin</div>
+        <div style="font-size:18px;font-weight:700;line-height:1.25;letter-spacing:-0.4px;" id="fecha-finalizacion">—</div>
       </div>
     </div>
   </div>
 
-  <!-- Tabla zonas + gráfica -->
-  <div style="display:grid;grid-template-columns:1fr 340px;gap:16px;margin-bottom:16px;align-items:start;">
+  <!-- FILA: Zonas + Gauge donut + Barras apiladas % -->
+  <div style="display:grid;grid-template-columns:1.4fr 0.7fr 0.9fr;gap:14px;margin-bottom:14px;align-items:start;">
     <div>
-      <div class="seccion-titulo" style="font-size:14px;">AVANCE POR ZONA GEOGRÁFICA</div>
-      <div class="tabla-wrap" style="margin-bottom:0">
+      <div class="seccion-titulo">AVANCE POR ZONA GEOGRÁFICA</div>
+      <div class="tabla-wrap" style="margin-bottom:0;max-height:380px;overflow:auto">
         <table id="tbl-esc-zonas">
           <thead><tr><th>Zona Geo</th><th>KM</th><th>Tm. Estimado</th><th>Tm. Cosechado</th><th>Tm. Pendiente</th><th>%</th></tr></thead>
           <tbody><tr><td colspan="6" class="loading">Cargando...</td></tr></tbody>
@@ -501,35 +892,27 @@
       </div>
     </div>
     <div>
-      <div class="chart-box" style="margin-bottom:10px;">
-        <div class="chart-title">Avance toneladas cosechadas</div>
-        <canvas id="chart-gauge" height="140"></canvas>
-        <div style="text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:var(--azul);margin-top:4px;" id="gauge-valor">—</div>
+      <div class="seccion-titulo">AVANCE TONELADAS</div>
+      <div class="chart-box" style="padding:12px;text-align:center">
+        <canvas id="chart-gauge" height="180"></canvas>
+        <div style="font-size:18px;font-weight:700;color:var(--brand);margin-top:6px;font-variant-numeric:tabular-nums;letter-spacing:-0.5px" id="gauge-valor">—</div>
+        <div style="font-size:11px;color:var(--texto-soft);margin-top:2px" id="gauge-sub">— %</div>
       </div>
-      <div class="chart-box">
-        <div class="chart-title">Tm estimado vs Tm real</div>
-        <canvas id="chart-esc-barras" height="130"></canvas>
+    </div>
+    <div>
+      <div class="seccion-titulo">% AVANCE Y CUOTA POR FRENTE</div>
+      <div class="chart-box" style="padding:12px">
+        <canvas id="chart-esc-barras" height="220"></canvas>
       </div>
     </div>
   </div>
 
-  <p class="pie-pagina">Depto. de Estadística Agrícola | Zafra 2025-2026</p>
+  <p class="pie-pagina">by <strong>Departamento de Estadística Agrícola</strong> &nbsp;|&nbsp; Compañía Azucarera Chumbagua</p>
 </div>
 
 <!-- FRENTES -->
 <div id="pag-frentes" class="page">
   <!-- [EDITABLE] Título página Cosechado por Frente -->
-  <div class="pag-hdr">
-    <div>
-      <div class="pag-hdr-titulo">Cosechado por Frente</div>
-      <div class="pag-hdr-sub">Compañía Azucarera Chumbagua | Zafra 2025-2026</div>
-    </div>
-    <div class="pag-hdr-actions">
-      <span class="depto-badge">Depto. Estadística Agrícola</span>
-      <button class="back-btn" onclick="irA('pag-menu')">← Ir al menú</button>
-    </div>
-  </div>
-
   <div class="tabla-wrap"><table id="tbl-frentes-detalle">
     <thead><tr><th>Frente</th><th>TM Estimado</th><th>TM Cosechado</th><th>TM Pendiente</th><th>% Avance</th><th>Dist. KM</th></tr></thead>
     <tbody><tr><td colspan="6" class="loading">Cargando...</td></tr></tbody>
@@ -540,49 +923,28 @@
     <canvas id="chart-frentes" height="80"></canvas>
   </div>
 
-  <p class="pie-pagina">Depto. de Estadística Agrícola | Zafra 2025-2026</p>
-</div>
-
-<!-- ZONAS -->
-<div id="pag-zonas" class="page">
-  <!-- [EDITABLE] Título página Zonas Geográficas -->
-  <div class="pag-hdr">
-    <div>
-      <div class="pag-hdr-titulo">Avance por Zona Geográfica</div>
-      <div class="pag-hdr-sub">Compañía Azucarera Chumbagua | Zafra 2025-2026</div>
-    </div>
-    <div class="pag-hdr-actions">
-      <span class="depto-badge">Depto. Estadística Agrícola</span>
-      <button class="back-btn" onclick="irA('pag-menu')">← Ir al menú</button>
-    </div>
-  </div>
-
+  <!-- AVANCE POR ZONA GEOGRÁFICA (movido desde su página propia) -->
+  <div class="seccion-titulo" style="margin-top:20px;">AVANCE POR ZONA GEOGRÁFICA</div>
   <div class="tabla-wrap"><table id="tbl-zonas">
     <thead><tr><th>Zona Geo</th><th>Dist. KM</th><th>TM Estimado</th><th>TM Cosechado</th><th>TM Pendiente</th><th>% Avance</th></tr></thead>
     <tbody><tr><td colspan="6" class="loading">Cargando...</td></tr></tbody>
   </table></div>
 
-  <p class="pie-pagina">Depto. de Estadística Agrícola | Zafra 2025-2026</p>
+  <p class="pie-pagina">by <strong>Departamento de Estadística Agrícola</strong> &nbsp;|&nbsp; Compañía Azucarera Chumbagua</p>
+</div>
+
+<!-- ZONAS (página oculta - tabla integrada en Cosechado por Frente) -->
+<div id="pag-zonas" class="page" style="display:none;">
+  <p>Esta página fue integrada a Cosechado por Frente.</p>
 </div>
 
 <!-- QUEMAS -->
 <div id="pag-quemas" class="page">
   <!-- [EDITABLE] Título página Quemas Criminales -->
-  <div class="pag-hdr">
-    <div>
-      <div class="pag-hdr-titulo">Histórico Quemas Criminales</div>
-      <div class="pag-hdr-sub">Compañía Azucarera Chumbagua | Zafra 2025-2026</div>
-    </div>
-    <div class="pag-hdr-actions">
-      <span class="depto-badge">Depto. Estadística Agrícola</span>
-      <button class="back-btn" onclick="irA('pag-menu')">← Ir al menú</button>
-    </div>
-  </div>
-
   <!-- FILTRO ZAFRA (chips grandes, no se filtra en gráfica histórica) -->
   <div style="background:#fff;border:1px solid #e0e4ec;border-radius:8px;padding:10px 14px;margin-bottom:10px;">
     <div style="font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">Zafra</div>
-    <div id="filtro-zafras" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+    <div id="filtro-zafras" style="display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px;"></div>
   </div>
 
   <!-- FILTROS SECUNDARIOS -->
@@ -607,13 +969,13 @@
     </div>
   </div>
 
-  <!-- KPIs -->
-  <div class="kpi-grid" id="kpis-quemas" style="grid-template-columns:repeat(4,1fr);margin-bottom:12px;">
+  <!-- KPIs (4 + 2 mini KPIs en la misma fila) -->
+  <div class="kpi-grid" id="kpis-quemas" style="grid-template-columns:repeat(4,1fr);margin-bottom:14px;">
     <div class="loading">Cargando...</div>
   </div>
 
-  <!-- FILA 1: Tabla histórica + % línea (pequeño, no filtrable) + TM barras -->
-  <div style="display:grid;grid-template-columns:300px 1fr 1fr;gap:10px;margin-bottom:10px;">
+  <!-- FILA 1: Tabla resumen zafra (300px) + 2 charts apilados (1fr) + Tabla mes×semana (1fr) -->
+  <div style="display:grid;grid-template-columns:300px 1fr 1.1fr;gap:14px;margin-bottom:14px;align-items:start;">
     <div>
       <div class="seccion-titulo">RESUMEN POR ZAFRA</div>
       <div class="tabla-wrap" style="margin-bottom:0"><table id="tbl-quemas-resumen">
@@ -622,48 +984,48 @@
       </table></div>
     </div>
     <div>
-      <div class="seccion-titulo">% QUEMA POR ZAFRA <span style="font-size:9px;color:#aaa;font-weight:400;">(histórico fijo)</span></div>
+      <div class="seccion-titulo">% QUEMA POR ZAFRA <span style="font-size:9px;color:var(--texto-muted);font-weight:400;font-family:'Geist Mono',monospace">(histórico fijo)</span></div>
       <div class="chart-box" style="padding:10px"><canvas id="chart-quemas-pct" height="140"></canvas></div>
-    </div>
-    <div>
+      <div style="height:12px"></div>
       <div class="seccion-titulo">TM QUEMA POR ZAFRA</div>
       <div class="chart-box" style="padding:10px"><canvas id="chart-quemas-tm" height="140"></canvas></div>
     </div>
+    <div>
+      <div class="seccion-titulo">HA APROX. MES × SEMANA</div>
+      <div class="tabla-wrap" style="margin-bottom:0"><table id="tbl-quemas-mes-sem">
+        <thead><tr id="thead-mes-sem"><th>Mes</th></tr></thead>
+        <tbody><tr><td colspan="6" class="loading">Cargando...</td></tr></tbody>
+      </table></div>
+      <!-- Mini chart: HA por mes (visualiza tendencia debajo de la tabla) -->
+      <div style="height:12px"></div>
+      <div class="seccion-titulo">HA APROX. POR MES</div>
+      <div class="chart-box" style="padding:8px"><canvas id="chart-quemas-mes" height="220"></canvas></div>
+    </div>
   </div>
 
-  <!-- FILA 2: Zonas + HA por mes -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px;margin-top:0;">
+  <!-- FILA 2: Zonas geográficas afectadas + Mapa heatmap (full ancho) -->
+  <div style="display:grid;grid-template-columns:1fr 1.6fr;gap:14px;margin-bottom:14px;align-items:start;">
     <div>
       <div class="seccion-titulo">ZONAS GEOGRÁFICAS AFECTADAS (TM)</div>
-      <div class="chart-box" style="padding:8px"><canvas id="chart-quemas-zonas" height="130"></canvas></div>
+      <div class="chart-box" style="padding:10px"><canvas id="chart-quemas-zonas" height="280"></canvas></div>
     </div>
     <div>
-      <div class="seccion-titulo">HA APROX. POR MES</div>
-      <div class="chart-box" style="padding:8px"><canvas id="chart-quemas-mes" height="130"></canvas></div>
+      <div class="seccion-titulo">MAPA DE QUEMAS CRIMINALES — FILTRO ACTIVO</div>
+      <div id="mapa-quemas" style="height:430px;border-radius:10px;border:1px solid var(--gris-borde);"></div>
+      <div style="display:flex;gap:16px;margin-top:8px;font-size:11px;color:var(--texto-soft);align-items:center;flex-wrap:wrap">
+        <span style="font-weight:600;color:var(--texto)">Mapa heatmap:</span>
+        <span><span style="display:inline-block;width:14px;height:14px;background:#fff5b8;border-radius:3px;margin-right:4px;border:1px solid #ddd;vertical-align:middle"></span>TM bajo</span>
+        <span><span style="display:inline-block;width:14px;height:14px;background:#ff9a3c;border-radius:3px;margin-right:4px;vertical-align:middle"></span>TM medio</span>
+        <span><span style="display:inline-block;width:14px;height:14px;background:#7a0e0e;border-radius:3px;margin-right:4px;vertical-align:middle"></span>TM alto</span>
+        <span style="margin-left:auto;font-weight:600;color:var(--texto)">Polígonos:</span>
+        <span><span style="display:inline-block;width:14px;height:14px;background:#c0392b;border-radius:3px;margin-right:4px;vertical-align:middle"></span>Quema Criminal</span>
+        <span><span style="display:inline-block;width:14px;height:14px;background:#aac4e8;border-radius:3px;margin-right:4px;vertical-align:middle"></span>Sin quema</span>
+        <span><span style="display:inline-block;width:14px;height:14px;background:#e8a020;border-radius:3px;margin-right:4px;vertical-align:middle"></span>Otras zafras</span>
+      </div>
     </div>
   </div>
 
-  <!-- FILA 3: Tabla mes×semana ancho completo -->
-  <div style="margin-bottom:12px;overflow-x:auto;">
-    <div class="seccion-titulo">HA APROX. MES × SEMANA</div>
-    <div class="tabla-wrap" style="margin-bottom:0"><table id="tbl-quemas-mes-sem">
-      <thead><tr id="thead-mes-sem"><th>Mes</th></tr></thead>
-      <tbody><tr><td colspan="6" class="loading">Cargando...</td></tr></tbody>
-    </table></div>
-  </div>
-
-  <!-- MAPA AL FONDO -->
-  <div style="margin-top:14px;">
-    <div class="seccion-titulo">MAPA DE QUEMAS CRIMINALES — FILTRO ACTIVO</div>
-    <div id="mapa-quemas" style="height:420px;border-radius:8px;border:1px solid #e0e4ec;"></div>
-    <div style="display:flex;gap:16px;margin-top:6px;font-size:11px;color:#666;">
-      <span><span style="display:inline-block;width:12px;height:12px;background:#c0392b;border-radius:2px;margin-right:4px;"></span>Quema Criminal</span>
-      <span><span style="display:inline-block;width:12px;height:12px;background:#aac4e8;border-radius:2px;margin-right:4px;"></span>Sin quema</span>
-      <span><span style="display:inline-block;width:12px;height:12px;background:#e8a020;border-radius:2px;margin-right:4px;"></span>Otras zafras</span>
-    </div>
-  </div>
-
-  <p class="pie-pagina">Depto. de Estadística Agrícola | Zafra 2025-2026</p>
+  <p class="pie-pagina">by <strong>Departamento de Estadística Agrícola</strong> &nbsp;|&nbsp; Compañía Azucarera Chumbagua</p>
 </div>
 
 <script>
@@ -681,7 +1043,7 @@ const NOMBRE_FRENTE = {
   4:'Fte 4 - Mecanizado Interno', 5:'Fte 5 - Mecanizado Externo', 6:'Fte 6 - Verde Manual'
 }
 const nomFte = k => NOMBRE_FRENTE[k] || 'Sin Frente'
-const esMecanizado = k => k >= 4
+const esMecanizado = k => (k===4 || k===5)
 
 let PLAN        = []   // planificacion filtrada solo PRODUCCIÓN sin semilleros
 let TOTALES     = {}
@@ -701,6 +1063,7 @@ let V_QUEMAS_DET = []  // v_quemas_detalle
 let MAESTRO_MAP  = {}  // finca_lote → tipo_riego
 let ZAG225_SET   = new Set()
 let chartFrescura = null, chartFrente = null, chartGauge = null, chartEscBarras = null
+let chartDonutCorte = null, chartDonutOrigen = null
 let datosListos = false
 
 // ── CARGA INICIAL ──────────────────────────────────────────
@@ -741,6 +1104,32 @@ async function cargarDatos() {
   V_FRESC_ORIG   = forig.data || []
   V_FRESC_DIST   = fdist.data || []
   V_FRESC_GLOB   = fglob.data?.[0] || {}
+
+  // ── CARGAR BOLETAS desde zag212_boletas (paginado, max 50K filas)
+  // EXCLUIR origen_corte = SEMILLA/SEMILLERO y fte_corte vacío/null/0
+  let allBoletas = [], from = 0, pageSize = 1000
+  while(true){
+    const {data:bRows, error:bErr} = await sb.from('zag212_boletas')
+      .select('finca_lote,fte_corte,peso_ton,origen_corte,frescura,dia_z,fec_zafra')
+      .range(from, from+pageSize-1)
+    if(bErr){ console.error('zag212_boletas:', bErr.message); break }
+    if(!bRows || bRows.length===0) break
+    allBoletas = allBoletas.concat(bRows)
+    if(bRows.length < pageSize) break
+    from += pageSize
+    if(from > 50000) break
+  }
+  // Filtrar: excluir semilla/semillero Y fte_corte inválido
+  BOLETAS = allBoletas.filter(b=>{
+    const oc = (b.origen_corte||'').toUpperCase()
+    if(oc.includes('SEMILLA') || oc.includes('SEMILLERO')) return false
+    const f = parseFloat(b.fte_corte)
+    if(!f || f<=0) return false  // Sin frente excluido
+    b.peso_ton = parseFloat(b.peso_ton)||0
+    b.fte_corte = f
+    return true
+  })
+  console.log(`BOLETAS cargadas: ${allBoletas.length} totales, ${BOLETAS.length} válidas (sin semilla, sin sin-frente)`)
 }
 
 async function cargarPlanificacion() {
@@ -761,7 +1150,7 @@ function irA(id) {
   if(id==='pag-resumen')    cargarResumen()
   if(id==='pag-frescura')   cargarFrescura()
   if(id==='pag-escenarios') calcularEscenario()
-  if(id==='pag-frentes')    cargarFrente()
+  if(id==='pag-frentes')    { cargarFrente(); cargarZonas() }
   if(id==='pag-zonas')      cargarZonas()
   if(id==='pag-quemas')     cargarQuemas()
 }
@@ -842,15 +1231,15 @@ async function cargarResumen() {
     <div class="kpi-card verde"><div class="kpi-label">TM Cosechado</div><div class="kpi-valor">${fmt(tmTotal,0)}</div>
       <div class="progress-wrap"><div class="progress-bar" style="width:${Math.min(avance,100).toFixed(1)}%"></div></div>
       <div class="kpi-sub">${fmt(avance,1)}% del estimado</div></div>
-    <div class="kpi-card"><div class="kpi-label">TM Estimado</div><div class="kpi-valor">${fmt(tmEst,0)}</div></div>
-    <div class="kpi-card rojo"><div class="kpi-label">TM Pendiente</div><div class="kpi-valor">${fmt(tmPend,0)}</div></div>
+    <div class="kpi-card"><div class="kpi-label">TM Estimado</div><div class="kpi-valor">${fmt(tmEst,0)}</div><div class="kpi-sub">Toneladas de caña</div></div>
+    <div class="kpi-card rojo"><div class="kpi-label">TM Pendiente</div><div class="kpi-valor">${fmt(tmPend,0)}</div><div class="kpi-sub">Toneladas de caña</div></div>
     <div class="kpi-card naranja"><div class="kpi-label">Frescura Calculada</div><div class="kpi-valor">${fmt(frescProm,2)}</div><div class="kpi-sub">Horas promedio</div></div>
     <div class="kpi-card"><div class="kpi-label">Distancia Calculada</div><div class="kpi-valor">${fmt(distProm,2)}</div><div class="kpi-sub">KM promedio</div></div>`
 
   // ── POR TIPO DE CORTE (Manual vs Mecanizado — desde v_cosecha_resumen)
   const porCorte = {}
   data.forEach(r=>{
-    const k = r.fte_corte<=3?'MANUAL':'MECANIZADO'
+    const k = esMecanizado(parseFloat(r.fte_corte))?'MECANIZADO':'MANUAL'
     porCorte[k] = (porCorte[k]||0) + (parseFloat(r.tm_cosechado)||0)
   })
   let h1=''
@@ -939,10 +1328,12 @@ async function cargarResumen() {
   hP+=`<tr class="total-row"><td>TOTAL</td><td>${fmt(tE,2)}</td><td>${fmt(tC,2)}</td><td>${fmt(Math.max(0,tE-tC),2)}</td></tr>`
   document.querySelector('#tbl-pend-corte tbody').innerHTML=hP
 
-  // ── FRESCURA ACUMULADA POR RANGOS (en resumen)
+  // ── FRESCURA ACUMULADA POR RANGOS (en resumen, sin Sin Frente ni semilla)
   const frentesR={}
   FRESCURA_DIAS.forEach(r=>{
-    const k=r.fte_corte; if(!k)return
+    const k=parseFloat(r.fte_corte); if(!k || k<=0)return
+    const oc=(r.origen_corte||'').toUpperCase()
+    if(oc.includes('SEMILLA') || oc.includes('SEMILLERO'))return
     if(!frentesR[k]) frentesR[k]={tm:0,r0:0,r37:0,r49:0}
     frentesR[k].tm +=parseFloat(r.peso_ton)||0
     frentesR[k].r0 +=parseFloat(r.tm_0_36)||0
@@ -961,6 +1352,39 @@ async function cargarResumen() {
   const tp0=tTm>0?tR0/tTm*100:0,tp37=tTm>0?tR37/tTm*100:0,tp49=tTm>0?tR49/tTm*100:0
   hFR+=`<tr class="total-row"><td>TOTAL</td><td>${fmt(tTm,2)}</td><td>${fmt(tp0,2)}%</td><td>${fmt(tp37,2)}%</td><td>${fmt(tp49,2)}%</td></tr>`
   document.querySelector('#tbl-frescura-rangos-res tbody').innerHTML=hFR||'<tr><td colspan="5">Sin datos</td></tr>'
+
+  // ── DONUTS visuales (Manual vs Mecanizado · Caña Quemada vs Cruda) ───
+  const colCorte = ['#1e3f7a','#2d6e3e']
+  const colOrig  = ['#c0392b','#e8a020']
+  if(chartDonutCorte) chartDonutCorte.destroy()
+  chartDonutCorte = new Chart(document.getElementById('donut-corte').getContext('2d'),{
+    type:'doughnut',
+    data:{labels:['Manual','Mecanizado'],datasets:[{data:[porCorte['MANUAL']||0,porCorte['MECANIZADO']||0],backgroundColor:colCorte,borderWidth:2,borderColor:'#fff'}]},
+    options:{cutout:'62%',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${fmt(c.raw,0)} TM (${fmt(tmTotal>0?c.raw/tmTotal*100:0,1)}%)`}}}}
+  })
+  document.getElementById('leyenda-corte').innerHTML = `
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;"><span style="width:12px;height:12px;background:${colCorte[0]};border-radius:2px;"></span><b>Manual</b></div>
+    <div style="font-size:18px;font-weight:700;color:${colCorte[0]};margin-bottom:2px;">${fmt(porCorte['MANUAL']||0,0)} TM</div>
+    <div style="font-size:11px;color:#888;margin-bottom:12px;">${fmt(tmTotal>0?(porCorte['MANUAL']||0)/tmTotal*100:0,2)}% del total</div>
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;"><span style="width:12px;height:12px;background:${colCorte[1]};border-radius:2px;"></span><b>Mecanizado</b></div>
+    <div style="font-size:18px;font-weight:700;color:${colCorte[1]};margin-bottom:2px;">${fmt(porCorte['MECANIZADO']||0,0)} TM</div>
+    <div style="font-size:11px;color:#888;">${fmt(tmTotal>0?(porCorte['MECANIZADO']||0)/tmTotal*100:0,2)}% del total</div>`
+
+  const tmQuem = porOrigen['CAÑA QUEMADA']||0
+  const tmCrud = porOrigen['CAÑA CRUDA']||0
+  if(chartDonutOrigen) chartDonutOrigen.destroy()
+  chartDonutOrigen = new Chart(document.getElementById('donut-origen').getContext('2d'),{
+    type:'doughnut',
+    data:{labels:['Caña Quemada','Caña Cruda'],datasets:[{data:[tmQuem,tmCrud],backgroundColor:colOrig,borderWidth:2,borderColor:'#fff'}]},
+    options:{cutout:'62%',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${fmt(c.raw,0)} TM (${fmt(tmTotal>0?c.raw/tmTotal*100:0,1)}%)`}}}}
+  })
+  document.getElementById('leyenda-origen').innerHTML = `
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;"><span style="width:12px;height:12px;background:${colOrig[0]};border-radius:2px;"></span><b>Caña Quemada</b></div>
+    <div style="font-size:18px;font-weight:700;color:${colOrig[0]};margin-bottom:2px;">${fmt(tmQuem,0)} TM</div>
+    <div style="font-size:11px;color:#888;margin-bottom:12px;">${fmt(tmTotal>0?tmQuem/tmTotal*100:0,2)}% del total</div>
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;"><span style="width:12px;height:12px;background:${colOrig[1]};border-radius:2px;"></span><b>Caña Cruda</b></div>
+    <div style="font-size:18px;font-weight:700;color:${colOrig[1]};margin-bottom:2px;">${fmt(tmCrud,0)} TM</div>
+    <div style="font-size:11px;color:#888;">${fmt(tmTotal>0?tmCrud/tmTotal*100:0,2)}% del total</div>`
 }
 
 // ── FRESCURA ───────────────────────────────────────────────
@@ -972,58 +1396,89 @@ function diaALSemana(dia) { return Math.ceil(dia/7) }
 let chartFrescSemana = null
 
 async function cargarFrescura() {
-  // Poblar selectores de día si están vacíos
+  // Calcular TODO desde BOLETAS (zag212) para coincidir con DAX de Power BI:
+  //   Frescura_pond = SUM(frescura * peso_ton) / SUM(peso_ton)
+  // EXCLUIR Sin Frente (fte_corte vacío/0) y origen semilla (ya viene filtrado en BOLETAS)
+  const bolValidas = BOLETAS.filter(b=>{
+    const f = parseFloat(b.frescura)||0
+    const p = parseFloat(b.peso_ton)||0
+    return f>0 && p>0
+  })
+
+  // Poblar selectores de día
   const selDesde = document.getElementById('f-dia-desde')
   const selHasta = document.getElementById('f-dia-hasta')
-  const diasDisp = [...new Set(FRESCURA_DIAS.map(r=>parseFloat(r.dia_z)).filter(d=>d>0))].sort((a,b)=>a-b)
+  const diasDisp = [...new Set(bolValidas.map(b=>parseFloat(b.dia_z)).filter(d=>d>0))].sort((a,b)=>a-b)
   if(selDesde.options.length<=1){
     diasDisp.forEach(d=>{ selDesde.add(new Option('Día '+d,d)); selHasta.add(new Option('Día '+d,d)) })
   }
   const dDesde = selDesde.value ? parseFloat(selDesde.value) : null
   const dHasta = selHasta.value ? parseFloat(selHasta.value) : null
 
-  // Filtrar FRESCURA_DIAS por rango de día
-  const diasFilt = FRESCURA_DIAS.filter(r=>{
-    const d=parseFloat(r.dia_z)
+  const bolFilt = bolValidas.filter(b=>{
+    const d=parseFloat(b.dia_z)
     if(dDesde && d<dDesde) return false
     if(dHasta && d>dHasta) return false
     return true
   })
 
-  // ── KPI frescura global (desde v_fresc_global)
-  const frescGlob = parseFloat(V_FRESC_GLOB.frescura_global)||0
+  // ── KPI frescura global = SUM(frescura*peso) / SUM(peso) [DAX exacto]
+  let sumFP=0, sumP=0
+  bolFilt.forEach(b=>{
+    const f=parseFloat(b.frescura)||0, p=parseFloat(b.peso_ton)||0
+    sumFP += f*p
+    sumP  += p
+  })
+  const frescGlob = sumP>0 ? sumFP/sumP : 0
   document.getElementById('frescura-global').textContent = fmt(frescGlob,2)
 
-  // ── RANGOS POR FRENTE (desde FRESCURA_DIAS filtrado)
+  // ── RANGOS POR FRENTE + frescura ponderada por frente
   const frentes={}
-  diasFilt.forEach(r=>{
-    const k=r.fte_corte; if(!k)return
-    if(!frentes[k]) frentes[k]={tm:0,r0:0,r37:0,r49:0}
-    frentes[k].tm +=parseFloat(r.peso_ton)||0
-    frentes[k].r0 +=parseFloat(r.tm_0_36)||0
-    frentes[k].r37+=parseFloat(r.tm_37_48)||0
-    frentes[k].r49+=parseFloat(r.tm_49_mas)||0
+  bolFilt.forEach(b=>{
+    const k=parseFloat(b.fte_corte); if(!k||k<=0)return
+    if(!frentes[k]) frentes[k]={tm:0,r0:0,r37:0,r49:0,fpond:0}
+    const f=parseFloat(b.frescura)||0, p=parseFloat(b.peso_ton)||0
+    frentes[k].tm += p
+    frentes[k].fpond += f*p
+    if(f<=36)        frentes[k].r0  += p
+    else if(f<=48)   frentes[k].r37 += p
+    else             frentes[k].r49 += p
   })
-  let html='',tTm=0,tR0=0,tR37=0,tR49=0
+  let html='',tTm=0,tR0=0,tR37=0,tR49=0,tFpond=0
+  let mejorFte=null, mejorFteVal=Infinity
   Object.keys(frentes).sort((a,b)=>a-b).forEach(k=>{
-    const g=frentes[k]; tTm+=g.tm;tR0+=g.r0;tR37+=g.r37;tR49+=g.r49
+    const g=frentes[k]; tTm+=g.tm;tR0+=g.r0;tR37+=g.r37;tR49+=g.r49;tFpond+=g.fpond
     const p0=g.tm>0?g.r0/g.tm*100:0,p37=g.tm>0?g.r37/g.tm*100:0,p49=g.tm>0?g.r49/g.tm*100:0
+    const fpAvg = g.tm>0 ? g.fpond/g.tm : 0
+    if(g.tm>0 && fpAvg<mejorFteVal){ mejorFteVal=fpAvg; mejorFte={k:Number(k),tm:g.tm} }
     html+=`<tr><td style="font-weight:700">${nomFte(Number(k))}</td><td>${fmt(g.tm,2)}</td>
+      <td style="font-weight:700;color:var(--brand)">${fmt(fpAvg,2)}</td>
       <td><span class="badge badge-verde">${fmt(p0,2)}%</span></td>
       <td><span class="badge badge-amarillo">${fmt(p37,2)}%</span></td>
       <td><span class="badge badge-rojo">${fmt(p49,2)}%</span></td></tr>`
   })
-  const p0=tTm>0?tR0/tTm*100:0,p37=tTm>0?tR37/tTm*100:0,p49=tTm>0?tR49/tTm*100:0
-  html+=`<tr class="total-row"><td>TOTAL</td><td>${fmt(tTm,2)}</td><td>${fmt(p0,2)}%</td><td>${fmt(p37,2)}%</td><td>${fmt(p49,2)}%</td></tr>`
+  const p0t=tTm>0?tR0/tTm*100:0,p37t=tTm>0?tR37/tTm*100:0,p49t=tTm>0?tR49/tTm*100:0
+  const fpTot=tTm>0?tFpond/tTm:0
+  html+=`<tr class="total-row"><td>TOTAL</td><td>${fmt(tTm,2)}</td><td>${fmt(fpTot,2)}</td><td>${fmt(p0t,2)}%</td><td>${fmt(p37t,2)}%</td><td>${fmt(p49t,2)}%</td></tr>`
   document.querySelector('#tbl-frescura-rangos tbody').innerHTML=html
 
-  // ── GRÁFICA POR DÍA
+  // KPI: frente más fresco
+  if(mejorFte){
+    document.getElementById('frescura-mejor-fte').textContent = nomFte(mejorFte.k)
+    document.getElementById('frescura-mejor-fte-sub').textContent = `${fmt(mejorFteVal,2)} hrs · ${fmt(mejorFte.tm,0)} TM`
+  } else {
+    document.getElementById('frescura-mejor-fte').textContent = '—'
+    document.getElementById('frescura-mejor-fte-sub').textContent = 'Sin datos'
+  }
+
+  // ── GRÁFICA POR DÍA (DAX exacto)
   const porDia={}
-  diasFilt.forEach(r=>{
-    const k=parseFloat(r.dia_z); if(!k)return
+  bolFilt.forEach(b=>{
+    const k=parseFloat(b.dia_z); if(!k)return
     if(!porDia[k]) porDia[k]={suma:0,tm:0}
-    porDia[k].suma+=(parseFloat(r.frescura_promedio)||0)*(parseFloat(r.peso_ton)||0)
-    porDia[k].tm  +=parseFloat(r.peso_ton)||0
+    const f=parseFloat(b.frescura)||0, p=parseFloat(b.peso_ton)||0
+    porDia[k].suma += f*p
+    porDia[k].tm   += p
   })
   const dias=Object.keys(porDia).map(Number).sort((a,b)=>a-b)
   const vals=dias.map(d=>porDia[d].tm>0?(porDia[d].suma/porDia[d].tm).toFixed(2):0)
@@ -1034,17 +1489,34 @@ async function cargarFrescura() {
     options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{maxRotation:45,font:{size:9}}},y:{beginAtZero:true,title:{display:true,text:'Horas'}}}}
   })
 
-  // ── GRÁFICA POR SEMANA
+  // ── GRÁFICA POR SEMANA + KPI mejor/peor semana
   const porSem={}
-  diasFilt.forEach(r=>{
-    const d=parseFloat(r.dia_z); if(!d)return
+  bolFilt.forEach(b=>{
+    const d=parseFloat(b.dia_z); if(!d)return
     const sem=diaALSemana(d)
     if(!porSem[sem]) porSem[sem]={suma:0,tm:0}
-    porSem[sem].suma+=(parseFloat(r.frescura_promedio)||0)*(parseFloat(r.peso_ton)||0)
-    porSem[sem].tm  +=parseFloat(r.peso_ton)||0
+    const f=parseFloat(b.frescura)||0, p=parseFloat(b.peso_ton)||0
+    porSem[sem].suma += f*p
+    porSem[sem].tm   += p
   })
   const sems=Object.keys(porSem).map(Number).sort((a,b)=>a-b)
   const valsSem=sems.map(s=>porSem[s].tm>0?(porSem[s].suma/porSem[s].tm).toFixed(2):0)
+
+  let mejorSem=null,mejorSemVal=Infinity,peorSem=null,peorSemVal=-Infinity
+  sems.forEach(s=>{
+    const g=porSem[s]; if(g.tm<=0) return
+    const v=g.suma/g.tm
+    if(v<mejorSemVal){mejorSemVal=v; mejorSem={s,tm:g.tm}}
+    if(v>peorSemVal) {peorSemVal=v; peorSem={s,tm:g.tm}}
+  })
+  if(mejorSem){
+    document.getElementById('frescura-mejor-sem').textContent = fmt(mejorSemVal,2)
+    document.getElementById('frescura-mejor-sem-sub').textContent = `Sem ${mejorSem.s} · ${fmt(mejorSem.tm,0)} TM`
+  }
+  if(peorSem){
+    document.getElementById('frescura-peor-sem').textContent = fmt(peorSemVal,2)
+    document.getElementById('frescura-peor-sem-sub').textContent = `Sem ${peorSem.s} · ${fmt(peorSem.tm,0)} TM`
+  }
   if(chartFrescSemana) chartFrescSemana.destroy()
   chartFrescSemana=new Chart(document.getElementById('chart-frescura-semana').getContext('2d'),{
     type:'line',
@@ -1052,38 +1524,59 @@ async function cargarFrescura() {
     options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,title:{display:true,text:'Horas'}}}}
   })
 
-  // ── POR TIPO DE QUEMA (desde v_fresc_por_quema)
+  // ── POR TIPO DE QUEMA (desde BOLETAS)
+  const fQuema={}
+  bolFilt.forEach(b=>{
+    const oc=(b.origen_corte||'').toUpperCase()
+    const k=oc==='CAÑA QUEMADA'?'Quemada':(oc==='CAÑA CRUDA'?'Cruda':'N/D')
+    if(!fQuema[k]) fQuema[k]={sw:0,sp:0}
+    const f=parseFloat(b.frescura)||0, p=parseFloat(b.peso_ton)||0
+    fQuema[k].sw += p
+    fQuema[k].sp += f*p
+  })
   let hQ='', totQsw=0, totQsp=0
-  V_FRESC_QUEMA.forEach(r=>{
-    const sw=parseFloat(r.peso_ton)||0, fp=parseFloat(r.fresc_pond)||0
-    totQsw+=sw; totQsp+=fp*sw
-    hQ+=`<tr><td style="text-align:left;font-weight:600">${r.tipo_quema}</td><td>${fmt(sw,2)}</td><td>${fmt(fp,2)}</td></tr>`
+  Object.entries(fQuema).forEach(([k,v])=>{
+    totQsw+=v.sw; totQsp+=v.sp
+    hQ+=`<tr><td style="text-align:left;font-weight:600">${k}</td><td>${fmt(v.sw,2)}</td><td>${fmt(v.sw>0?v.sp/v.sw:0,2)}</td></tr>`
   })
   hQ+=`<tr class="total-row"><td>TOTAL</td><td>${fmt(totQsw,2)}</td><td>${fmt(totQsw>0?totQsp/totQsw:0,2)}</td></tr>`
   document.querySelector('#tbl-fresc-quema tbody').innerHTML=hQ||'<tr><td colspan="3">Sin datos</td></tr>'
 
-  // ── POR TIPO DE CORTE (desde v_fresc_por_corte)
+  // ── POR TIPO DE CORTE (Manual=fte 1,2,3,6 / Mecanizado=fte 4,5)
+  const fCorte={MANUAL:{sw:0,sp:0},MECANIZADO:{sw:0,sp:0}}
+  bolFilt.forEach(b=>{
+    const k=esMecanizado(parseFloat(b.fte_corte))?'MECANIZADO':'MANUAL'
+    const f=parseFloat(b.frescura)||0, p=parseFloat(b.peso_ton)||0
+    fCorte[k].sw += p
+    fCorte[k].sp += f*p
+  })
   let hTC='', totTCsw=0, totTCsp=0
   ;['MANUAL','MECANIZADO'].forEach(k=>{
-    const r=V_FRESC_CORTE.find(x=>x.tipo_corte===k)||{peso_ton:0,fresc_pond:0}
-    const sw=parseFloat(r.peso_ton)||0, fp=parseFloat(r.fresc_pond)||0
-    totTCsw+=sw; totTCsp+=fp*sw
-    hTC+=`<tr><td style="text-align:left;font-weight:600">${k}</td><td>${fmt(sw,2)}</td><td>${fmt(fp,2)}</td></tr>`
+    const v=fCorte[k]
+    totTCsw+=v.sw; totTCsp+=v.sp
+    hTC+=`<tr><td style="text-align:left;font-weight:600">${k}</td><td>${fmt(v.sw,2)}</td><td>${fmt(v.sw>0?v.sp/v.sw:0,2)}</td></tr>`
   })
   hTC+=`<tr class="total-row"><td>TOTAL</td><td>${fmt(totTCsw,2)}</td><td>${fmt(totTCsw>0?totTCsp/totTCsw:0,2)}</td></tr>`
   document.querySelector('#tbl-fresc-tipo-corte tbody').innerHTML=hTC
 
-  // ── POR ORIGEN DE CAÑA (desde v_fresc_por_origen)
+  // ── POR ORIGEN DE CAÑA (desde BOLETAS)
+  const fOrig={}
+  bolFilt.forEach(b=>{
+    const k=b.origen_corte||'N/D'
+    if(!fOrig[k]) fOrig[k]={sw:0,sp:0}
+    const f=parseFloat(b.frescura)||0, p=parseFloat(b.peso_ton)||0
+    fOrig[k].sw += p
+    fOrig[k].sp += f*p
+  })
   let hO='', totOsw=0, totOsp=0
-  V_FRESC_ORIG.sort((a,b)=>parseFloat(b.peso_ton)-parseFloat(a.peso_ton)).forEach(r=>{
-    const sw=parseFloat(r.peso_ton)||0, fp=parseFloat(r.fresc_pond)||0
-    totOsw+=sw; totOsp+=fp*sw
-    hO+=`<tr><td style="text-align:left;font-weight:600">${r.origen_corte||'N/D'}</td><td>${fmt(sw,2)}</td><td>${fmt(fp,2)}</td></tr>`
+  Object.entries(fOrig).sort((a,b)=>b[1].sw-a[1].sw).forEach(([k,v])=>{
+    totOsw+=v.sw; totOsp+=v.sp
+    hO+=`<tr><td style="text-align:left;font-weight:600">${k}</td><td>${fmt(v.sw,2)}</td><td>${fmt(v.sw>0?v.sp/v.sw:0,2)}</td></tr>`
   })
   hO+=`<tr class="total-row"><td>TOTAL</td><td>${fmt(totOsw,2)}</td><td>${fmt(totOsw>0?totOsp/totOsw:0,2)}</td></tr>`
   document.querySelector('#tbl-fresc-origen tbody').innerHTML=hO||'<tr><td colspan="3">Sin datos</td></tr>'
 
-  // ── FRESCURA POR RANGO DE DISTANCIA (desde v_fresc_por_dist)
+  // ── FRESCURA POR RANGO DE DISTANCIA (vista existente)
   const ordenDist=['0 - 5 km','5 - 10 km','10 - 15 km','15 - 20 km','20 - 25 km','25+ km']
   const totDsw=V_FRESC_DIST.reduce((s,r)=>s+(parseFloat(r.peso_ton)||0),0)
   const totDsp=V_FRESC_DIST.reduce((s,r)=>s+(parseFloat(r.fresc_pond)||0)*(parseFloat(r.peso_ton)||0),0)
@@ -1111,21 +1604,30 @@ async function calcularEscenario() {
   const dias  = molienda>0?tmPend/molienda:0
   const fechaFin=new Date(Date.now()+dias*864e5)
 
-  document.getElementById('esc-kpi-est').textContent   = fmt(tmEst,2)
-  document.getElementById('esc-kpi-cos').textContent   = fmt(tmCos,2)
-  document.getElementById('esc-kpi-pend').textContent  = fmt(tmPend,2)
+  document.getElementById('esc-kpi-est').textContent   = fmt(tmEst,0)
+  document.getElementById('esc-kpi-cos').textContent   = fmt(tmCos,0)
+  document.getElementById('esc-kpi-pend').textContent  = fmt(tmPend,0)
   document.getElementById('esc-kpi-mol').textContent   = fmt(molienda,0)
-  document.getElementById('esc-kpi-avance').textContent= fmt(avance,2)+'%'
-  document.getElementById('dias-finalizacion').textContent = fmt(dias,2)
-  document.getElementById('fecha-finalizacion').textContent= fechaFin.toLocaleDateString('es-HN',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})
-  document.getElementById('gauge-valor').textContent   = fmt(tmCos,2)
+  document.getElementById('esc-kpi-avance').textContent= fmt(avance,1)+'%'
+  const subAv = document.getElementById('esc-kpi-avance-sub')
+  if(subAv) subAv.textContent = fmt(avance,1)+'% del estimado'
+  document.getElementById('dias-finalizacion').textContent = fmt(dias,1)
+  document.getElementById('fecha-finalizacion').textContent= fechaFin.toLocaleDateString('es-HN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})
+  document.getElementById('gauge-valor').textContent   = fmt(tmCos,0)
+  const gSub=document.getElementById('gauge-sub')
+  if(gSub) gSub.textContent = fmt(avance,1)+'% del estimado'
 
-  // Gauge (donut)
+  // Gauge (donut) con colores marca
   if(chartGauge) chartGauge.destroy()
   chartGauge=new Chart(document.getElementById('chart-gauge').getContext('2d'),{
     type:'doughnut',
-    data:{datasets:[{data:[tmCos,Math.max(0,tmEst-tmCos)],backgroundColor:['#27ae60','#e8e8e8'],borderWidth:0}]},
-    options:{cutout:'75%',responsive:true,plugins:{legend:{display:false},tooltip:{enabled:false}}}
+    data:{datasets:[{data:[tmCos,Math.max(0,tmEst-tmCos)],backgroundColor:['#2d6e3e','#eef0f4'],borderWidth:0}]},
+    options:{cutout:'72%',responsive:true,plugins:{legend:{display:false},tooltip:{
+      callbacks:{label:(ctx)=>{
+        const lbl=ctx.dataIndex===0?'Cosechado':'Pendiente'
+        return `${lbl}: ${fmt(ctx.parsed,0)} TM`
+      }}
+    }}}
   })
 
   // Tabla frentes con frente real desde boletas + nombre
@@ -1142,27 +1644,49 @@ async function calcularEscenario() {
   BOLETAS.forEach(b=>{ const k=b.fte_corte; if(!k)return; porFrenteCos[k]=(porFrenteCos[k]||0)+b.peso_ton })
 
   const ftes=[...new Set([...Object.keys(porFrenteEst),...Object.keys(porFrenteCos)].map(Number))].sort((a,b)=>a-b)
-  let html='', tE=0,tC=0,tP=0, labFr=[],dEst=[],dCos=[]
+  let html='', tE=0,tC=0,tP=0
+  // Para chart apilado: % cosechado vs % pendiente por frente + cuota
+  const labFr=[], dPctCos=[], dPctPend=[], dCuota=[]
   ftes.forEach(k=>{
     const est=porFrenteEst[k]||0, cos=porFrenteCos[k]||0
     const pend=Math.max(0,est-cos), cuota=molienda*(tmEst>0?est/tmEst:0)
     const av=est>0?cos/est*100:0, dist=porFrenteDist[k]||0
     tE+=est;tC+=cos;tP+=pend
-    labFr.push(nomFte(k)); dEst.push(est.toFixed(0)); dCos.push(cos.toFixed(0))
-    html+=`<tr><td style="text-align:left;font-weight:600">${nomFte(k)}</td><td>${fmt(dist,2)}</td><td>${fmt(est,2)}</td><td>${fmt(cos,2)}</td><td>${fmt(pend,2)}</td><td>${fmt(cuota,2)}</td><td><span class="badge ${av>=90?'badge-verde':av>=70?'badge-amarillo':'badge-rojo'}">${fmt(av,1)}%</span></td></tr>`
+    labFr.push(nomFte(k))
+    dPctCos.push((est>0?cos/est*100:0).toFixed(2))
+    dPctPend.push((est>0?pend/est*100:0).toFixed(2))
+    dCuota.push(cuota.toFixed(0))
+    html+=`<tr><td style="text-align:left;font-weight:600">${nomFte(k)}</td><td>${fmt(dist,2)}</td><td>${fmt(est,0)}</td><td>${fmt(cos,0)}</td><td>${fmt(pend,0)}</td><td>${fmt(cuota,0)}</td><td><span class="badge ${av>=90?'badge-verde':av>=70?'badge-amarillo':'badge-rojo'}">${fmt(av,1)}%</span></td></tr>`
   })
-  html+=`<tr class="total-row"><td>TOTAL</td><td>${fmt(Object.values(porFrenteDist).reduce((s,v)=>s+v,0)/Math.max(1,ftes.length),2)}</td><td>${fmt(tE,2)}</td><td>${fmt(tC,2)}</td><td>${fmt(tP,2)}</td><td>${fmt(molienda,2)}</td><td>${fmt(tE>0?tC/tE*100:0,1)}%</td></tr>`
+  const distProm = ftes.length>0 ? Object.values(porFrenteDist).reduce((s,v)=>s+v,0)/ftes.length : 0
+  html+=`<tr class="total-row"><td>TOTAL</td><td>${fmt(distProm,2)}</td><td>${fmt(tE,0)}</td><td>${fmt(tC,0)}</td><td>${fmt(tP,0)}</td><td>${fmt(molienda,0)}</td><td>${fmt(tE>0?tC/tE*100:0,1)}%</td></tr>`
   document.querySelector('#tbl-escenario-frentes tbody').innerHTML=html
 
-  // Gráfica barras frentes
+  // Gráfica barras apiladas: % cosechado | % pendiente con cuota como anotación
   if(chartEscBarras) chartEscBarras.destroy()
   chartEscBarras=new Chart(document.getElementById('chart-esc-barras').getContext('2d'),{
     type:'bar',
     data:{labels:labFr,datasets:[
-      {label:'Tm Estimadas',data:dEst,backgroundColor:'#3d7abf'},
-      {label:'Cosechado',data:dCos,backgroundColor:'#2d7a3a'},
+      {label:'% Cosechado',data:dPctCos,backgroundColor:'#2d6e3e',borderRadius:3,stack:'pct'},
+      {label:'% Pendiente',data:dPctPend,backgroundColor:'#dde7f5',borderRadius:3,stack:'pct'}
     ]},
-    options:{responsive:true,plugins:{legend:{position:'bottom',labels:{font:{size:10}}}},scales:{x:{ticks:{font:{size:9}}},y:{beginAtZero:true}}}
+    options:{
+      indexAxis:'y',responsive:true,
+      plugins:{
+        legend:{position:'bottom',labels:{font:{size:10},boxWidth:11,padding:8}},
+        tooltip:{callbacks:{
+          label:(ctx)=>{
+            const idx=ctx.dataIndex
+            const cuota=parseFloat(dCuota[idx]||0)
+            return `${ctx.dataset.label}: ${ctx.parsed.x.toFixed(1)}% · Cuota: ${fmt(cuota,0)} TM/día`
+          }
+        }}
+      },
+      scales:{
+        x:{stacked:true,beginAtZero:true,max:100,ticks:{callback:(v)=>v+'%',font:{size:9}}},
+        y:{stacked:true,ticks:{font:{size:10}}}
+      }
+    }
   })
 
   // Tabla zonas
@@ -1170,7 +1694,7 @@ async function calcularEscenario() {
   PLAN.forEach(r=>{
     const z=r.zona_geo||'N/D', est=parseFloat(r.ton_estimadas)||0, dist=parseFloat(r.distancia)||0
     zonaEst[z]=(zonaEst[z]||0)+est
-    if(dist) zonaDist[z]=dist
+    if(dist) zonaDist[z]=Math.max(zonaDist[z]||0,dist)
   })
   BOLETAS.forEach(b=>{
     const planR=PLAN.find(p=>p.codigo_plantio===b.finca_lote)
@@ -1178,13 +1702,14 @@ async function calcularEscenario() {
     zonaCos[z]=(zonaCos[z]||0)+b.peso_ton
   })
   const zonas=[...new Set(Object.keys(zonaEst))].filter(z=>z!=='N/D').sort()
-  let hZ='',tzE=0,tzC=0,tzP=0
+  let hZ='',tzE=0,tzC=0,tzP=0,sumDist=0
   zonas.forEach(z=>{
     const est=zonaEst[z]||0, cos=zonaCos[z]||0, pend=Math.max(0,est-cos), av=est>0?cos/est*100:0
-    tzE+=est;tzC+=cos;tzP+=pend
-    hZ+=`<tr><td style="text-align:left;font-weight:600">${z}</td><td>${fmt(zonaDist[z]||0,2)}</td><td>${fmt(est,2)}</td><td>${fmt(cos,2)}</td><td>${fmt(pend,2)}</td><td><span class="badge ${av>=90?'badge-verde':av>=70?'badge-amarillo':'badge-rojo'}">${fmt(av,1)}%</span></td></tr>`
+    tzE+=est;tzC+=cos;tzP+=pend; sumDist+=zonaDist[z]||0
+    hZ+=`<tr><td style="text-align:left;font-weight:600">${z}</td><td>${fmt(zonaDist[z]||0,2)}</td><td>${fmt(est,0)}</td><td>${fmt(cos,0)}</td><td>${fmt(pend,0)}</td><td><span class="badge ${av>=90?'badge-verde':av>=70?'badge-amarillo':'badge-rojo'}">${fmt(av,1)}%</span></td></tr>`
   })
-  hZ+=`<tr class="total-row"><td>TOTAL</td><td>—</td><td>${fmt(tzE,2)}</td><td>${fmt(tzC,2)}</td><td>${fmt(tzP,2)}</td><td>${fmt(tzE>0?tzC/tzE*100:0,1)}%</td></tr>`
+  const distZProm = zonas.length>0 ? sumDist/zonas.length : 0
+  hZ+=`<tr class="total-row"><td>TOTAL</td><td>${fmt(distZProm,2)}</td><td>${fmt(tzE,0)}</td><td>${fmt(tzC,0)}</td><td>${fmt(tzP,0)}</td><td>${fmt(tzE>0?tzC/tzE*100:0,1)}%</td></tr>`
   document.querySelector('#tbl-esc-zonas tbody').innerHTML=hZ
 }
 
@@ -1311,7 +1836,7 @@ async function cargarQuemas() {
       btn.textContent=r.zafra
       btn.dataset.z=r.zafra
       btn.className='chip-zafra'
-      btn.style.cssText='font-size:13px;padding:6px 14px;border:1px solid #ccd3e0;border-radius:20px;background:white;cursor:pointer;color:#1e3f7a;font-weight:600;transition:all 0.15s;'
+      btn.style.cssText='font-size:11.5px;padding:5px 11px;border:1px solid #ccd3e0;border-radius:18px;background:white;cursor:pointer;color:#1e3f7a;font-weight:600;transition:all 0.15s;white-space:nowrap;flex-shrink:0;'
       btn.onclick=()=>{
         btn.classList.toggle('activo')
         btn.style.background=btn.classList.contains('activo')?'#1e3f7a':'white'
@@ -1513,19 +2038,34 @@ async function actualizarMapaQuemas(detFilt) {
   geojLayer._isQuemaLayer = true
   geojLayer.addTo(mapaQ)
 
+  // Construir puntos de heatmap con escala normalizada (0-1) según TM:
+  // - Mínimo TM (0.1) → amarillo claro (#ffffb2)
+  // - Medio TM (0.5)  → naranja-rojo claro
+  // - Máximo TM (1.0) → rojo oscuro
   const heatPoints = []
   GEOJSON_FINCAS.features.forEach(f=>{
     const fl = normFL(f.properties.finca_lote)
     if(!quemaActiva.has(fl) || !f.properties.centroid) return
     const tm = tmPorLote[fl]||0
-    const intens = Math.max(0.4, tm/maxTM)
+    if(tm<=0) return
+    // Escala lineal pura sin floor para ver gradiente real
+    const intens = maxTM>0 ? Math.min(1, tm/maxTM) : 0.5
     heatPoints.push([f.properties.centroid[0], f.properties.centroid[1], intens])
   })
   if(heatPoints.length){
-    console.log('🔥 HeatPoints:', heatPoints.length, 'max intensidad:', Math.max(...heatPoints.map(p=>p[2])))
+    console.log('🔥 HeatPoints:', heatPoints.length, 'max:', Math.max(...heatPoints.map(p=>p[2])).toFixed(2),
+      'min:', Math.min(...heatPoints.map(p=>p[2])).toFixed(2), 'maxTM:', maxTM.toFixed(0))
     const heat = L.heatLayer(heatPoints,{
-      radius:25, blur:15, maxZoom:18, max:1, minOpacity:0.6,
-      gradient:{0.0:'#ffffb2',0.3:'#fecc5c',0.6:'#fd8d3c',0.8:'#f03b20',1.0:'#bd0026'}
+      radius:28, blur:20, maxZoom:18, max:1, minOpacity:0.45,
+      // Gradiente: amarillo (bajo) → naranja → rojo claro → rojo oscuro (alto)
+      gradient:{
+        0.0:'#fff5b8',     // amarillo muy claro
+        0.20:'#ffd166',    // amarillo-dorado
+        0.40:'#ff9a3c',    // naranja claro
+        0.60:'#ee6c4d',    // rojo coral
+        0.80:'#d63027',    // rojo
+        1.0: '#7a0e0e'     // rojo oscuro
+      }
     })
     heat._isQuemaLayer = true
     heat.addTo(mapaQ)
@@ -1533,24 +2073,85 @@ async function actualizarMapaQuemas(detFilt) {
 }
 
 // ── AUTH ───────────────────────────────────────────────────
-async function doLogin() {
+// ── LOGIN / LOGOUT / PERFIL ──
+async function doLogin(){
   const email=document.getElementById('login-email').value.trim()
-  const pass =document.getElementById('login-pass').value
-  const btn  =document.getElementById('login-btn')
-  const err  =document.getElementById('login-error')
+  const pass=document.getElementById('login-pass').value
+  const btn=document.getElementById('login-btn')
+  const err=document.getElementById('login-error')
   if(!email||!pass){err.textContent='Ingresa tu correo y contraseña.';return}
-  btn.disabled=true;btn.textContent='Ingresando...';err.textContent=''
+  btn.disabled=true; btn.textContent='Ingresando...'; err.textContent=''
   const {error}=await sb.auth.signInWithPassword({email,password:pass})
-  if(error){err.textContent='Credenciales incorrectas.';btn.disabled=false;btn.textContent='INGRESAR'}
+  if(error){err.textContent='Credenciales incorrectas.';btn.disabled=false;btn.textContent='Ingresar'}
   else mostrarApp()
 }
 async function doLogout(){
   await sb.auth.signOut()
-  document.getElementById('pag-login').classList.remove('oculto')
+  window.location.href='index.html'
 }
+async function cargarPerfilUsuario(email){
+  document.getElementById('udd-email').textContent = email
+  try{
+    const {data, error} = await sb.from('user_perfiles').select('*').eq('email', email).maybeSingle()
+    if(error) throw error
+    if(data){
+      document.getElementById('user-avatar').textContent = data.iniciales || email.substring(0,2).toUpperCase()
+      if(data.color_avatar) document.getElementById('user-avatar').style.background = data.color_avatar
+      document.getElementById('udd-nombre').textContent = data.nombre_completo || email
+      document.getElementById('udd-cargo').textContent  = data.cargo || '—'
+    } else {
+      const ini = email.substring(0,2).toUpperCase()
+      document.getElementById('user-avatar').textContent = ini
+      document.getElementById('udd-nombre').textContent  = email.split('@')[0]
+      document.getElementById('udd-cargo').textContent   = 'Sin perfil asignado'
+    }
+  } catch(e){
+    console.warn('No se pudo cargar perfil:', e)
+    document.getElementById('udd-nombre').textContent = email.split('@')[0]
+    document.getElementById('udd-cargo').textContent  = '—'
+  }
+}
+function toggleUserDropdown(){
+  document.getElementById('user-dropdown').classList.toggle('abierto')
+}
+document.addEventListener('click', (e)=>{
+  const wrap = document.querySelector('.header-actions')
+  if(wrap && !wrap.contains(e.target)){
+    const dd = document.getElementById('user-dropdown')
+    if(dd) dd.classList.remove('abierto')
+  }
+})
+// Mapa de títulos por página para actualizar header dinámicamente
+const TITULOS_PAGS = {
+  'pag-menu':       ['',                          ''],
+  'pag-resumen':    ['Resumen Cosecha',           'Dashboard general · Zafra 2025-2026'],
+  'pag-frescura':   ['Frescura',                  'Horas de quemado a molienda por frente'],
+  'pag-escenarios': ['Escenarios de Molienda',    'Proyecciones TM/Día y fecha de fin'],
+  'pag-frentes':    ['Cosechado por Frente',      'Avance por frente activo'],
+  'pag-zonas':      ['Zonas Geográficas',         'Avance por zona y distrito'],
+  'pag-quemas':     ['Quemas Criminales',         'Registro histórico con mapa interactivo']
+}
+// Hook al irA original para actualizar título
+const _irA_orig = irA
+irA = function(id){
+  _irA_orig(id)
+  const t = TITULOS_PAGS[id] || ['Avance de Cosecha', 'Compañía Azucarera Chumbagua']
+  const tit = document.getElementById('hdr-titulo')
+  const sub = document.getElementById('hdr-subtitulo')
+  if(tit) tit.textContent = t[0]
+  if(sub) sub.textContent = t[1]
+  // Ocultar bloque central del header si título vacío (página menu)
+  const pagBox = document.querySelector('.header-pagina')
+  if(pagBox) pagBox.style.visibility = (t[0] === '') ? 'hidden' : 'visible'
+  // Mostrar/ocultar botón Atrás según si estamos en menu o en página interna
+  const btnAtras = document.getElementById('btn-atras-hdr')
+  if(btnAtras) btnAtras.style.display = (id === 'pag-menu') ? 'none' : 'flex'
+}
+
 async function mostrarApp(){
   document.getElementById('pag-login').classList.add('oculto')
-  document.getElementById('fecha-header').textContent=new Date().toLocaleDateString('es-HN',{weekday:'long',year:'numeric',month:'long',day:'numeric'})
+  const {data:{session}} = await sb.auth.getSession()
+  if(session) await cargarPerfilUsuario(session.user.email)
   await Promise.all([cargarDatos(),cargarPlanificacion()])
   datosListos=true
 }
