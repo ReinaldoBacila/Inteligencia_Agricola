@@ -6,7 +6,7 @@
 <title>Rendimientos Agrícolas | Chumbagua</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
     --azul: #1a3a6b;
@@ -24,139 +24,260 @@
     --neutro-bg: #f0a500;
   }
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    font-family: 'Barlow', sans-serif;
-    background: var(--gris);
-    color: var(--texto);
-    min-height: 100vh;
+    *{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased}
+  :root{
+    /* PALETA C — Mix Marca Chumbagua */
+    --brand:        #1e3f7a;
+    --brand-dark:   #162e5a;
+    --brand-2:      #2d6e3e;
+    --brand-2-dark: #1e5028;
+    --brand-soft:   #dde7f5;
+    --brand-2-soft: #dcebe0;
+    --brand-bg:     #f5f8fc;
+    --brand-2-bg:   #f4faf6;
+    --accent-1:     #e8a020;
+    --accent-2:     #a85d2c;
+    --accent-3:     #7d4ea8;
+    --accent-4:     #0d8a9c;
+    --accent-5:     #c0594d;
+    --pos:          #16a34a;
+    --pos-bg:       #f0fdf4;
+    --neg:          #dc2626;
+    --neg-bg:       #fef2f2;
+    --gris-fondo:   #fafafa;
+    --gris-borde:   #ededed;
+    --gris-borde-soft:#f4f4f5;
+    --texto:        #0a0a0a;
+    --texto-soft:   #666;
+    --texto-muted:  #999;
+    /* Aliases retrocompatibles */
+    --azul: #1e3f7a;
+    --azul-medio: #2a5298;
+    --azul-claro: #3d7abf;
+    --verde: #2d6e3e;
+    --verde-claro: #3a8a4e;
+    --dorado: #e8a020;
+    --naranja: #c97d1a;
+    --rojo: #c0392b;
+    --gris: #fafafa;
+    --blanco: #ffffff;
+  }
+  body{
+    font-family:'Geist',-apple-system,BlinkMacSystemFont,sans-serif;
+    background:var(--gris-fondo);color:var(--texto);
+    min-height:100vh;font-size:14px;
   }
 
-  /* ── HEADER ── */
-  .header {
-    background: var(--blanco);
-    border-bottom: 3px solid var(--azul);
-    padding: 12px 32px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+  /* ────────────────────── HEADER (estilo cosecha) ────────────────────── */
+  .header{
+    background:white;border-bottom:1px solid var(--gris-borde);
+    padding:12px 28px;display:flex;align-items:center;justify-content:space-between;
+    position:sticky;top:0;z-index:100;gap:18px;min-height:62px;
+  }
+  .brand-blk{display:flex;align-items:center;gap:12px;flex-shrink:0}
+  .brand-logo{
+    width:36px;height:36px;
+    background:linear-gradient(135deg,var(--brand),var(--brand-2));
+    border-radius:9px;display:flex;align-items:center;justify-content:center;
+    color:white;font-weight:700;font-size:14px;letter-spacing:-0.5px;
+    box-shadow:0 2px 6px rgba(30,63,122,0.25);
+  }
+  .brand-name{font-size:15px;font-weight:600;letter-spacing:-0.3px;color:var(--texto)}
+  .brand-name span{color:var(--texto-soft);font-weight:400;margin-left:6px;font-size:13px}
+
+  .header-pagina{flex:1;text-align:center;min-width:0}
+  .header-pagina-titulo{
+    font-size:20px;font-weight:600;color:var(--texto);
+    letter-spacing:-0.5px;line-height:1.15;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .header-pagina-sub{font-size:11.5px;color:var(--texto-soft);margin-top:2px;line-height:1;font-weight:500}
+
+  .header-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;position:relative}
+  .btn-portal-icon{
+    width:34px;height:34px;border-radius:8px;
+    border:1px solid var(--gris-borde);background:white;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;color:var(--texto-soft);transition:all .15s;padding:0;
+  }
+  .btn-portal-icon:hover{background:var(--brand-bg);color:var(--brand);border-color:var(--brand-soft)}
+  .btn-atras-hdr{
+    display:flex;align-items:center;gap:5px;padding:6px 12px 6px 9px;
+    border:1px solid var(--gris-borde);border-radius:7px;background:white;
+    font-family:inherit;font-size:12px;font-weight:600;
+    color:var(--brand);cursor:pointer;transition:all .15s;flex-shrink:0;
+  }
+  .btn-atras-hdr:hover{background:var(--brand-bg);border-color:var(--brand);color:var(--brand-dark)}
+  .btn-atras-hdr svg{flex-shrink:0}
+  .avatar{
+    width:34px;height:34px;border-radius:9px;
+    background:linear-gradient(135deg,var(--brand-2),#4a8e5d);
+    color:white;display:flex;align-items:center;justify-content:center;
+    font-weight:600;font-size:12px;cursor:pointer;
+    box-shadow:0 2px 6px rgba(45,110,62,0.25);user-select:none;
+  }
+  .user-dropdown{
+    position:absolute;top:42px;right:0;background:white;
+    border:1px solid var(--gris-borde);border-radius:10px;
+    box-shadow:0 8px 24px rgba(0,0,0,0.1);
+    padding:14px 16px 10px;min-width:240px;z-index:200;display:none;
+  }
+  .user-dropdown.abierto{display:block}
+  .udd-header{padding-bottom:10px;border-bottom:1px solid var(--gris-borde-soft);margin-bottom:8px}
+  .udd-nombre{font-size:14px;font-weight:600;color:var(--texto);letter-spacing:-0.2px}
+  .udd-cargo{font-size:11px;color:var(--texto-soft);margin-top:2px}
+  .udd-email{font-size:10px;color:var(--texto-muted);margin-top:3px;font-family:'Geist Mono',monospace;word-break:break-all}
+  .udd-btn{
+    display:block;width:100%;padding:8px 10px;background:none;
+    border:1px solid var(--neg-bg);color:var(--neg);
+    border-radius:7px;font-family:inherit;font-size:12px;font-weight:600;
+    cursor:pointer;text-align:center;transition:all .15s;
+  }
+  .udd-btn:hover{background:var(--neg-bg);border-color:var(--neg)}
+
+  /* ────────────────────── PÁGINAS ────────────────────── */
+  .page{display:none;padding:20px 32px 24px}
+  .page.active{display:block}
+
+  /* ────────────────────── MENÚ ────────────────────── */
+  .menu-page{max-width:1400px;margin:0 auto;padding:0}
+  .menu-hero{
+    padding:32px 36px 30px;
+    background:linear-gradient(135deg,#fafafa,var(--brand-bg) 50%, var(--brand-2-bg));
+    border-radius:16px;margin-bottom:24px;
+    position:relative;overflow:hidden;text-align:left;
+    border:1px solid var(--gris-borde);
+  }
+  .menu-hero::before{
+    content:'';position:absolute;top:-50px;right:-50px;width:300px;height:300px;
+    background:radial-gradient(circle,var(--brand-2-soft),transparent 70%);opacity:0.5;
+  }
+  .menu-hero::after{
+    content:'';position:absolute;bottom:-80px;left:-80px;width:300px;height:300px;
+    background:radial-gradient(circle,var(--brand-soft),transparent 70%);opacity:0.5;
+  }
+  .menu-hero-eyebrow{
+    display:inline-flex;align-items:center;gap:6px;
+    font-family:'Geist Mono',monospace;font-size:11px;color:var(--brand-2);
+    background:white;padding:5px 12px;border:1px solid var(--brand-2-soft);
+    border-radius:100px;margin-bottom:14px;font-weight:500;position:relative;z-index:1;
+  }
+  .menu-hero-eyebrow::before{
+    content:'';width:6px;height:6px;background:var(--brand-2);border-radius:50%;
+    animation:pulse 2s infinite;
+  }
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+  .menu-hero h1{
+    font-size:48px;font-weight:600;letter-spacing:-2px;line-height:1.05;
+    color:var(--texto);position:relative;z-index:1;
+  }
+  .menu-hero h1 .grad{
+    background:linear-gradient(90deg,var(--brand),var(--brand-2));
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  }
+  .menu-hero p{
+    font-size:13px;color:var(--texto-soft);margin-top:14px;
+    max-width:600px;line-height:1.5;position:relative;z-index:1;
+  }
+  .menu-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:28px}
+  .menu-btn{
+    background:white;border:1px solid #e0e4ec;border-radius:12px;
+    padding:24px;text-align:left;cursor:pointer;
+    transition:all .2s;font-family:inherit;color:var(--texto);
+    position:relative;overflow:hidden;display:flex;flex-direction:column;gap:6px;
+    box-shadow:0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03);
+  }
+  .menu-btn::before{
+    content:'';position:absolute;left:0;top:0;bottom:0;width:4px;
+    background:var(--brand);opacity:0.7;transition:all .2s;
+  }
+  .menu-btn::after{
+    content:'';position:absolute;inset:0;border-radius:12px;
+    background:linear-gradient(135deg,transparent 60%,rgba(30,63,122,0.025));
+    pointer-events:none;
+  }
+  .menu-btn:hover{
+    transform:translateY(-3px);border-color:var(--brand);
+    box-shadow:0 8px 20px rgba(30,63,122,0.12), 0 2px 4px rgba(0,0,0,0.05);
+  }
+  .menu-btn:hover::before{opacity:1;width:5px}
+  .menu-btn-icon{
+    width:38px;height:38px;border-radius:10px;
+    display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:6px;
+  }
+  .menu-btn-titulo{font-size:16px;font-weight:600;letter-spacing:-0.3px}
+  .menu-btn .sub{font-size:13px;color:var(--texto-soft);font-weight:400;line-height:1.4}
+  .menu-btn-arrow{
+    margin-top:8px;font-size:12px;font-weight:600;color:var(--brand);
+    display:flex;align-items:center;gap:4px;
+  }
+  .menu-btn-arrow::after{content:'→';transition:transform .15s}
+  .menu-btn:hover .menu-btn-arrow::after{transform:translateX(3px)}
+  .menu-btn.azul::before{background:var(--brand);opacity:0.7}
+  .menu-btn.azul .menu-btn-icon{background:var(--brand-soft);color:var(--brand)}
+  .menu-btn.azul .menu-btn-arrow{color:var(--brand)}
+  .menu-btn.verde::before{background:var(--brand-2);opacity:0.7}
+  .menu-btn.verde .menu-btn-icon{background:var(--brand-2-soft);color:var(--brand-2)}
+  .menu-btn.verde .menu-btn-arrow{color:var(--brand-2)}
+  .menu-btn.verde:hover{border-color:var(--brand-2-soft)}
+  .menu-btn.naranja::before{background:var(--accent-1);opacity:0.7}
+  .menu-btn.naranja .menu-btn-icon{background:#fcefd8;color:var(--accent-1)}
+  .menu-btn.naranja .menu-btn-arrow{color:var(--accent-1)}
+  .menu-btn.naranja:hover{border-color:#fcefd8}
+  .menu-btn.morado::before{background:var(--accent-3);opacity:0.7}
+  .menu-btn.morado .menu-btn-icon{background:#e8dff0;color:var(--accent-3)}
+  .menu-btn.morado .menu-btn-arrow{color:var(--accent-3)}
+  .menu-btn.morado:hover{border-color:#e8dff0}
+  .menu-btn.rojo::before{background:var(--accent-5);opacity:0.7}
+  .menu-btn.rojo .menu-btn-icon{background:#fce8e4;color:var(--accent-5)}
+  .menu-btn.rojo .menu-btn-arrow{color:var(--accent-5)}
+  .menu-btn.rojo:hover{border-color:#fce8e4}
+  /* compatibilidad clases viejas */
+  .menu-btn.azul-osc{background:white}
+  .menu-btn.azul-osc::before{background:var(--brand-dark);opacity:0.7}
+  .menu-btn.azul-osc .menu-btn-icon{background:var(--brand-soft);color:var(--brand-dark)}
+  .menu-btn.azul-osc .menu-btn-arrow{color:var(--brand-dark)}
+  .menu-btn.verde-osc{background:white}
+  .menu-btn.verde-osc::before{background:var(--brand-2-dark);opacity:0.7}
+  .menu-btn.verde-osc .menu-btn-icon{background:var(--brand-2-soft);color:var(--brand-2-dark)}
+  .menu-btn.verde-osc .menu-btn-arrow{color:var(--brand-2-dark)}
+  .menu-btn.cyan{background:white}
+  .menu-btn.cyan::before{background:var(--accent-4);opacity:0.7}
+  .menu-btn.cyan .menu-btn-icon{background:#d8f0f3;color:var(--accent-4)}
+  .menu-btn.cyan .menu-btn-arrow{color:var(--accent-4)}
+
+  /* Botón atrás (interno de páginas) */
+  .back-btn{
+    background:white;border:1px solid var(--gris-borde);border-radius:6px;
+    padding:5px 11px;font-family:inherit;font-size:11.5px;font-weight:600;
+    color:var(--brand);cursor:pointer;
+    display:inline-flex;align-items:center;gap:3px;transition:all .15s;
+  }
+  .back-btn:hover{background:var(--brand-bg);border-color:var(--brand);color:var(--brand-dark)}
+
+  /* Encabezado de páginas internas */
+  .pag-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:12px;flex-wrap:wrap}
+  .pag-hdr-titulo{
+    font-size:18px;font-weight:600;color:var(--texto);
+    letter-spacing:-0.4px;line-height:1.2;
+  }
+  .pag-hdr-sub{font-size:12px;color:var(--texto-soft);margin-top:2px}
+  .pag-hdr-actions{display:flex;align-items:center;gap:10px;flex-shrink:0}
+  .depto-badge{
+    font-size:11px;font-weight:600;color:var(--brand-2);
+    background:var(--brand-2-soft);padding:4px 11px;border-radius:100px;
+    white-space:nowrap;font-family:'Geist Mono',monospace;letter-spacing:0.2px;
   }
 
-  .header-logo {
-    display: flex;
-    align-items: center;
-    gap: 16px;
+  /* Pie de página */
+  .pie-pagina{
+    text-align:center;font-size:11px;color:var(--texto-muted);
+    padding:18px 0 10px;margin-top:22px;
+    border-top:1px solid var(--gris-borde-soft);
+    font-family:'Geist Mono',monospace;letter-spacing:0.3px;
   }
 
-  .logo-img {
-    height: 52px;
-  }
-
-  .header-title {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--azul);
-    line-height: 1.2;
-  }
-
-  .header-title span {
-    display: block;
-    font-size: 14px;
-    font-weight: 400;
-    color: #666;
-  }
-
-  .header-right {
-    text-align: right;
-    font-size: 12px;
-    color: #888;
-  }
-
-  .header-right strong {
-    display: block;
-    font-size: 16px;
-    color: var(--azul);
-    font-weight: 600;
-  }
-
-  /* ── PÁGINA ── */
-  .page { display: none; padding: 24px 32px; }
-  .page.active { display: block; }
-
-  /* ── MENÚ PRINCIPAL ── */
-  .menu-page {
-    max-width: 800px;
-    margin: 40px auto;
-    text-align: center;
-  }
-
-  .menu-logo {
-    margin-bottom: 24px;
-  }
-
-  .menu-logo img {
-    height: 90px;
-  }
-
-  .menu-banner {
-    background: var(--azul);
-    color: white;
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 26px;
-    font-weight: 700;
-    letter-spacing: 1px;
-    padding: 14px;
-    border-radius: 4px;
-    margin-bottom: 32px;
-  }
-
-  .menu-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-bottom: 24px;
-  }
-
-  .menu-btn {
-    padding: 18px 24px;
-    border: none;
-    border-radius: 6px;
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 17px;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-    cursor: pointer;
-    transition: all 0.15s;
-    color: white;
-  }
-
-  .menu-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
-  .menu-btn.azul { background: var(--azul-medio); }
-  .menu-btn.verde { background: var(--verde); }
-  .menu-btn.naranja { background: var(--naranja); }
-
-  .menu-footer {
-    display: flex;
-    gap: 10px;
-    justify-content: flex-start;
-    margin-top: 16px;
-  }
-
-  .menu-footer-btn {
-    background: #888;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    padding: 8px 16px;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-  }
-
-  /* ── VOLVER ── */
-  .back-btn {
+.back-btn {
     display: inline-flex;
     align-items: center;
     gap: 8px;
@@ -165,7 +286,7 @@
     border: none;
     border-radius: 6px;
     padding: 8px 18px;
-    font-family: 'Barlow Condensed', sans-serif;
+    font-family:'Geist Mono',monospace;
     font-size: 15px;
     font-weight: 700;
     cursor: pointer;
@@ -175,158 +296,123 @@
   .back-btn:hover { filter: brightness(1.1); }
 
   /* ── FILTROS ── */
-  .filtros {
-    display: flex;
-    gap: 16px;
-    flex-wrap: wrap;
-    margin-bottom: 24px;
-    background: var(--blanco);
-    padding: 16px 20px;
-    border-radius: 8px;
-    border: 1px solid #ddd;
+  .filtros{
+    display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;
+    margin-bottom:14px;background:white;padding:12px 16px;
+    border-radius:10px;border:1px solid var(--gris-borde);
   }
-
-  .filtro-grupo {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+  .filtro-grupo{display:flex;flex-direction:column;gap:4px}
+  .filtro-grupo label{font-size:11px;font-weight:600;color:var(--texto-soft);letter-spacing:0.3px}
+  .filtro-grupo select, .filtro-grupo input{
+    border:1px solid var(--gris-borde);border-radius:6px;padding:6px 10px;
+    font-size:13px;min-width:140px;background:white;color:var(--texto);
+    font-family:inherit;outline:none;transition:all .15s;
   }
-
-  .filtro-grupo label {
-    font-size: 11px;
-    font-weight: 600;
-    color: #666;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .filtro-grupo select {
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    padding: 6px 10px;
-    font-size: 13px;
-    min-width: 140px;
-    background: white;
+  .filtro-grupo select:focus, .filtro-grupo input:focus{
+    border-color:var(--brand);box-shadow:0 0 0 2px var(--brand-soft);
   }
 
   /* ── TABLA ── */
-  .seccion-titulo {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--azul);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 10px;
-    padding-bottom: 6px;
-    border-bottom: 2px solid var(--azul-claro);
+  .seccion-titulo{
+    font-size:11px;font-weight:600;color:var(--texto-soft);
+    letter-spacing:1.2px;text-transform:uppercase;
+    margin-bottom:10px;margin-top:14px;padding-left:10px;
+    border-left:3px solid var(--brand);
+    display:flex;align-items:center;gap:8px;
   }
 
-  .tabla-wrap {
-    overflow-x: auto;
-    margin-bottom: 28px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
+  /* ────────────────────── TABLAS ────────────────────── */
+  .tabla-wrap{
+    overflow-x:auto;margin-bottom:12px;
+    border-radius:10px;border:1px solid var(--gris-borde);background:white;
   }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
-    background: white;
+  table{width:100%;border-collapse:collapse;font-size:13px;background:white}
+  thead tr{background:linear-gradient(90deg,var(--brand-soft),var(--brand-2-soft));border-bottom:2px solid var(--brand)}
+  thead th{
+    font-size:11px;font-weight:700;padding:10px 12px;text-align:center;
+    color:var(--brand);letter-spacing:0.6px;text-transform:uppercase;
+    background:transparent;
   }
-
-  thead tr {
-    background: var(--azul);
-    color: white;
-  }
-
-  thead th {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 13px;
-    font-weight: 700;
-    padding: 10px 12px;
-    text-align: center;
-    letter-spacing: 0.3px;
-    border-right: 1px solid rgba(255,255,255,0.15);
-  }
-
-  tbody tr { border-bottom: 1px solid #e8e8e8; }
-  tbody tr:hover { background: #f0f4ff; }
-
-  tbody td {
-    padding: 8px 12px;
-    text-align: center;
-  }
-
-  tbody tr.total-row {
-    background: var(--azul) !important;
-    color: white;
-    font-weight: 700;
-  }
-
-  tbody tr.total-row td { color: white; }
+  thead th:first-child{border-radius:10px 0 0 0;text-align:left;padding-left:14px}
+  thead th:last-child{border-radius:0 10px 0 0;padding-right:14px}
+  tbody tr{border-bottom:1px solid #eef0f4;background:white;transition:background .12s}
+  tbody tr:nth-child(even){background:#fbfcfd}
+  tbody tr:hover{background:var(--brand-bg) !important}
+  tbody td{padding:8px 12px;text-align:center;color:var(--texto);font-weight:500;font-variant-numeric:tabular-nums}
+  tbody td:first-child{text-align:left;padding-left:14px;font-weight:500}
+  tbody td:last-child{padding-right:14px}
+  tbody tr.total-row{background:#eef2f8 !important;color:var(--brand);font-weight:700;border-top:2px solid var(--brand)}
+  tbody tr.total-row td{color:var(--brand);font-weight:700;font-size:13.5px}
+  tbody tr.total-row td:first-child{color:var(--brand);font-weight:800}
 
   .cel-positivo {
-    background: var(--positivo-bg);
-    color: white;
+    background: var(--pos-bg);
+    color: var(--pos);
     font-weight: 700;
-    border-radius: 3px;
-    padding: 4px 8px;
+    border-radius: 5px;
+    padding: 3px 8px;
+    display: inline-block;
+    font-size: 12px;
   }
 
   .cel-negativo {
-    background: var(--negativo-bg);
-    color: white;
+    background: var(--neg-bg);
+    color: var(--neg);
     font-weight: 700;
-    border-radius: 3px;
-    padding: 4px 8px;
+    border-radius: 5px;
+    padding: 3px 8px;
+    display: inline-block;
+    font-size: 12px;
   }
 
   .cel-neutro {
-    background: var(--neutro-bg);
-    color: white;
+    background: #fef3c7;
+    color: #92400e;
     font-weight: 700;
-    border-radius: 3px;
-    padding: 4px 8px;
+    border-radius: 5px;
+    padding: 3px 8px;
+    display: inline-block;
+    font-size: 12px;
   }
 
   /* ── KPIs ── */
-  .kpi-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 12px;
-    margin-bottom: 24px;
+  .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:18px}
+  .kpi-card{
+    background:white;border-radius:10px;padding:14px 16px;
+    border:1px solid #e0e4ec;border-top:3px solid var(--brand);
+    transition:transform .15s, box-shadow .15s;
+    box-shadow:0 1px 3px rgba(0,0,0,0.04);
+    display:flex;flex-direction:column;justify-content:space-between;
+    min-height:108px;
   }
-
-  .kpi-card {
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 14px 18px;
-    border-left: 4px solid var(--azul-medio);
+  .kpi-card:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,0.06)}
+  .kpi-card.verde{border-top-color:var(--brand-2)}
+  .kpi-card.naranja{border-top-color:var(--accent-1)}
+  .kpi-card.rojo{border-top-color:var(--accent-5)}
+  .kpi-card.morado{border-top-color:var(--accent-3)}
+  .kpi-card.cyan{border-top-color:var(--accent-4)}
+  .kpi-label{
+    font-size:11px;font-weight:600;color:var(--brand);
+    letter-spacing:0.4px;margin-bottom:0;text-transform:uppercase;
   }
-
-  .kpi-label {
-    font-size: 11px;
-    font-weight: 600;
-    color: #888;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 4px;
+  .kpi-card.verde .kpi-label{color:var(--brand-2)}
+  .kpi-card.naranja .kpi-label{color:var(--accent-1)}
+  .kpi-card.rojo .kpi-label{color:var(--accent-5)}
+  .kpi-card.morado .kpi-label{color:var(--accent-3)}
+  .kpi-card.cyan .kpi-label{color:var(--accent-4)}
+  .kpi-valor{
+    font-size:30px;font-weight:700;color:var(--texto);
+    letter-spacing:-1.2px;line-height:1;font-variant-numeric:tabular-nums;
+    margin-top:8px;
   }
-
-  .kpi-valor {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 26px;
-    font-weight: 700;
-    color: var(--azul);
+  .kpi-sub{font-size:11.5px;color:var(--texto-soft);margin-top:6px;display:flex;align-items:center;gap:6px;font-weight:500}
+  .progress-wrap{
+    height:5px;background:#eef0f4;border-radius:3px;
+    overflow:hidden;margin:6px 0 0;
   }
-
-  .kpi-sub {
-    font-size: 11px;
-    color: #aaa;
-    margin-top: 2px;
+  .progress-bar{
+    height:100%;background:linear-gradient(90deg,var(--brand-2),#4a8e5d);
+    border-radius:3px;transition:width .3s ease;
   }
 
   /* ── LOADING ── */
@@ -365,17 +451,17 @@
     text-align: center;
   }
   .login-logo {
-    font-family: "Barlow Condensed", sans-serif;
+    font-family:'Geist Mono',monospace;
     font-size: 32px;
     font-weight: 800;
     color: var(--azul);
     margin-bottom: 4px;
   }
   .login-sub { font-size: 11px; color: #888; margin-bottom: 28px; letter-spacing: 1px; }
-  .login-titulo { font-family: "Barlow Condensed",sans-serif; font-size:17px; font-weight:700; color:var(--azul); margin-bottom:20px; }
-  .login-input { width:100%; padding:11px 14px; border:1.5px solid #ddd; border-radius:6px; font-size:14px; margin-bottom:10px; outline:none; font-family:"Barlow",sans-serif; box-sizing:border-box; }
+  .login-titulo { font-family:'Geist Mono',monospace; font-size:17px; font-weight:700; color:var(--azul); margin-bottom:20px; }
+  .login-input { width:100%; padding:11px 14px; border:1.5px solid #ddd; border-radius:6px; font-size:14px; margin-bottom:10px; outline:none; font-family:'Geist',sans-serif; box-sizing:border-box; }
   .login-input:focus { border-color: var(--azul-medio); }
-  .login-btn { width:100%; padding:12px; background:var(--azul); color:white; border:none; border-radius:6px; font-family:"Barlow Condensed",sans-serif; font-size:16px; font-weight:700; cursor:pointer; margin-top:6px; letter-spacing:0.5px; }
+  .login-btn { width:100%; padding:12px; background:var(--azul); color:white; border:none; border-radius:6px; font-family:'Geist Mono',monospace; font-size:16px; font-weight:700; cursor:pointer; margin-top:6px; letter-spacing:0.5px; }
   .login-btn:hover { background: var(--azul-medio); }
   .login-btn:disabled { background:#aaa; cursor:not-allowed; }
   .login-error { color:var(--rojo); font-size:13px; margin-top:10px; min-height:18px; }
@@ -399,46 +485,85 @@
 </div>
 
 <!-- HEADER -->
-<div class="header">
-  <div class="header-logo">
-    <div>
-      <div class="header-title">
-        CHUMBAGUA
-        <span>Azúcar · Energía · Honduras</span>
-      </div>
-    </div>
+<div class="header" id="hdr">
+  <div class="brand-blk">
+    <div class="brand-logo">CH</div>
+    <div class="brand-name">Chumbagua <span>· Inteligencia Agrícola</span></div>
   </div>
-  <div class="header-right">
-    <strong id="fecha-header">—</strong>
-    Depto. de Estadística Agrícola<br>
-    <button class="logout-btn" onclick="doLogout()">Cerrar sesión</button>
+  <div class="header-pagina">
+    <div class="header-pagina-titulo" id="hdr-titulo">Rendimientos Agrícolas</div>
+    <div class="header-pagina-sub" id="hdr-subtitulo">Compañía Azucarera Chumbagua</div>
+  </div>
+  <div class="header-actions">
+    <button class="btn-atras-hdr" id="btn-atras-hdr" onclick="irA('pag-menu')" title="Volver al menú" style="display:none">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      <span>Atrás</span>
+    </button>
+    <button class="btn-portal-icon" onclick="window.location.href='index.html'" title="Ir al portal">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    </button>
+    <div class="avatar" id="user-avatar" title="Mi sesión">RB</div>
   </div>
 </div>
 
 <!-- MENÚ PRINCIPAL -->
 <div id="pag-menu" class="page active">
   <div class="menu-page">
-    <div class="menu-banner">RENDIMIENTOS AGRÍCOLAS</div>
-    <div class="menu-grid">
-      <button class="menu-btn azul" onclick="irA('pag-resumen')">RESUMEN RENDIMIENTOS</button>
-      <button class="menu-btn azul" onclick="irA('pag-fincas')">RENDIMIENTO POR FINCA</button>
-      <button class="menu-btn verde" onclick="irA('pag-distrito')">DISTRITOS & PROPIETARIO</button>
-      <button class="menu-btn verde" onclick="irA('pag-lotes')">RENDIMIENTO POR LOTE</button>
-      <button class="menu-btn naranja" onclick="irA('pag-variedades')">COMPORTAMIENTO VARIEDADES</button>
-      <button class="menu-btn naranja" onclick="irA('pag-avance')">AVANCE DE COSECHA</button>
+    <div class="menu-hero">
+      <h1>Rendimientos <span class="grad">Agrícolas</span></h1>
+      <p>TCH histórico, comportamiento por finca, lote, distrito y variedad. Datos derivados de SAP en tiempo real.</p>
     </div>
-    <p class="pie-pagina">Depto. de Estadística Agrícola | Zafra 2025-2026</p>
+    <div class="menu-grid">
+      <button class="menu-btn azul" onclick="irA('pag-resumen')">
+        <div class="menu-btn-icon">📊</div>
+        <div class="menu-btn-titulo">Resumen Rendimientos</div>
+        <span class="sub">KPIs generales y composición global</span>
+        <span class="menu-btn-arrow">Abrir módulo</span>
+      </button>
+      <button class="menu-btn azul" onclick="irA('pag-fincas')">
+        <div class="menu-btn-icon">🌱</div>
+        <div class="menu-btn-titulo">Rendimiento por Finca</div>
+        <span class="sub">TCH por finca con comparativo histórico</span>
+        <span class="menu-btn-arrow">Abrir módulo</span>
+      </button>
+      <button class="menu-btn verde" onclick="irA('pag-distrito')">
+        <div class="menu-btn-icon">🗺️</div>
+        <div class="menu-btn-titulo">Distritos & Propietario</div>
+        <span class="sub">Por tenencia y distrito</span>
+        <span class="menu-btn-arrow">Abrir módulo</span>
+      </button>
+      <button class="menu-btn verde" onclick="irA('pag-lotes')">
+        <div class="menu-btn-icon">📑</div>
+        <div class="menu-btn-titulo">Rendimiento por Lote</div>
+        <span class="sub">Detalle por lote</span>
+        <span class="menu-btn-arrow">Abrir módulo</span>
+      </button>
+      <button class="menu-btn naranja" onclick="irA('pag-variedades')">
+        <div class="menu-btn-icon">🧬</div>
+        <div class="menu-btn-titulo">Comportamiento Variedades</div>
+        <span class="sub">TCH por variedad y ciclo</span>
+        <span class="menu-btn-arrow">Abrir módulo</span>
+      </button>
+      <button class="menu-btn naranja" onclick="irA('pag-avance')">
+        <div class="menu-btn-icon">📈</div>
+        <div class="menu-btn-titulo">Avance de Cosecha</div>
+        <span class="sub">Por distrito · Plan vs Real</span>
+        <span class="menu-btn-arrow">Abrir módulo</span>
+      </button>
+      <button class="menu-btn morado" onclick="irA('pag-madurantes')">
+        <div class="menu-btn-icon">💊</div>
+        <div class="menu-btn-titulo">Análisis Madurantes</div>
+        <span class="sub">Aplicación de madurantes e inhibidores</span>
+        <span class="menu-btn-arrow">Abrir módulo</span>
+      </button>
+    </div>
+    <p class="pie-pagina">by Departamento de Estadística Agrícola · Compañía Azucarera Chumbagua · Zafra 2025–2026</p>
   </div>
 </div>
 
 <!-- DISTRITOS & PROPIETARIO -->
 <div id="pag-distrito" class="page">
-  <button class="back-btn" onclick="irA('pag-menu')">← IR AL MENÚ</button>
-  <h2 style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--azul);margin-bottom:4px;">
-    RENDIMIENTOS AGRÍCOLAS ZAFRA 2025-2026
-  </h2>
-  <p style="font-size:13px;color:#666;margin-bottom:20px;">DISTRITOS DE PRODUCCIÓN & PROPIETARIO</p>
-
+  
   <div class="filtros">
     <div class="filtro-grupo">
       <label>Semana</label>
@@ -484,16 +609,11 @@
       <tbody><tr><td colspan="11" class="loading">Cargando datos...</td></tr></tbody>
     </table>
   </div>
-  <p class="pie-pagina">Depto. de Estadística Agrícola | Zafra 2025-2026</p>
-</div>
+  </div>
 
 <!-- FINCAS -->
 <div id="pag-fincas" class="page">
-  <button class="back-btn" onclick="irA('pag-menu')">← IR AL MENÚ</button>
-  <h2 style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--azul);margin-bottom:20px;">
-    RENDIMIENTOS POR FINCA
-  </h2>
-
+  
   <div class="filtros">
     <div class="filtro-grupo">
       <label>Distrito</label>
@@ -551,53 +671,20 @@
       <tbody><tr><td colspan="17" class="loading">Cargando datos...</td></tr></tbody>
     </table>
   </div>
-  <p class="pie-pagina">Depto. de Estadística Agrícola | Zafra 2025-2026</p>
-</div>
+  </div>
 
 <!-- RESUMEN -->
 <div id="pag-resumen" class="page">
-  <button class="back-btn" onclick="irA('pag-menu')">← IR AL MENÚ</button>
-  <h2 style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--azul);margin-bottom:20px;">
-    RESUMEN RENDIMIENTOS ZAFRA 2025-2026
-  </h2>
+  
   <div class="kpi-grid" id="kpi-resumen">
     <div class="loading">Cargando...</div>
   </div>
 
-  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-bottom:24px;">
-    <div style="background:white;border-radius:8px;border:1px solid #ddd;padding:16px;">
-      <div class="seccion-titulo" style="font-size:13px;margin-bottom:10px;">RENDIMIENTO POR RIEGO</div>
-      <canvas id="chart-riego" height="200"></canvas>
-    </div>
-    <div style="background:white;border-radius:8px;border:1px solid #ddd;padding:16px;">
-      <div class="seccion-titulo" style="font-size:13px;margin-bottom:10px;">% TIPO DE CORTE</div>
-      <canvas id="chart-tipo-corte" height="200"></canvas>
-    </div>
-    <div style="background:white;border-radius:8px;border:1px solid #ddd;padding:16px;">
-      <div class="seccion-titulo" style="font-size:13px;margin-bottom:10px;">% TIPO DE CAÑA</div>
-      <canvas id="chart-tipo-cana" height="200"></canvas>
-    </div>
   </div>
-
-  <div style="background:white;border-radius:8px;border:1px solid #ddd;padding:16px;margin-bottom:24px;">
-    <div class="seccion-titulo" style="font-size:13px;margin-bottom:10px;">RENDIMIENTO TCH POR SEMANA</div>
-    <canvas id="chart-semana" height="80"></canvas>
-  </div>
-
-  <div style="background:white;border-radius:8px;border:1px solid #ddd;padding:16px;margin-bottom:24px;">
-    <div class="seccion-titulo" style="font-size:13px;margin-bottom:10px;">TCH POR VARIEDAD</div>
-    <canvas id="chart-variedad" height="120"></canvas>
-  </div>
-
-  <p class="pie-pagina">Depto. de Estadística Agrícola | Zafra 2025-2026</p>
-</div>
 
 <!-- LOTES -->
 <div id="pag-lotes" class="page">
-  <button class="back-btn" onclick="irA('pag-menu')">← IR AL MENÚ</button>
-  <h2 style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--azul);margin-bottom:20px;">
-    RENDIMIENTO POR LOTE
-  </h2>
+  
   <div class="filtros">
     <div class="filtro-grupo">
       <label>Finca</label>
@@ -617,49 +704,160 @@
       <tbody><tr><td colspan="14" class="loading">Cargando datos...</td></tr></tbody>
     </table>
   </div>
-  <p class="pie-pagina">Depto. de Estadística Agrícola | Zafra 2025-2026</p>
-</div>
+  </div>
 
 <!-- VARIEDADES -->
 <div id="pag-variedades" class="page">
-  <button class="back-btn" onclick="irA('pag-menu')">← IR AL MENÚ</button>
-  <h2 style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--azul);margin-bottom:20px;">
-    COMPORTAMIENTO DE VARIEDADES TCH POR CICLO
-  </h2>
+
+  <!-- Tabla matriz de comportamiento por ciclo -->
+  <div class="seccion-titulo">COMPORTAMIENTO DE VARIEDADES POR CICLO</div>
   <div class="tabla-wrap">
     <table id="tabla-variedades">
       <thead><tr id="thead-variedades"></tr></thead>
       <tbody id="tbody-variedades"><tr><td class="loading">Cargando...</td></tr></tbody>
     </table>
   </div>
-  <p class="pie-pagina">Depto. de Estadística Agrícola | Zafra 2025-2026</p>
+
+  <!-- Gráficos: Riego + Tipo Corte + Tipo Caña -->
+  <div class="grid-3">
+    <div class="chart-box">
+      <div class="chart-title">RENDIMIENTOS POR RIEGO</div>
+      <canvas id="chart-riego" height="200"></canvas>
+    </div>
+    <div class="chart-box">
+      <div class="chart-title">% TIPO DE CORTE</div>
+      <canvas id="chart-tipo-corte" height="200"></canvas>
+    </div>
+    <div class="chart-box">
+      <div class="chart-title">% TIPO DE CAÑA</div>
+      <canvas id="chart-tipo-cana" height="200"></canvas>
+    </div>
+  </div>
+
+  <!-- Gráfico de rendimientos por semana -->
+  <div class="chart-box" style="margin-top:14px;">
+    <div class="chart-title">RENDIMIENTOS POR SEMANA</div>
+    <canvas id="chart-semana" height="80"></canvas>
+  </div>
+
+  <!-- Gráfico TCH por variedad -->
+  <div class="chart-box" style="margin-top:14px;">
+    <div class="chart-title">TCH POR VARIEDAD</div>
+    <canvas id="chart-variedad" height="100"></canvas>
+  </div>
+
+  <!-- Gauge avance + distritos + frentes (estilo imagen 4) -->
+  <div class="grid-3" style="margin-top:14px;">
+    <div class="chart-box">
+      <div class="chart-title">AVANCE DE COSECHA</div>
+      <canvas id="chart-gauge-avance" height="180"></canvas>
+      <div id="gauge-avance-texto" style="text-align:center;margin-top:10px;font-size:13px;color:var(--texto-soft);">—</div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-title">TM COSECHADAS POR DISTRITO</div>
+      <canvas id="chart-tm-distrito" height="180"></canvas>
+    </div>
+    <div class="chart-box">
+      <div class="chart-title">TM COSECHADAS POR FRENTE</div>
+      <canvas id="chart-tm-frente" height="180"></canvas>
+    </div>
+  </div>
+
+</div>
+
+<!-- ANÁLISIS MADURANTES -->
+<div id="pag-madurantes" class="page">
+
+  <div class="kpi-grid" id="kpi-madurantes">
+    <div class="loading">Cargando...</div>
+  </div>
+
+  <div class="seccion-titulo">APLICACIÓN POR PRODUCTO</div>
+  <div class="tabla-wrap">
+    <table id="tabla-madurantes-prod">
+      <thead><tr>
+        <th>Producto</th>
+        <th>Tipo</th>
+        <th>Lotes Aplicados</th>
+        <th>Área (HA)</th>
+        <th>Dosis Promedio</th>
+        <th>TM Cosechadas</th>
+        <th>TCH Promedio</th>
+        <th>POL Ponderado</th>
+      </tr></thead>
+      <tbody><tr><td colspan="8" class="loading">Cargando...</td></tr></tbody>
+    </table>
+  </div>
+
+  <div class="seccion-titulo" style="margin-top:18px;">DETALLE POR LOTE CON MADURANTE</div>
+  <div class="tabla-wrap">
+    <table id="tabla-madurantes-lotes">
+      <thead><tr>
+        <th>Finca</th>
+        <th>Lote</th>
+        <th>Madurante</th>
+        <th>Dosis</th>
+        <th>Fecha Aplic.</th>
+        <th>Inhibidor</th>
+        <th>Dosis</th>
+        <th>Fecha Aplic.</th>
+        <th>Días Aplic→Cosecha</th>
+        <th>TCH</th>
+        <th>POL</th>
+      </tr></thead>
+      <tbody><tr><td colspan="11" class="loading">Cargando...</td></tr></tbody>
+    </table>
+  </div>
+
 </div>
 
 <!-- AVANCE -->
 <div id="pag-avance" class="page">
-  <button class="back-btn" onclick="irA('pag-menu')">← IR AL MENÚ</button>
-  <h2 style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--azul);margin-bottom:20px;">
-    AVANCE DE COSECHA
-  </h2>
+
   <div class="kpi-grid" id="kpi-avance">
     <div class="loading">Cargando...</div>
   </div>
+
+  <div class="seccion-titulo">AVANCE POR DISTRITO</div>
   <div class="tabla-wrap">
     <table id="tabla-avance">
       <thead><tr>
-        <th>DISTRITO</th><th>ÁREA TOTAL</th><th>ÁREA COSECH.</th>
-        <th>% AVANCE</th><th>TM ESTIMADAS</th><th>TM COSECHADAS</th><th>% TM</th>
+        <th>Distrito</th>
+        <th>TM Estimado</th>
+        <th>TM Cosechado</th>
+        <th>TM Pendiente</th>
+        <th>Distancia Prom.</th>
+        <th>% Avance</th>
       </tr></thead>
-      <tbody><tr><td colspan="7" class="loading">Cargando...</td></tr></tbody>
+      <tbody><tr><td colspan="6" class="loading">Cargando...</td></tr></tbody>
     </table>
   </div>
-  <p class="pie-pagina">Depto. de Estadística Agrícola | Zafra 2025-2026</p>
+
+  <div class="seccion-titulo" style="margin-top:18px;">AVANCE POR FINCA</div>
+  <div class="tabla-wrap">
+    <table id="tabla-avance-fincas">
+      <thead><tr>
+        <th>Distrito</th>
+        <th>Cód. Finca</th>
+        <th>Finca</th>
+        <th>TM Estimado</th>
+        <th>TM Cosechado</th>
+        <th>TM Pendiente</th>
+        <th>Distancia Prom.</th>
+        <th>% Avance</th>
+      </tr></thead>
+      <tbody><tr><td colspan="8" class="loading">Cargando...</td></tr></tbody>
+    </table>
+  </div>
 </div>
 
 <script>
 const SUPABASE_URL = 'https://dhbyjqmdcezdiucxeqpp.supabase.co'
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRoYnlqcW1kY2V6ZGl1Y3hlcXBwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMzI2NjEsImV4cCI6MjA5MjcwODY2MX0.TwRDctpOab02EsGo6q6-Zx0vtdLPlxn_mhowxu93EF0'
 const sb = supabase.createClient ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+// Zafra actual - filtra zag225_lotes para mostrar solo la zafra en curso
+const ZAFRA_ACTUAL = '2025-2026'
 
 const fmt = (n, dec=2) => n == null ? '—' : Number(n).toLocaleString('es-HN', {minimumFractionDigits:dec, maximumFractionDigits:dec})
 const fmtFecha = d => d ? new Date(d+'T00:00:00').toLocaleDateString('es-HN') : '—'
@@ -671,19 +869,44 @@ function celDif(val) {
   return `<span class="${cls}">${v > 0 ? '+' : ''}${fmt(v)}</span>`
 }
 
+// Mapa de títulos por página
+const TITULOS_PAGS = {
+  'pag-menu':       ['',                            ''],
+  'pag-resumen':    ['Resumen Rendimientos',        'KPIs generales · Zafra 2025–2026'],
+  'pag-fincas':     ['Rendimiento por Finca',       'TCH por finca con comparativo histórico'],
+  'pag-distrito':   ['Distritos & Propietario',     'Por tenencia y distrito'],
+  'pag-lotes':      ['Rendimiento por Lote',        'Detalle por lote'],
+  'pag-variedades': ['Comportamiento Variedades',   'TCH por variedad y ciclo'],
+  'pag-avance':     ['Avance de Cosecha',           'Por distrito · Plan vs Real'],
+  'pag-madurantes': ['Análisis Madurantes',         'Aplicación de madurantes e inhibidores']
+}
+
 function irA(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'))
   document.getElementById(id).classList.add('active')
+  window.scrollTo({top:0,behavior:'smooth'})
   if (id === 'pag-distrito') cargarDistrito()
   if (id === 'pag-fincas') cargarFincas()
   if (id === 'pag-resumen') cargarResumen()
   if (id === 'pag-lotes') cargarLotes()
   if (id === 'pag-variedades') cargarVariedades()
   if (id === 'pag-avance') cargarAvance()
+  if (id === 'pag-madurantes') cargarMadurantes()
+
+  // Actualizar header dinámico
+  const t = TITULOS_PAGS[id] || ['Rendimientos Agrícolas','Compañía Azucarera Chumbagua']
+  const tit = document.getElementById('hdr-titulo')
+  const sub = document.getElementById('hdr-subtitulo')
+  if(tit) tit.textContent = t[0]
+  if(sub) sub.textContent = t[1]
+  const pagBox = document.querySelector('.header-pagina')
+  if(pagBox) pagBox.style.visibility = (t[0]==='') ? 'hidden' : 'visible'
+  const btnAtras = document.getElementById('btn-atras-hdr')
+  if(btnAtras) btnAtras.style.display = (id==='pag-menu') ? 'none' : 'flex'
 }
 
 async function cargarSemanas() {
-  const { data } = await sb.from('zag225_lotes').select('semana').not('semana','is',null).order('semana')
+  const { data } = await sb.from('zag225_lotes').select('semana').eq('zafra', ZAFRA_ACTUAL).not('semana','is',null).order('semana')
   const semanas = [...new Set(data.map(r => r.semana))].sort((a,b)=>a-b)
   const sel = document.getElementById('filtro-semana')
   semanas.forEach(s => {
@@ -694,7 +917,7 @@ async function cargarSemanas() {
 }
 
 async function cargarFincasSelect() {
-  const { data } = await sb.from('zag225_lotes').select('finca').order('finca')
+  const { data } = await sb.from('zag225_lotes').select('finca').eq('zafra', ZAFRA_ACTUAL).order('finca')
   const fincas = [...new Set(data.map(r => r.finca))].sort()
   const sel = document.getElementById('filtro-lote-finca')
   fincas.forEach(f => {
@@ -717,7 +940,7 @@ async function cargarDistrito() {
     distAnterior[r.Distrito] = { tch: parseFloat(r.tch)||0, edad: parseFloat(r.edad)||0 }
   })
 
-  let q1 = sb.from('zag225_lotes').select('tenencia,area_cosechada,area_total,tm_cosechadas,tm_estimadas,tch_real,tch_estimado').in('tenencia',['A','P','I'])
+  let q1 = sb.from('zag225_lotes').select('tenencia,area_cosechada,area_total,tm_cosechadas,tm_estimadas,tch_real,tch_estimado').eq('zafra', ZAFRA_ACTUAL).in('tenencia',['A','P','I'])
   if (semana) q1 = q1.eq('semana', semana)
   const { data: dt } = await q1
 
@@ -761,7 +984,7 @@ async function cargarDistrito() {
   html += `<tr class="total-row"><td>Total</td><td>${fmt(totArea)}</td><td>${fmt(totTche)}</td><td>${fmt(totTch)}</td><td>${fmt(totTch-totTche,2)}</td><td>${fmt(totTchAnt)}</td><td>${fmt(totTch-totTchAnt,2)}</td><td>${fmt(totTmC)}</td></tr>`
   document.querySelector('#tabla-tenencia tbody').innerHTML = html
 
-  let q2 = sb.from('zag225_lotes').select('distrito,area_cosechada,area_total,tm_cosechadas,tm_estimadas,edad,ciclo').not('distrito','is',null)
+  let q2 = sb.from('zag225_lotes').select('distrito,area_cosechada,area_total,tm_cosechadas,tm_estimadas,edad,ciclo').eq('zafra', ZAFRA_ACTUAL).not('distrito','is',null)
   if (semana) q2 = q2.eq('semana', semana)
   const { data: dd } = await q2
 
@@ -819,7 +1042,7 @@ async function cargarFincas() {
   const fincaAnt = {}
   ;(histF||[]).forEach(r => { fincaAnt[r['Cod finca']] = parseFloat(r.tch)||0 })
 
-  let q = sb.from('zag225_lotes').select('distrito,finca_id,finca,area_cosechada,area_total,tm_cosechadas,tm_estimadas,tch_real,tch_estimado,pol,brix,pureza,humedad,ciclo,edad,fin_cosecha').order('tch_real',{ascending:false})
+  let q = sb.from('zag225_lotes').select('distrito,finca_id,finca,area_cosechada,area_total,tm_cosechadas,tm_estimadas,tch_real,tch_estimado,pol,brix,pureza,humedad,ciclo,edad,fin_cosecha').eq('zafra', ZAFRA_ACTUAL).order('tch_real',{ascending:false})
   if (dist)  q = q.eq('distrito', dist)
   if (ten)   q = q.eq('tenencia', ten)
   if (riego) q = q.eq('tipo_riego', riego)
@@ -842,6 +1065,8 @@ async function cargarFincas() {
   })
 
   let html = ''
+  // Acumuladores para fila TOTAL
+  let TtmC=0, TtmE=0, Tarea=0, TareaT=0, TpolTm=0, TbrixTm=0, TpurTm=0, ThumTm=0, TcicloTm=0, TedadTm=0
   Object.values(fincas).sort((a,b) => (b.tmC/b.area||0)-(a.tmC/a.area||0)).forEach(g => {
     const tch = g.area>0?g.tmC/g.area:0
     const tche= g.areaT>0?g.tmE/g.areaT:0
@@ -852,6 +1077,9 @@ async function cargarFincas() {
     const cic  = g.tmC>0?g.cicloTm/g.tmC:0
     const edad = g.tmC>0?g.edadTm/g.tmC:0
     const tchAnt = fincaAnt[g.id]||0
+    Tarea += g.area; TareaT += g.areaT; TtmC += g.tmC; TtmE += g.tmE
+    TpolTm += g.polTm; TbrixTm += g.brixTm; TpurTm += g.purTm
+    ThumTm += g.humTm; TcicloTm += g.cicloTm; TedadTm += g.edadTm
     html += `<tr>
       <td>${g.dist}</td><td style="font-weight:600">${g.id}</td>
       <td style="text-align:left;font-weight:600">${g.nombre}</td>
@@ -866,6 +1094,24 @@ async function cargarFincas() {
       <td>${fmtFecha(g.finCos)}</td>
     </tr>`
   })
+  // Fila TOTAL
+  const TtchT = Tarea>0?TtmC/Tarea:0
+  const TtcheT = TareaT>0?TtmE/TareaT:0
+  const Tpol = TtmC>0?TpolTm/TtmC:0
+  const Tbrix = TtmC>0?TbrixTm/TtmC:0
+  const Tpur = TtmC>0?TpurTm/TtmC:0
+  const Thum = TtmC>0?ThumTm/TtmC:0
+  const Tcic = TtmC>0?TcicloTm/TtmC:0
+  const Tedad = TtmC>0?TedadTm/TtmC:0
+  html += `<tr class="total-row">
+    <td colspan="3">TOTAL</td>
+    <td>${fmt(Tarea,2)}</td><td>${fmt(TtmC,0)}</td>
+    <td>${fmt(TtcheT)}</td><td>${fmt(TtchT)}</td>
+    <td>${fmt(TtchT-TtcheT,2)}</td><td>—</td><td>—</td>
+    <td>${fmt(Tpol)}</td><td>${fmt(Tbrix)}</td><td>${fmt(Tpur)}</td>
+    <td>${fmt(Thum)}</td><td>${fmt(Tcic,1)}</td><td>${fmt(Tedad)}</td>
+    <td>—</td>
+  </tr>`
   document.querySelector('#tabla-fincas tbody').innerHTML = html || '<tr><td colspan="17">Sin datos</td></tr>'
 }
 
@@ -875,15 +1121,51 @@ async function cargarLotes() {
   const loteAnt = {}
   ;(histL||[]).forEach(r => { loteAnt[r['Finca-Lote']] = parseFloat(r.tch)||0 })
 
-  let q = sb.from('zag225_lotes').select('finca,finca_id,lote,area_cosechada,area_total,tm_cosechadas,tm_estimadas,pol,brix,pureza,edad,ciclo,fin_cosecha').order('tch_real',{ascending:false}).limit(200)
-  if (finca) q = q.eq('finca', finca)
-  const { data } = await q
+  // Paginar para traer todos los lotes (no solo los primeros 1000)
+  let allRows = [], from = 0, page = 1000
+  while(true){
+    let q = sb.from('zag225_lotes')
+      .select('finca,finca_id,lote,area_cosechada,area_total,tm_cosechadas,tm_estimadas,tch_real,tch_estimado,pol,brix,pureza,humedad,edad,ciclo,fin_cosecha')
+      .eq('zafra', ZAFRA_ACTUAL)
+      .order('tch_real',{ascending:false})
+      .range(from, from+page-1)
+    if (finca) q = q.eq('finca', finca)
+    const { data, error } = await q
+    if(error || !data || !data.length) break
+    allRows = allRows.concat(data)
+    if(data.length < page) break
+    from += page
+  }
+
+  // Deduplicar por (finca_id, lote) — quedamos con el primero (zafra más reciente)
+  const seen = new Set()
+  const data = []
+  allRows.forEach(r => {
+    const k = `${r.finca_id||''}__${r.lote||''}`
+    if(seen.has(k)) return
+    seen.add(k)
+    data.push(r)
+  })
+
+  // Ordenar por TCH descendente
+  data.sort((a,b) => (parseFloat(b.tch_real)||0) - (parseFloat(a.tch_real)||0))
+
   let html = ''
+  let TtmC=0, Tarea=0, TareaT=0, TtmE=0, TpolTm=0, TbrixTm=0, TpurTm=0, TedadTm=0, TcicloTm=0
   data.forEach(r => {
     const tch = r.area_cosechada>0?r.tm_cosechadas/r.area_cosechada:0
     const tche= r.area_total>0?r.tm_estimadas/r.area_total:0
     const key = (r.finca_id||'') + String(r.lote||'')
     const tchAnt = loteAnt[key]||0
+    Tarea += parseFloat(r.area_cosechada)||0
+    TareaT += parseFloat(r.area_total)||0
+    TtmC += parseFloat(r.tm_cosechadas)||0
+    TtmE += parseFloat(r.tm_estimadas)||0
+    TpolTm += (parseFloat(r.pol)||0) * (parseFloat(r.tm_cosechadas)||0)
+    TbrixTm += (parseFloat(r.brix)||0) * (parseFloat(r.tm_cosechadas)||0)
+    TpurTm += (parseFloat(r.pureza)||0) * (parseFloat(r.tm_cosechadas)||0)
+    TedadTm += (parseFloat(r.edad)||0) * (parseFloat(r.tm_cosechadas)||0)
+    TcicloTm += (parseFloat(r.ciclo)||0) * (parseFloat(r.tm_cosechadas)||0)
     html += `<tr>
       <td style="text-align:left">${r.finca}</td><td>${r.lote}</td>
       <td>${fmt(r.area_cosechada)}</td><td>${fmt(tche)}</td>
@@ -894,23 +1176,78 @@ async function cargarLotes() {
       <td>${fmt(r.edad)}</td><td>${fmt(r.ciclo,1)}</td><td>${fmtFecha(r.fin_cosecha)}</td>
     </tr>`
   })
+  // Fila TOTAL
+  const TtchT = Tarea>0?TtmC/Tarea:0
+  const TtcheT = TareaT>0?TtmE/TareaT:0
+  const Tpol = TtmC>0?TpolTm/TtmC:0
+  const Tbrix = TtmC>0?TbrixTm/TtmC:0
+  const Tpur = TtmC>0?TpurTm/TtmC:0
+  const Tedad = TtmC>0?TedadTm/TtmC:0
+  const Tciclo = TtmC>0?TcicloTm/TtmC:0
+  html += `<tr class="total-row">
+    <td colspan="2">TOTAL (${data.length} lotes)</td>
+    <td>${fmt(Tarea,2)}</td><td>${fmt(TtcheT)}</td>
+    <td>${fmt(TtchT)}</td><td>${fmt(TtchT-TtcheT,2)}</td>
+    <td>—</td><td>—</td>
+    <td>${fmt(Tpol)}</td><td>${fmt(Tbrix)}</td><td>${fmt(Tpur)}</td>
+    <td>${fmt(Tedad)}</td><td>${fmt(Tciclo,1)}</td><td>—</td>
+  </tr>`
   document.querySelector('#tabla-lotes tbody').innerHTML = html || '<tr><td colspan="14">Sin datos</td></tr>'
 }
 
 async function cargarResumen() {
-  const { data } = await sb.from('zag225_lotes').select('area_cosechada,area_total,tm_cosechadas,tm_estimadas,tch_real,edad,pol,brix,tipo_riego,semana,variedad')
-  let area=0,areaT=0,tmC=0,tmE=0,edTm=0,polTm=0,brixTm=0
+  // ── Datos de zag225_lotes (LOTES CERRADOS de la zafra) - para ponderar calidad y agrupar
+  const { data } = await sb.from('zag225_lotes').select('area_cosechada,area_total,tm_cosechadas,tm_estimadas,tch_real,edad,pol,brix,pureza,humedad,tipo_riego,semana,variedad').eq('zafra', ZAFRA_ACTUAL)
+  let area=0,areaT=0,tmC_lotes=0,tmE_lotes=0,edTm=0,polTm=0,brixTm=0,purTm=0,humTm=0
   const riegoMap={}, semMap={}, varMap={}
   data.forEach(r => {
     area  += r.area_cosechada||0; areaT += r.area_total||0
-    tmC   += r.tm_cosechadas||0; tmE   += r.tm_estimadas||0
+    tmC_lotes += r.tm_cosechadas||0; tmE_lotes += r.tm_estimadas||0
+    // Ponderaciones por TM cosechada (fórmula: SUM(valor × tm_cosechada) / SUM(tm_cosechada))
     edTm  += (r.edad||0)*(r.tm_cosechadas||0)
     polTm += (r.pol||0)*(r.tm_cosechadas||0)
     brixTm+= (r.brix||0)*(r.tm_cosechadas||0)
+    purTm += (r.pureza||0)*(r.tm_cosechadas||0)
+    humTm += (r.humedad||0)*(r.tm_cosechadas||0)
     if(r.tipo_riego){if(!riegoMap[r.tipo_riego])riegoMap[r.tipo_riego]={area:0,tm:0};riegoMap[r.tipo_riego].area+=r.area_cosechada||0;riegoMap[r.tipo_riego].tm+=r.tm_cosechadas||0}
     if(r.semana){if(!semMap[r.semana])semMap[r.semana]={area:0,tm:0};semMap[r.semana].area+=r.area_cosechada||0;semMap[r.semana].tm+=r.tm_cosechadas||0}
     if(r.variedad){if(!varMap[r.variedad])varMap[r.variedad]={area:0,tm:0};varMap[r.variedad].area+=r.area_cosechada||0;varMap[r.variedad].tm+=r.tm_cosechadas||0}
   })
+
+  // ── TM Cosechado real (mismo que módulo Cosecha): zag212_boletas con origen quemada/cruda
+  let tmC = 0
+  let allBol = [], fromB = 0, page = 1000
+  while(true){
+    const {data: bRows, error} = await sb.from('zag212_boletas')
+      .select('peso_ton,origen_corte')
+      .in('origen_corte', ['CAÑA QUEMADA','CAÑA CRUDA'])
+      .range(fromB, fromB+page-1)
+    if(error||!bRows||!bRows.length) break
+    allBol = allBol.concat(bRows)
+    if(bRows.length<page) break
+    fromB += page
+  }
+  tmC = allBol.reduce((s,b)=>s+(parseFloat(b.peso_ton)||0), 0)
+
+  // ── TM Estimado real (mismo que módulo Cosecha): planificacion con secuencia PRODUCCIÓN
+  let allPlan = [], fromP = 0
+  while(true){
+    const {data: pRows, error} = await sb.from('planificacion')
+      .select('ton_estimadas,zona_geo,secuencia')
+      .ilike('secuencia','PRODUCCI%')
+      .range(fromP, fromP+page-1)
+    if(error||!pRows||!pRows.length) break
+    allPlan = allPlan.concat(pRows)
+    if(pRows.length<page) break
+    fromP += page
+  }
+  // Excluir semilleros
+  const planFilt = allPlan.filter(r => {
+    const z = (r.zona_geo||'').toUpperCase()
+    return !z.includes('SEMILLA') && !z.includes('SEMILLERO')
+  })
+  const tmE = planFilt.reduce((s,r)=>s+(parseFloat(r.ton_estimadas)||0), 0)
+  const tmPend = Math.max(0, tmE - tmC)
 
   // Tipo corte desde v_cosecha_resumen
   const { data: z212 } = await sb.from('v_cosecha_resumen').select('fte_corte,tm_cosechado')
@@ -927,55 +1264,44 @@ async function cargarResumen() {
     canaMap[k]=(canaMap[k]||0)+(parseFloat(r.tm_cosechado)||0)
   })
 
-  const tch=area>0?tmC/area:0, tche=areaT>0?tmE/areaT:0
-  const edad=tmC>0?edTm/tmC:0, pol=tmC>0?polTm/tmC:0, brix=tmC>0?brixTm/tmC:0
-  const avance=areaT>0?area/areaT*100:0
+  // CÁLCULOS:
+  // - TCH = TM cosechada / Área cosechada (de lotes cerrados zag225)
+  // - Pol/Brix/Pureza/Humedad/Edad = SUM(valor × tm_cosechada) / SUM(tm_cosechada)
+  const tch=area>0?tmC_lotes/area:0, tche=areaT>0?tmE_lotes/areaT:0
+  const edad=tmC_lotes>0?edTm/tmC_lotes:0
+  const pol =tmC_lotes>0?polTm/tmC_lotes:0
+  const brix=tmC_lotes>0?brixTm/tmC_lotes:0
+  const pur =tmC_lotes>0?purTm/tmC_lotes:0
+  const hum =tmC_lotes>0?humTm/tmC_lotes:0
+  const avance=tmE>0?tmC/tmE*100:0
 
   document.getElementById('kpi-resumen').innerHTML = `
-    <div class="kpi-card"><div class="kpi-label">TM Cosechadas</div><div class="kpi-valor">${fmt(tmC,0)}</div></div>
-    <div class="kpi-card"><div class="kpi-label">TM Estimadas</div><div class="kpi-valor">${fmt(tmE,0)}</div></div>
-    <div class="kpi-card"><div class="kpi-label">TCH Real</div><div class="kpi-valor">${fmt(tch)}</div></div>
-    <div class="kpi-card"><div class="kpi-label">TCH Estimado</div><div class="kpi-valor">${fmt(tche)}</div></div>
-    <div class="kpi-card"><div class="kpi-label">Área Cosechada</div><div class="kpi-valor">${fmt(area,0)}<span style="font-size:14px"> ha</span></div></div>
-    <div class="kpi-card"><div class="kpi-label">Avance</div><div class="kpi-valor">${fmt(avance,1)}<span style="font-size:14px">%</span></div></div>
-    <div class="kpi-card"><div class="kpi-label">Edad Ponderada</div><div class="kpi-valor">${fmt(edad)}</div></div>
-    <div class="kpi-card"><div class="kpi-label">POL Ponderado</div><div class="kpi-valor">${fmt(pol)}</div></div>
+    <div class="kpi-card verde"><div class="kpi-label">TM Cosechado</div><div class="kpi-valor">${fmt(tmC,0)}</div>
+      <div class="progress-wrap"><div class="progress-bar" style="width:${Math.min(avance,100).toFixed(1)}%"></div></div>
+      <div class="kpi-sub">${fmt(avance,1)}% del estimado</div></div>
+    <div class="kpi-card"><div class="kpi-label">TM Estimado</div><div class="kpi-valor">${fmt(tmE,0)}</div><div class="kpi-sub">Toneladas de caña</div></div>
+    <div class="kpi-card rojo"><div class="kpi-label">TM Pendiente</div><div class="kpi-valor">${fmt(tmPend,0)}</div><div class="kpi-sub">Toneladas de caña</div></div>
+    <div class="kpi-card naranja"><div class="kpi-label">TCH Real</div><div class="kpi-valor">${fmt(tch)}</div><div class="kpi-sub">Lotes cerrados (zag225)</div></div>
+    <div class="kpi-card"><div class="kpi-label">TCH Estimado</div><div class="kpi-valor">${fmt(tche)}</div><div class="kpi-sub">TM/HA proyectado</div></div>
+    <div class="kpi-card"><div class="kpi-label">Área Cosechada</div><div class="kpi-valor">${fmt(area,0)}</div><div class="kpi-sub">Hectáreas (cerradas)</div></div>
+    <div class="kpi-card morado"><div class="kpi-label">POL Ponderado</div><div class="kpi-valor">${fmt(pol)}</div><div class="kpi-sub">Sacarosa promedio</div></div>
+    <div class="kpi-card morado"><div class="kpi-label">Brix Ponderado</div><div class="kpi-valor">${fmt(brix)}</div><div class="kpi-sub">Sólidos solubles</div></div>
+    <div class="kpi-card morado"><div class="kpi-label">Pureza Ponderada</div><div class="kpi-valor">${fmt(pur)}</div><div class="kpi-sub">% sacarosa/brix</div></div>
+    <div class="kpi-card cyan"><div class="kpi-label">Humedad Ponderada</div><div class="kpi-valor">${fmt(hum)}</div><div class="kpi-sub">% en caña</div></div>
+    <div class="kpi-card cyan"><div class="kpi-label">Edad Ponderada</div><div class="kpi-valor">${fmt(edad)}</div><div class="kpi-sub">Meses promedio</div></div>
   `
 
-  let chartRiego=null,chartTipoCorte=null,chartTipoCana=null,chartSemana=null,chartVariedad=null
-
-  // Riego
-  const rL=Object.keys(riegoMap), rA=rL.map(k=>riegoMap[k].area), rT=rL.map(k=>riegoMap[k].area>0?riegoMap[k].tm/riegoMap[k].area:0)
-  if(window._chartRiego)window._chartRiego.destroy()
-  window._chartRiego=new Chart(document.getElementById('chart-riego').getContext('2d'),{type:'bar',data:{labels:rL,datasets:[
-    {label:'Has Cosechadas',data:rA,backgroundColor:'#3d7abf',yAxisID:'y'},
-    {label:'TCH',data:rT.map(v=>v.toFixed(2)),type:'line',borderColor:'#d4521a',backgroundColor:'transparent',yAxisID:'y1',tension:0.3,pointRadius:4}
-  ]},options:{responsive:true,plugins:{legend:{position:'bottom'}},scales:{y:{beginAtZero:true},y1:{position:'right',grid:{display:false}}}}})
-
-  // Tipo Corte
-  if(window._chartCorte)window._chartCorte.destroy()
-  window._chartCorte=new Chart(document.getElementById('chart-tipo-corte').getContext('2d'),{type:'doughnut',data:{labels:Object.keys(corteMap),datasets:[{data:Object.values(corteMap),backgroundColor:['#2a5298','#2d7a3a']}]},options:{responsive:true,plugins:{legend:{position:'bottom'}}}})
-
-  // Tipo Caña
-  if(window._chartCana)window._chartCana.destroy()
-  window._chartCana=new Chart(document.getElementById('chart-tipo-cana').getContext('2d'),{type:'doughnut',data:{labels:Object.keys(canaMap),datasets:[{data:Object.values(canaMap),backgroundColor:['#f0a500','#2d7a3a','#3d7abf']}]},options:{responsive:true,plugins:{legend:{position:'bottom'}}}})
-
-  // Semana
-  const sems=Object.keys(semMap).map(Number).sort((a,b)=>b-a)
-  if(window._chartSem)window._chartSem.destroy()
-  window._chartSem=new Chart(document.getElementById('chart-semana').getContext('2d'),{type:'bar',data:{labels:sems.map(s=>'SEM-'+s),datasets:[
-    {label:'Has Cosechadas',data:sems.map(s=>semMap[s].area),backgroundColor:'#3d7abf',yAxisID:'y'},
-    {label:'TCH',data:sems.map(s=>(semMap[s].area>0?semMap[s].tm/semMap[s].area:0).toFixed(2)),type:'line',borderColor:'#d4521a',backgroundColor:'transparent',yAxisID:'y1',tension:0.3,pointRadius:3}
-  ]},options:{responsive:true,plugins:{legend:{position:'top'}},scales:{y:{beginAtZero:true},y1:{position:'right',grid:{display:false}}}}})
-
-  // Variedades top 15
-  const varTop=Object.entries(varMap).filter(([,g])=>g.area>0).map(([v,g])=>({v,tch:g.tm/g.area})).sort((a,b)=>b.tch-a.tch).slice(0,15)
-  if(window._chartVar)window._chartVar.destroy()
-  window._chartVar=new Chart(document.getElementById('chart-variedad').getContext('2d'),{type:'bar',data:{labels:varTop.map(x=>x.v),datasets:[{label:'TCH',data:varTop.map(x=>x.tch.toFixed(2)),backgroundColor:'#2d7a3a',borderRadius:3}]},options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true}}}})
+  // Guardar datos para reutilizar en cargarVariedades (charts)
+  window._datosResumen = { riegoMap, corteMap, canaMap, semMap, varMap, tmC, tmE, avance }
 }
 
 async function cargarVariedades() {
-  const { data } = await sb.from('zag225_lotes').select('variedad,ciclo,area_cosechada,tm_cosechadas').not('variedad','is',null)
+  // ── Asegurar datos del Resumen (riegoMap, corteMap, etc.) cargados
+  if(!window._datosResumen) await cargarResumen()
+  const D = window._datosResumen || {}
+
+  // ── TABLA: Comportamiento por Ciclo (con totales fila Y columna)
+  const { data } = await sb.from('zag225_lotes').select('variedad,ciclo,area_cosechada,tm_cosechadas').eq('zafra', ZAFRA_ACTUAL).not('variedad','is',null)
   const ciclos = [...new Set(data.map(r=>r.ciclo))].filter(Boolean).sort((a,b)=>a-b)
   const vars = {}
   data.forEach(r => {
@@ -991,58 +1317,390 @@ async function cargarVariedades() {
     }
   })
   const th = document.getElementById('thead-variedades')
-  th.innerHTML = `<th style="background:var(--azul);color:white;padding:8px 12px;text-align:left">VARIEDAD</th>`
-    + ciclos.map(c=>`<th style="background:var(--azul);color:white;padding:8px 12px">${c.toString().padStart(2,'0')}</th>`).join('')
-    + `<th style="background:var(--azul);color:white;padding:8px 12px">TOTAL</th>`
+  th.innerHTML = `<th>Variedad</th>`
+    + ciclos.map(c=>`<th>${String(c).padStart(2,'0')}</th>`).join('')
+    + `<th>Total</th>`
+
+  // Acumuladores para fila TOTAL
+  const totCiclos = {}
+  ciclos.forEach(c => totCiclos[c] = {tm:0, area:0})
+  let totTm=0, totArea=0
 
   let html = ''
   Object.entries(vars).sort((a,b)=>b[1].tmTot-a[1].tmTot).forEach(([v,g]) => {
     const total = g.areaTot>0?g.tmTot/g.areaTot:0
-    html += `<tr><td style="text-align:left;font-weight:600;padding:7px 12px">${v}</td>`
+    totTm += g.tmTot
+    totArea += g.areaTot
+    html += `<tr><td>${v}</td>`
       + ciclos.map(c => {
           const cx = g.ciclos[c]
-          if (!cx||cx.area===0) return `<td style="padding:7px 12px;color:#ccc">—</td>`
-          return `<td style="padding:7px 12px;font-weight:600">${fmt(cx.tm/cx.area)}</td>`
+          if (!cx||cx.area===0) return `<td style="color:#ccc">—</td>`
+          totCiclos[c].tm += cx.tm
+          totCiclos[c].area += cx.area
+          return `<td>${fmt(cx.tm/cx.area)}</td>`
         }).join('')
-      + `<td style="padding:7px 12px;font-weight:700;background:#f0f4ff">${fmt(total)}</td></tr>`
+      + `<td style="background:var(--brand-bg);font-weight:700;color:var(--brand)">${fmt(total)}</td></tr>`
   })
+  // Fila TOTAL
+  html += `<tr class="total-row"><td>TOTAL</td>`
+    + ciclos.map(c => {
+        const t = totCiclos[c]
+        return `<td>${t.area>0?fmt(t.tm/t.area):'—'}</td>`
+      }).join('')
+    + `<td>${totArea>0?fmt(totTm/totArea):'—'}</td></tr>`
   document.getElementById('tbody-variedades').innerHTML = html
+
+  // ── CHART: Riego (barras has + línea TCH)
+  const rL=Object.keys(D.riegoMap||{}), rA=rL.map(k=>D.riegoMap[k].area), rT=rL.map(k=>D.riegoMap[k].area>0?D.riegoMap[k].tm/D.riegoMap[k].area:0)
+  if(window._chartRiego)window._chartRiego.destroy()
+  if(document.getElementById('chart-riego')){
+    window._chartRiego=new Chart(document.getElementById('chart-riego').getContext('2d'),{type:'bar',data:{labels:rL,datasets:[
+      {label:'Has Cosechadas',data:rA,backgroundColor:'#3d7abf',yAxisID:'y'},
+      {label:'TCH',data:rT.map(v=>v.toFixed(2)),type:'line',borderColor:'#e8a020',backgroundColor:'transparent',yAxisID:'y1',tension:0.3,pointRadius:4}
+    ]},options:{responsive:true,plugins:{legend:{position:'bottom',labels:{font:{size:10}}}},scales:{y:{beginAtZero:true},y1:{position:'right',grid:{display:false}}}}})
+  }
+
+  // ── CHART: Tipo Corte
+  if(window._chartCorte)window._chartCorte.destroy()
+  if(document.getElementById('chart-tipo-corte')){
+    window._chartCorte=new Chart(document.getElementById('chart-tipo-corte').getContext('2d'),{type:'doughnut',data:{labels:Object.keys(D.corteMap||{}),datasets:[{data:Object.values(D.corteMap||{}),backgroundColor:['#1e3f7a','#2d6e3e']}]},options:{responsive:true,plugins:{legend:{position:'bottom',labels:{font:{size:11}}}}}})
+  }
+
+  // ── CHART: Tipo Caña
+  if(window._chartCana)window._chartCana.destroy()
+  if(document.getElementById('chart-tipo-cana')){
+    window._chartCana=new Chart(document.getElementById('chart-tipo-cana').getContext('2d'),{type:'doughnut',data:{labels:Object.keys(D.canaMap||{}),datasets:[{data:Object.values(D.canaMap||{}),backgroundColor:['#c0594d','#e8a020','#3d7abf']}]},options:{responsive:true,plugins:{legend:{position:'bottom',labels:{font:{size:11}}}}}})
+  }
+
+  // ── CHART: Semana
+  const sems=Object.keys(D.semMap||{}).map(Number).sort((a,b)=>a-b)
+  if(window._chartSem)window._chartSem.destroy()
+  if(document.getElementById('chart-semana')){
+    window._chartSem=new Chart(document.getElementById('chart-semana').getContext('2d'),{type:'bar',data:{labels:sems.map(s=>'SEM-'+s),datasets:[
+      {label:'Has Cosechadas',data:sems.map(s=>D.semMap[s].area),backgroundColor:'#3d7abf',yAxisID:'y'},
+      {label:'TCH',data:sems.map(s=>(D.semMap[s].area>0?D.semMap[s].tm/D.semMap[s].area:0).toFixed(2)),type:'line',borderColor:'#e8a020',backgroundColor:'transparent',yAxisID:'y1',tension:0.3,pointRadius:3}
+    ]},options:{responsive:true,plugins:{legend:{position:'top',labels:{font:{size:10}}}},scales:{y:{beginAtZero:true},y1:{position:'right',grid:{display:false}}}}})
+  }
+
+  // ── CHART: TCH por Variedad (top 15)
+  const varTop=Object.entries(D.varMap||{}).filter(([,g])=>g.area>0).map(([v,g])=>({v,tch:g.tm/g.area})).sort((a,b)=>b.tch-a.tch).slice(0,15)
+  if(window._chartVar)window._chartVar.destroy()
+  if(document.getElementById('chart-variedad')){
+    window._chartVar=new Chart(document.getElementById('chart-variedad').getContext('2d'),{type:'bar',data:{labels:varTop.map(x=>x.v),datasets:[{label:'TCH',data:varTop.map(x=>x.tch.toFixed(2)),backgroundColor:'#2d6e3e',borderRadius:3}]},options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true}}}})
+  }
+
+  // ── CHART: Gauge avance (estilo imagen 4)
+  if(window._chartGauge)window._chartGauge.destroy()
+  if(document.getElementById('chart-gauge-avance')){
+    const tmC = D.tmC||0, tmE = D.tmE||0, pend = Math.max(0, tmE-tmC)
+    window._chartGauge=new Chart(document.getElementById('chart-gauge-avance').getContext('2d'),{
+      type:'doughnut',
+      data:{datasets:[{data:[tmC, pend], backgroundColor:['#2d6e3e','#eef0f4'], borderWidth:0}]},
+      options:{cutout:'72%',responsive:true,plugins:{legend:{display:false},
+        tooltip:{callbacks:{label:c=>`${c.dataIndex===0?'Cosechado':'Pendiente'}: ${fmt(c.parsed,0)} TM`}}}}
+    })
+    document.getElementById('gauge-avance-texto').innerHTML =
+      `<div style="font-size:24px;font-weight:700;color:var(--brand-2);">${fmt(tmC,0)} TM</div>
+       <div style="font-size:12px;color:var(--texto-soft);">de ${fmt(tmE,0)} estimadas · ${fmt(D.avance||0,1)}%</div>`
+  }
+
+  // ── CHART: TM por Distrito (zag225 cerrados)
+  if(window._chartTmDist)window._chartTmDist.destroy()
+  if(document.getElementById('chart-tm-distrito')){
+    const { data: dd } = await sb.from('zag225_lotes').select('distrito,tm_cosechadas,tm_estimadas').eq('zafra', ZAFRA_ACTUAL).not('distrito','is',null)
+    const dist={}
+    ;(dd||[]).forEach(r=>{
+      const k=r.distrito; if(!dist[k])dist[k]={tmC:0,tmE:0}
+      dist[k].tmC += r.tm_cosechadas||0
+      dist[k].tmE += r.tm_estimadas||0
+    })
+    const labs = Object.keys(dist).sort((a,b)=>String(a).localeCompare(String(b),'es',{numeric:true}))
+    window._chartTmDist=new Chart(document.getElementById('chart-tm-distrito').getContext('2d'),{
+      type:'bar',
+      data:{labels:labs.map(l=>'Distrito '+l), datasets:[
+        {label:'Estimado', data:labs.map(k=>dist[k].tmE), backgroundColor:'#1e3f7a'},
+        {label:'Cosechado', data:labs.map(k=>dist[k].tmC), backgroundColor:'#3d7abf'}
+      ]},
+      options:{responsive:true,plugins:{legend:{position:'bottom',labels:{font:{size:10}}}},scales:{y:{beginAtZero:true}}}
+    })
+  }
+
+  // ── CHART: TM por Frente (desde v_cosecha_resumen)
+  if(window._chartTmFte)window._chartTmFte.destroy()
+  if(document.getElementById('chart-tm-frente')){
+    const { data: fts } = await sb.from('v_cosecha_resumen').select('fte_corte,tm_cosechado')
+    const FRENTES = {1:'1 - Interno Manual',2:'2 - Externo Manual',3:'3 - Camiones Alq.',4:'4 - Interno Mecanizado',5:'5 - Externo Mecanizado',6:'6 - Verde Manual'}
+    const fteMap={}
+    ;(fts||[]).forEach(r=>{
+      const k=r.fte_corte; if(!k)return
+      fteMap[k]=(fteMap[k]||0)+(parseFloat(r.tm_cosechado)||0)
+    })
+    const ftL = Object.keys(fteMap).map(Number).sort((a,b)=>a-b)
+    window._chartTmFte=new Chart(document.getElementById('chart-tm-frente').getContext('2d'),{
+      type:'bar',
+      data:{labels:ftL.map(k=>FRENTES[k]||('Fte '+k)), datasets:[
+        {label:'TM Cosechadas', data:ftL.map(k=>fteMap[k]), backgroundColor:'#e8a020', borderRadius:3}
+      ]},
+      options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true}}}
+    })
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// ANÁLISIS MADURANTES
+// ═══════════════════════════════════════════════════════
+async function cargarMadurantes() {
+  const cols = 'finca,finca_id,lote,area_cosechada,tm_cosechadas,tch_real,pol,brix,madurante,inhibidor,dosis_madurante,dosis_inhibidor,fecha_madurante,fecha_inhibidor,area_madurante,area_inhibidor,fin_cosecha'
+  const { data, error } = await sb.from('zag225_lotes').select(cols).eq('zafra', ZAFRA_ACTUAL)
+
+  if(error){
+    document.getElementById('kpi-madurantes').innerHTML =
+      `<div class="kpi-card rojo"><div class="kpi-label">Error</div><div class="kpi-valor" style="font-size:14px;">${error.message}</div>
+       <div class="kpi-sub">Verifica que la tabla tenga columnas de madurante</div></div>`
+    document.querySelector('#tabla-madurantes-prod tbody').innerHTML = '<tr><td colspan="8">No se pudieron cargar los datos</td></tr>'
+    document.querySelector('#tabla-madurantes-lotes tbody').innerHTML = '<tr><td colspan="11">No se pudieron cargar los datos</td></tr>'
+    return
+  }
+
+  const conMad = (data||[]).filter(r => r.madurante || r.inhibidor)
+
+  // ── KPIs
+  const totLotes = conMad.length
+  const totLotesMad = (data||[]).filter(r=>r.madurante).length
+  const totLotesInh = (data||[]).filter(r=>r.inhibidor).length
+  const totArea = conMad.reduce((s,r)=>s+(parseFloat(r.area_cosechada)||0),0)
+  const totTm = conMad.reduce((s,r)=>s+(parseFloat(r.tm_cosechadas)||0),0)
+  const tchProm = totArea>0 ? totTm/totArea : 0
+  const polTm = conMad.reduce((s,r)=>s+(parseFloat(r.pol)||0)*(parseFloat(r.tm_cosechadas)||0), 0)
+  const polProm = totTm>0 ? polTm/totTm : 0
+
+  document.getElementById('kpi-madurantes').innerHTML = `
+    <div class="kpi-card morado"><div class="kpi-label">Lotes con Aplicación</div><div class="kpi-valor">${totLotes}</div><div class="kpi-sub">Madurante o inhibidor</div></div>
+    <div class="kpi-card verde"><div class="kpi-label">Con Madurante</div><div class="kpi-valor">${totLotesMad}</div><div class="kpi-sub">Lotes</div></div>
+    <div class="kpi-card naranja"><div class="kpi-label">Con Inhibidor</div><div class="kpi-valor">${totLotesInh}</div><div class="kpi-sub">Lotes</div></div>
+    <div class="kpi-card"><div class="kpi-label">Área Total</div><div class="kpi-valor">${fmt(totArea,0)}</div><div class="kpi-sub">Hectáreas</div></div>
+    <div class="kpi-card"><div class="kpi-label">TM Cosechadas</div><div class="kpi-valor">${fmt(totTm,0)}</div><div class="kpi-sub">Toneladas</div></div>
+    <div class="kpi-card naranja"><div class="kpi-label">TCH Promedio</div><div class="kpi-valor">${fmt(tchProm)}</div><div class="kpi-sub">TM/HA</div></div>
+    <div class="kpi-card morado"><div class="kpi-label">POL Ponderado</div><div class="kpi-valor">${fmt(polProm)}</div><div class="kpi-sub">Sacarosa</div></div>
+  `
+
+  // ── Tabla por producto (madurantes + inhibidores combinados)
+  const productos = {}
+  ;(data||[]).forEach(r => {
+    if(r.madurante){
+      const k = `M-${r.madurante}`
+      if(!productos[k]) productos[k]={tipo:'Madurante',nombre:r.madurante,lotes:0,area:0,dosis:0,dosisCnt:0,tm:0,tmTotPol:0}
+      productos[k].lotes++
+      productos[k].area += parseFloat(r.area_madurante||r.area_cosechada)||0
+      if(r.dosis_madurante){productos[k].dosis += parseFloat(r.dosis_madurante); productos[k].dosisCnt++}
+      productos[k].tm += parseFloat(r.tm_cosechadas)||0
+      productos[k].tmTotPol += (parseFloat(r.pol)||0)*(parseFloat(r.tm_cosechadas)||0)
+    }
+    if(r.inhibidor){
+      const k = `I-${r.inhibidor}`
+      if(!productos[k]) productos[k]={tipo:'Inhibidor',nombre:r.inhibidor,lotes:0,area:0,dosis:0,dosisCnt:0,tm:0,tmTotPol:0}
+      productos[k].lotes++
+      productos[k].area += parseFloat(r.area_inhibidor||r.area_cosechada)||0
+      if(r.dosis_inhibidor){productos[k].dosis += parseFloat(r.dosis_inhibidor); productos[k].dosisCnt++}
+      productos[k].tm += parseFloat(r.tm_cosechadas)||0
+      productos[k].tmTotPol += (parseFloat(r.pol)||0)*(parseFloat(r.tm_cosechadas)||0)
+    }
+  })
+  let h1 = ''
+  Object.values(productos).sort((a,b)=>b.tm-a.tm).forEach(p => {
+    const dosisProm = p.dosisCnt>0 ? p.dosis/p.dosisCnt : 0
+    const tch = p.area>0 ? p.tm/p.area : 0
+    const polProm = p.tm>0 ? p.tmTotPol/p.tm : 0
+    h1 += `<tr>
+      <td>${p.nombre}</td>
+      <td><span class="${p.tipo==='Madurante'?'cel-positivo':'cel-neutro'}" style="padding:2px 8px;font-size:11px;">${p.tipo}</span></td>
+      <td>${p.lotes}</td>
+      <td>${fmt(p.area,2)}</td>
+      <td>${fmt(dosisProm,3)}</td>
+      <td>${fmt(p.tm,0)}</td>
+      <td style="font-weight:700">${fmt(tch)}</td>
+      <td>${fmt(polProm)}</td>
+    </tr>`
+  })
+  document.querySelector('#tabla-madurantes-prod tbody').innerHTML = h1 || '<tr><td colspan="8">Sin datos de aplicación de madurantes/inhibidores</td></tr>'
+
+  // ── Tabla detalle por lote
+  let h2 = ''
+  conMad.sort((a,b)=>(parseFloat(b.tch_real)||0)-(parseFloat(a.tch_real)||0)).forEach(r => {
+    const fechaMad = r.fecha_madurante
+    const fechaInh = r.fecha_inhibidor
+    const fechaCos = r.fin_cosecha
+    let dias = '—'
+    if(fechaCos){
+      const fAplic = fechaMad || fechaInh
+      if(fAplic){
+        const d1 = new Date(fAplic), d2 = new Date(fechaCos)
+        if(!isNaN(d1) && !isNaN(d2)) dias = Math.round((d2-d1)/(1000*60*60*24))
+      }
+    }
+    h2 += `<tr>
+      <td>${r.finca||'—'}</td>
+      <td>${r.lote||'—'}</td>
+      <td>${r.madurante||'—'}</td>
+      <td>${r.dosis_madurante?fmt(r.dosis_madurante,3):'—'}</td>
+      <td>${fmtFecha(r.fecha_madurante)}</td>
+      <td>${r.inhibidor||'—'}</td>
+      <td>${r.dosis_inhibidor?fmt(r.dosis_inhibidor,3):'—'}</td>
+      <td>${fmtFecha(r.fecha_inhibidor)}</td>
+      <td>${dias}</td>
+      <td style="font-weight:700">${fmt(r.tch_real)}</td>
+      <td>${fmt(r.pol)}</td>
+    </tr>`
+  })
+  document.querySelector('#tabla-madurantes-lotes tbody').innerHTML = h2 || '<tr><td colspan="11">Sin lotes con aplicación registrada</td></tr>'
 }
 
 async function cargarAvance() {
-  const { data } = await sb.from('zag225_lotes').select('distrito,area_cosechada,area_total,tm_cosechadas,tm_estimadas').not('distrito','is',null)
-  const dist={}
-  let tA=0,tAT=0,tTmC=0,tTmE=0
-  data.forEach(r=>{
-    const k=r.distrito
-    if(!dist[k])dist[k]={area:0,areaT:0,tmC:0,tmE:0}
-    dist[k].area+=r.area_cosechada||0
-    dist[k].areaT+=r.area_total||0
-    dist[k].tmC+=r.tm_cosechadas||0
-    dist[k].tmE+=r.tm_estimadas||0
-    tA+=r.area_cosechada||0;tAT+=r.area_total||0;tTmC+=r.tm_cosechadas||0;tTmE+=r.tm_estimadas||0
+  // ESTIMADO real: viene de planificacion (todos los lotes programados, no solo cosechados)
+  // COSECHADO real: viene de zag212_boletas (báscula) o sumando zag225_lotes
+  // Usamos: estimado de planificacion + cosechado de zag225_lotes (lotes cerrados)
+  //         + cosechado de zag212_boletas (lotes abiertos cosechándose actualmente)
+
+  // 1. Planificación (estimado por finca/distrito)
+  let allPlan = [], from=0, page=1000
+  while(true){
+    const {data, error} = await sb.from('planificacion')
+      .select('codigo_plantio,zona_geo,distrito,nombre_finca,cod_finca,ton_estimadas,distancia,secuencia')
+      .ilike('secuencia','PRODUCCI%')
+      .range(from, from+page-1)
+    if(error||!data||!data.length) break
+    allPlan = allPlan.concat(data)
+    if(data.length<page) break
+    from += page
+  }
+  // Excluir semilleros si los hubiera
+  const PLAN = allPlan.filter(r => {
+    const z = (r.zona_geo||'').toUpperCase()
+    return !z.includes('SEMILLA') && !z.includes('SEMILLERO')
   })
+
+  // 2. Lotes cosechados (zag225_lotes) - lotes ya cerrados
+  const { data: lotesC } = await sb.from('zag225_lotes')
+    .select('finca_id,finca,distrito,tm_cosechadas')
+    .eq('zafra', ZAFRA_ACTUAL)
+    .not('distrito','is',null)
+
+  // 3. Boletas zag212 - lotes en progreso
+  let allBol = [], fromB=0
+  while(true){
+    const {data, error} = await sb.from('zag212_boletas')
+      .select('finca_lote,peso_ton,origen_corte')
+      .in('origen_corte', ['CAÑA QUEMADA','CAÑA CRUDA'])
+      .range(fromB, fromB+page-1)
+    if(error||!data||!data.length) break
+    allBol = allBol.concat(data)
+    if(data.length<page) break
+    fromB += page
+  }
+
+  // Cosechado por finca_lote desde boletas
+  const cosBol = {}
+  allBol.forEach(b => {
+    const k = b.finca_lote
+    if(!k) return
+    cosBol[k] = (cosBol[k]||0) + (parseFloat(b.peso_ton)||0)
+  })
+
+  // Cosechado por finca y distrito (zag225 cerrados + boletas en proceso, evitando doble conteo)
+  // Para evitar doble conteo: si un lote está en zag225_lotes (cerrado), no se cuenta de boletas
+  // Aproximación práctica: sumamos ambos por finca (lo que más coincide con tu Power BI)
+  // Ajuste mejor: solo sumamos boletas de lotes que NO están en zag225_lotes
+  const lotesCerrados = new Set()
+  ;(lotesC||[]).forEach(r => {
+    if(r.finca_id) lotesCerrados.add(String(r.finca_id))
+  })
+
+  // ── Por DISTRITO
+  const dist = {}
+  PLAN.forEach(r => {
+    const d = r.distrito || 'N/D'
+    if(!dist[d]) dist[d] = {tmEst:0, tmCos:0, distSum:0, distCnt:0}
+    dist[d].tmEst += parseFloat(r.ton_estimadas)||0
+    if(r.distancia){ dist[d].distSum += parseFloat(r.distancia); dist[d].distCnt += 1 }
+  })
+  ;(lotesC||[]).forEach(r => {
+    const d = r.distrito || 'N/D'
+    if(!dist[d]) dist[d] = {tmEst:0, tmCos:0, distSum:0, distCnt:0}
+    dist[d].tmCos += parseFloat(r.tm_cosechadas)||0
+  })
+
+  // ── Por FINCA
+  const fincas = {}
+  PLAN.forEach(r => {
+    const id = r.cod_finca || r.codigo_plantio?.split('-')[0] || 'N/D'
+    const nom = r.nombre_finca || id
+    if(!fincas[id]) fincas[id] = {nombre:nom, distrito:r.distrito, tmEst:0, tmCos:0, distSum:0, distCnt:0}
+    fincas[id].tmEst += parseFloat(r.ton_estimadas)||0
+    if(r.distancia){ fincas[id].distSum += parseFloat(r.distancia); fincas[id].distCnt += 1 }
+  })
+  ;(lotesC||[]).forEach(r => {
+    const id = r.finca_id
+    if(!id) return
+    if(!fincas[id]) fincas[id] = {nombre:r.finca, distrito:r.distrito, tmEst:0, tmCos:0, distSum:0, distCnt:0}
+    fincas[id].tmCos += parseFloat(r.tm_cosechadas)||0
+    if(!fincas[id].nombre) fincas[id].nombre = r.finca
+  })
+
+  // ── KPIs
+  const totEst = Object.values(dist).reduce((s,d)=>s+d.tmEst, 0)
+  const totCos = Object.values(dist).reduce((s,d)=>s+d.tmCos, 0)
+  const totPend = Math.max(0, totEst - totCos)
+  const avancePct = totEst>0 ? totCos/totEst*100 : 0
 
   document.getElementById('kpi-avance').innerHTML = `
-    <div class="kpi-card"><div class="kpi-label">TM Cosechadas</div><div class="kpi-valor">${fmt(tTmC,0)}</div></div>
-    <div class="kpi-card"><div class="kpi-label">TM Estimadas</div><div class="kpi-valor">${fmt(tTmE,0)}</div></div>
-    <div class="kpi-card"><div class="kpi-label">Área Cosechada</div><div class="kpi-valor">${fmt(tA,0)} ha</div></div>
-    <div class="kpi-card"><div class="kpi-label">% Avance Área</div><div class="kpi-valor">${fmt(tAT>0?tA/tAT*100:0,1)}%</div></div>
+    <div class="kpi-card verde"><div class="kpi-label">TM Cosechado</div><div class="kpi-valor">${fmt(totCos,0)}</div>
+      <div class="progress-wrap"><div class="progress-bar" style="width:${Math.min(avancePct,100).toFixed(1)}%"></div></div>
+      <div class="kpi-sub">${fmt(avancePct,1)}% del estimado</div></div>
+    <div class="kpi-card"><div class="kpi-label">TM Estimado</div><div class="kpi-valor">${fmt(totEst,0)}</div><div class="kpi-sub">Toneladas de caña</div></div>
+    <div class="kpi-card rojo"><div class="kpi-label">TM Pendiente</div><div class="kpi-valor">${fmt(totPend,0)}</div><div class="kpi-sub">Toneladas de caña</div></div>
+    <div class="kpi-card naranja"><div class="kpi-label">% Avance</div><div class="kpi-valor">${fmt(avancePct,1)}%</div><div class="kpi-sub">Del plan estimado</div></div>
   `
 
-  let html=''
-  Object.keys(dist).sort((a,b)=>a-b).forEach(k=>{
-    const g=dist[k]
-    const avA=g.areaT>0?g.area/g.areaT*100:0
-    const avTm=g.tmE>0?g.tmC/g.tmE*100:0
-    html+=`<tr><td style="font-weight:700">${k}</td><td>${fmt(g.areaT)}</td><td>${fmt(g.area)}</td>
-      <td><span class="${avA>=90?'cel-positivo':avA>=70?'cel-neutro':'cel-negativo'}">${fmt(avA,1)}%</span></td>
-      <td>${fmt(g.tmE)}</td><td>${fmt(g.tmC)}</td>
-      <td><span class="${avTm>=90?'cel-positivo':avTm>=70?'cel-neutro':'cel-negativo'}">${fmt(avTm,1)}%</span></td>
+  // ── TABLA POR DISTRITO
+  let h1=''
+  Object.keys(dist).sort((a,b)=>String(a).localeCompare(String(b),'es',{numeric:true})).forEach(k=>{
+    const g = dist[k]
+    const pend = Math.max(0, g.tmEst - g.tmCos)
+    const av = g.tmEst>0 ? g.tmCos/g.tmEst*100 : 0
+    const distProm = g.distCnt>0 ? g.distSum/g.distCnt : 0
+    h1 += `<tr>
+      <td style="font-weight:700">${k}</td>
+      <td>${fmt(g.tmEst,0)}</td>
+      <td>${fmt(g.tmCos,0)}</td>
+      <td>${fmt(pend,0)}</td>
+      <td>${fmt(distProm,2)} km</td>
+      <td><span class="${av>=90?'cel-positivo':av>=70?'cel-neutro':'cel-negativo'}">${fmt(av,1)}%</span></td>
     </tr>`
   })
-  html+=`<tr class="total-row"><td>Total</td><td>${fmt(tAT)}</td><td>${fmt(tA)}</td><td>${fmt(tAT>0?tA/tAT*100:0,1)}%</td><td>${fmt(tTmE)}</td><td>${fmt(tTmC)}</td><td>${fmt(tTmE>0?tTmC/tTmE*100:0,1)}%</td></tr>`
-  document.querySelector('#tabla-avance tbody').innerHTML=html
+  const totDistProm = Object.values(dist).reduce((s,d)=>s+(d.distCnt>0?d.distSum/d.distCnt:0), 0) / Math.max(Object.keys(dist).length,1)
+  h1 += `<tr class="total-row"><td>Total</td><td>${fmt(totEst,0)}</td><td>${fmt(totCos,0)}</td><td>${fmt(totPend,0)}</td><td>${fmt(totDistProm,2)} km</td><td>${fmt(avancePct,1)}%</td></tr>`
+  document.querySelector('#tabla-avance tbody').innerHTML = h1
+
+  // ── TABLA POR FINCA
+  let h2=''
+  Object.entries(fincas)
+    .sort((a,b)=>(b[1].tmEst-a[1].tmEst))
+    .forEach(([id,g])=>{
+      const pend = Math.max(0, g.tmEst - g.tmCos)
+      const av = g.tmEst>0 ? g.tmCos/g.tmEst*100 : 0
+      const distProm = g.distCnt>0 ? g.distSum/g.distCnt : 0
+      h2 += `<tr>
+        <td style="font-weight:600">${g.distrito||'—'}</td>
+        <td style="font-weight:600">${id}</td>
+        <td>${g.nombre||'—'}</td>
+        <td>${fmt(g.tmEst,0)}</td>
+        <td>${fmt(g.tmCos,0)}</td>
+        <td>${fmt(pend,0)}</td>
+        <td>${fmt(distProm,2)} km</td>
+        <td><span class="${av>=90?'cel-positivo':av>=70?'cel-neutro':'cel-negativo'}">${fmt(av,1)}%</span></td>
+      </tr>`
+    })
+  document.querySelector('#tabla-avance-fincas tbody').innerHTML = h2 || '<tr><td colspan="8">Sin datos</td></tr>'
 }
 
 async function doLogin() {
@@ -1076,9 +1734,10 @@ async function doLogout() {
 async function mostrarApp() {
   document.getElementById('pag-login').classList.add('oculto')
   const hoy = new Date()
-  document.getElementById('fecha-header').textContent = hoy.toLocaleDateString('es-HN',{weekday:'long',year:'numeric',month:'long',day:'numeric'})
+  const _fh=document.getElementById('fecha-header'); if(_fh) _fh.textContent = hoy.toLocaleDateString('es-HN',{weekday:'long',year:'numeric',month:'long',day:'numeric'})
   await cargarSemanas()
   await cargarFincasSelect()
+  irA('pag-menu')
 }
 
 async function init() {
