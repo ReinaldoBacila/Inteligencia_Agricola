@@ -856,8 +856,6 @@ const SUPABASE_URL = 'https://dhbyjqmdcezdiucxeqpp.supabase.co'
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRoYnlqcW1kY2V6ZGl1Y3hlcXBwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMzI2NjEsImV4cCI6MjA5MjcwODY2MX0.TwRDctpOab02EsGo6q6-Zx0vtdLPlxn_mhowxu93EF0'
 const sb = supabase.createClient ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
-// Zafra actual - filtra zag225_lotes para mostrar solo la zafra en curso
-const ZAFRA_ACTUAL = '2025-2026'
 
 const fmt = (n, dec=2) => n == null ? '—' : Number(n).toLocaleString('es-HN', {minimumFractionDigits:dec, maximumFractionDigits:dec})
 const fmtFecha = d => d ? new Date(d+'T00:00:00').toLocaleDateString('es-HN') : '—'
@@ -906,7 +904,7 @@ function irA(id) {
 }
 
 async function cargarSemanas() {
-  const { data } = await sb.from('zag225_lotes').select('semana').eq('zafra', ZAFRA_ACTUAL).not('semana','is',null).order('semana')
+  const { data } = await sb.from('zag225_lotes').select('semana').not('semana','is',null).order('semana')
   const semanas = [...new Set(data.map(r => r.semana))].sort((a,b)=>a-b)
   const sel = document.getElementById('filtro-semana')
   semanas.forEach(s => {
@@ -917,7 +915,7 @@ async function cargarSemanas() {
 }
 
 async function cargarFincasSelect() {
-  const { data } = await sb.from('zag225_lotes').select('finca').eq('zafra', ZAFRA_ACTUAL).order('finca')
+  const { data } = await sb.from('zag225_lotes').select('finca').order('finca')
   const fincas = [...new Set(data.map(r => r.finca))].sort()
   const sel = document.getElementById('filtro-lote-finca')
   fincas.forEach(f => {
@@ -940,9 +938,17 @@ async function cargarDistrito() {
     distAnterior[r.Distrito] = { tch: parseFloat(r.tch)||0, edad: parseFloat(r.edad)||0 }
   })
 
-  let q1 = sb.from('zag225_lotes').select('tenencia,area_cosechada,area_total,tm_cosechadas,tm_estimadas,tch_real,tch_estimado').eq('zafra', ZAFRA_ACTUAL).in('tenencia',['A','P','I'])
-  if (semana) q1 = q1.eq('semana', semana)
-  const { data: dt } = await q1
+  // Paginar tenencia
+  let dt = [], from=0, page=1000
+  while(true){
+    let q1 = sb.from('zag225_lotes').select('tenencia,area_cosechada,area_total,tm_cosechadas,tm_estimadas,tch_real,tch_estimado').in('tenencia',['A','P','I']).range(from, from+page-1)
+    if (semana) q1 = q1.eq('semana', semana)
+    const {data: rows, error} = await q1
+    if(error||!rows||!rows.length) break
+    dt = dt.concat(rows)
+    if(rows.length<page) break
+    from += page
+  }
 
   const tenMap = { A: 'ALQUILADO', P: 'PROPIO', I: 'INDEPENDIENTE' }
   const tenMapRev = { ALQUILADO:'A', PROPIO:'P', INDEPENDIENTE:'I' }
@@ -984,9 +990,18 @@ async function cargarDistrito() {
   html += `<tr class="total-row"><td>Total</td><td>${fmt(totArea)}</td><td>${fmt(totTche)}</td><td>${fmt(totTch)}</td><td>${fmt(totTch-totTche,2)}</td><td>${fmt(totTchAnt)}</td><td>${fmt(totTch-totTchAnt,2)}</td><td>${fmt(totTmC)}</td></tr>`
   document.querySelector('#tabla-tenencia tbody').innerHTML = html
 
-  let q2 = sb.from('zag225_lotes').select('distrito,area_cosechada,area_total,tm_cosechadas,tm_estimadas,edad,ciclo').eq('zafra', ZAFRA_ACTUAL).not('distrito','is',null)
-  if (semana) q2 = q2.eq('semana', semana)
-  const { data: dd } = await q2
+  // Paginar distrito
+  let dd = []
+  from=0
+  while(true){
+    let q2 = sb.from('zag225_lotes').select('distrito,area_cosechada,area_total,tm_cosechadas,tm_estimadas,edad,ciclo').not('distrito','is',null).range(from, from+page-1)
+    if (semana) q2 = q2.eq('semana', semana)
+    const {data: rows, error} = await q2
+    if(error||!rows||!rows.length) break
+    dd = dd.concat(rows)
+    if(rows.length<page) break
+    from += page
+  }
 
   const dist = {}
   dd.forEach(r => {
@@ -1042,12 +1057,22 @@ async function cargarFincas() {
   const fincaAnt = {}
   ;(histF||[]).forEach(r => { fincaAnt[r['Cod finca']] = parseFloat(r.tch)||0 })
 
-  let q = sb.from('zag225_lotes').select('distrito,finca_id,finca,area_cosechada,area_total,tm_cosechadas,tm_estimadas,tch_real,tch_estimado,pol,brix,pureza,humedad,ciclo,edad,fin_cosecha').eq('zafra', ZAFRA_ACTUAL).order('tch_real',{ascending:false})
-  if (dist)  q = q.eq('distrito', dist)
-  if (ten)   q = q.eq('tenencia', ten)
-  if (riego) q = q.eq('tipo_riego', riego)
+  // Paginar zag225_lotes
+  let data = [], from=0, page=1000
+  while(true){
+    let q = sb.from('zag225_lotes').select('distrito,finca_id,finca,area_cosechada,area_total,tm_cosechadas,tm_estimadas,tch_real,tch_estimado,pol,brix,pureza,humedad,ciclo,edad,fin_cosecha,tenencia,tipo_riego')
+      .order('tch_real',{ascending:false})
+      .range(from, from+page-1)
+    if (dist)  q = q.eq('distrito', dist)
+    if (ten)   q = q.eq('tenencia', ten)
+    if (riego) q = q.eq('tipo_riego', riego)
+    const {data: rows, error} = await q
+    if(error||!rows||!rows.length) break
+    data = data.concat(rows)
+    if(rows.length<page) break
+    from += page
+  }
 
-  const { data } = await q
   const fincas = {}
   data.forEach(r => {
     const k = r.finca_id
@@ -1126,7 +1151,7 @@ async function cargarLotes() {
   while(true){
     let q = sb.from('zag225_lotes')
       .select('finca,finca_id,lote,area_cosechada,area_total,tm_cosechadas,tm_estimadas,tch_real,tch_estimado,pol,brix,pureza,humedad,edad,ciclo,fin_cosecha')
-      .eq('zafra', ZAFRA_ACTUAL)
+      
       .order('tch_real',{ascending:false})
       .range(from, from+page-1)
     if (finca) q = q.eq('finca', finca)
@@ -1196,58 +1221,36 @@ async function cargarLotes() {
 }
 
 async function cargarResumen() {
-  // ── Datos de zag225_lotes (LOTES CERRADOS de la zafra) - para ponderar calidad y agrupar
-  const { data } = await sb.from('zag225_lotes').select('area_cosechada,area_total,tm_cosechadas,tm_estimadas,tch_real,edad,pol,brix,pureza,humedad,tipo_riego,semana,variedad').eq('zafra', ZAFRA_ACTUAL)
-  let area=0,areaT=0,tmC_lotes=0,tmE_lotes=0,edTm=0,polTm=0,brixTm=0,purTm=0,humTm=0
+  // ── Datos de zag225_lotes (paginado para traer TODO, no solo 1000)
+  let allRows = [], from=0, page=1000
+  while(true){
+    const {data: rows, error} = await sb.from('zag225_lotes')
+      .select('area_cosechada,area_total,tm_cosechadas,tm_estimadas,tch_real,edad,pol,brix,pureza,humedad,tipo_riego,semana,variedad')
+      .range(from, from+page-1)
+    if(error||!rows||!rows.length) break
+    allRows = allRows.concat(rows)
+    if(rows.length<page) break
+    from += page
+  }
+  console.log('zag225_lotes filas cargadas:', allRows.length)
+
+  let area=0,areaT=0,tmC=0,tmE=0,edTm=0,polTm=0,brixTm=0,purTm=0,humTm=0
   const riegoMap={}, semMap={}, varMap={}
-  data.forEach(r => {
-    area  += r.area_cosechada||0; areaT += r.area_total||0
-    tmC_lotes += r.tm_cosechadas||0; tmE_lotes += r.tm_estimadas||0
+  allRows.forEach(r => {
+    area  += parseFloat(r.area_cosechada)||0
+    areaT += parseFloat(r.area_total)||0
+    tmC   += parseFloat(r.tm_cosechadas)||0
+    tmE   += parseFloat(r.tm_estimadas)||0
     // Ponderaciones por TM cosechada (fórmula: SUM(valor × tm_cosechada) / SUM(tm_cosechada))
-    edTm  += (r.edad||0)*(r.tm_cosechadas||0)
-    polTm += (r.pol||0)*(r.tm_cosechadas||0)
-    brixTm+= (r.brix||0)*(r.tm_cosechadas||0)
-    purTm += (r.pureza||0)*(r.tm_cosechadas||0)
-    humTm += (r.humedad||0)*(r.tm_cosechadas||0)
-    if(r.tipo_riego){if(!riegoMap[r.tipo_riego])riegoMap[r.tipo_riego]={area:0,tm:0};riegoMap[r.tipo_riego].area+=r.area_cosechada||0;riegoMap[r.tipo_riego].tm+=r.tm_cosechadas||0}
-    if(r.semana){if(!semMap[r.semana])semMap[r.semana]={area:0,tm:0};semMap[r.semana].area+=r.area_cosechada||0;semMap[r.semana].tm+=r.tm_cosechadas||0}
-    if(r.variedad){if(!varMap[r.variedad])varMap[r.variedad]={area:0,tm:0};varMap[r.variedad].area+=r.area_cosechada||0;varMap[r.variedad].tm+=r.tm_cosechadas||0}
+    edTm  += (parseFloat(r.edad)||0)*(parseFloat(r.tm_cosechadas)||0)
+    polTm += (parseFloat(r.pol)||0)*(parseFloat(r.tm_cosechadas)||0)
+    brixTm+= (parseFloat(r.brix)||0)*(parseFloat(r.tm_cosechadas)||0)
+    purTm += (parseFloat(r.pureza)||0)*(parseFloat(r.tm_cosechadas)||0)
+    humTm += (parseFloat(r.humedad)||0)*(parseFloat(r.tm_cosechadas)||0)
+    if(r.tipo_riego){if(!riegoMap[r.tipo_riego])riegoMap[r.tipo_riego]={area:0,tm:0};riegoMap[r.tipo_riego].area+=parseFloat(r.area_cosechada)||0;riegoMap[r.tipo_riego].tm+=parseFloat(r.tm_cosechadas)||0}
+    if(r.semana){if(!semMap[r.semana])semMap[r.semana]={area:0,tm:0};semMap[r.semana].area+=parseFloat(r.area_cosechada)||0;semMap[r.semana].tm+=parseFloat(r.tm_cosechadas)||0}
+    if(r.variedad){if(!varMap[r.variedad])varMap[r.variedad]={area:0,tm:0};varMap[r.variedad].area+=parseFloat(r.area_cosechada)||0;varMap[r.variedad].tm+=parseFloat(r.tm_cosechadas)||0}
   })
-
-  // ── TM Cosechado real (mismo que módulo Cosecha): zag212_boletas con origen quemada/cruda
-  let tmC = 0
-  let allBol = [], fromB = 0, page = 1000
-  while(true){
-    const {data: bRows, error} = await sb.from('zag212_boletas')
-      .select('peso_ton,origen_corte')
-      .in('origen_corte', ['CAÑA QUEMADA','CAÑA CRUDA'])
-      .range(fromB, fromB+page-1)
-    if(error||!bRows||!bRows.length) break
-    allBol = allBol.concat(bRows)
-    if(bRows.length<page) break
-    fromB += page
-  }
-  tmC = allBol.reduce((s,b)=>s+(parseFloat(b.peso_ton)||0), 0)
-
-  // ── TM Estimado real (mismo que módulo Cosecha): planificacion con secuencia PRODUCCIÓN
-  let allPlan = [], fromP = 0
-  while(true){
-    const {data: pRows, error} = await sb.from('planificacion')
-      .select('ton_estimadas,zona_geo,secuencia')
-      .ilike('secuencia','PRODUCCI%')
-      .range(fromP, fromP+page-1)
-    if(error||!pRows||!pRows.length) break
-    allPlan = allPlan.concat(pRows)
-    if(pRows.length<page) break
-    fromP += page
-  }
-  // Excluir semilleros
-  const planFilt = allPlan.filter(r => {
-    const z = (r.zona_geo||'').toUpperCase()
-    return !z.includes('SEMILLA') && !z.includes('SEMILLERO')
-  })
-  const tmE = planFilt.reduce((s,r)=>s+(parseFloat(r.ton_estimadas)||0), 0)
-  const tmPend = Math.max(0, tmE - tmC)
 
   // Tipo corte desde v_cosecha_resumen
   const { data: z212 } = await sb.from('v_cosecha_resumen').select('fte_corte,tm_cosechado')
@@ -1265,15 +1268,18 @@ async function cargarResumen() {
   })
 
   // CÁLCULOS:
-  // - TCH = TM cosechada / Área cosechada (de lotes cerrados zag225)
+  // - TM Cosechado, TM Estimado: suma directa de zag225_lotes
+  // - TCH Real = TM cosechada / Área cosechada
   // - Pol/Brix/Pureza/Humedad/Edad = SUM(valor × tm_cosechada) / SUM(tm_cosechada)
-  const tch=area>0?tmC_lotes/area:0, tche=areaT>0?tmE_lotes/areaT:0
-  const edad=tmC_lotes>0?edTm/tmC_lotes:0
-  const pol =tmC_lotes>0?polTm/tmC_lotes:0
-  const brix=tmC_lotes>0?brixTm/tmC_lotes:0
-  const pur =tmC_lotes>0?purTm/tmC_lotes:0
-  const hum =tmC_lotes>0?humTm/tmC_lotes:0
-  const avance=tmE>0?tmC/tmE*100:0
+  const tch  = area>0 ? tmC/area : 0
+  const tche = areaT>0 ? tmE/areaT : 0
+  const edad = tmC>0 ? edTm/tmC : 0
+  const pol  = tmC>0 ? polTm/tmC : 0
+  const brix = tmC>0 ? brixTm/tmC : 0
+  const pur  = tmC>0 ? purTm/tmC : 0
+  const hum  = tmC>0 ? humTm/tmC : 0
+  const tmPend = Math.max(0, tmE - tmC)
+  const avance = tmE>0 ? tmC/tmE*100 : 0
 
   document.getElementById('kpi-resumen').innerHTML = `
     <div class="kpi-card verde"><div class="kpi-label">TM Cosechado</div><div class="kpi-valor">${fmt(tmC,0)}</div>
@@ -1281,9 +1287,9 @@ async function cargarResumen() {
       <div class="kpi-sub">${fmt(avance,1)}% del estimado</div></div>
     <div class="kpi-card"><div class="kpi-label">TM Estimado</div><div class="kpi-valor">${fmt(tmE,0)}</div><div class="kpi-sub">Toneladas de caña</div></div>
     <div class="kpi-card rojo"><div class="kpi-label">TM Pendiente</div><div class="kpi-valor">${fmt(tmPend,0)}</div><div class="kpi-sub">Toneladas de caña</div></div>
-    <div class="kpi-card naranja"><div class="kpi-label">TCH Real</div><div class="kpi-valor">${fmt(tch)}</div><div class="kpi-sub">Lotes cerrados (zag225)</div></div>
+    <div class="kpi-card naranja"><div class="kpi-label">TCH Real</div><div class="kpi-valor">${fmt(tch)}</div><div class="kpi-sub">TM/HA cosechadas</div></div>
     <div class="kpi-card"><div class="kpi-label">TCH Estimado</div><div class="kpi-valor">${fmt(tche)}</div><div class="kpi-sub">TM/HA proyectado</div></div>
-    <div class="kpi-card"><div class="kpi-label">Área Cosechada</div><div class="kpi-valor">${fmt(area,0)}</div><div class="kpi-sub">Hectáreas (cerradas)</div></div>
+    <div class="kpi-card"><div class="kpi-label">Área Cosechada</div><div class="kpi-valor">${fmt(area,0)}</div><div class="kpi-sub">Hectáreas</div></div>
     <div class="kpi-card morado"><div class="kpi-label">POL Ponderado</div><div class="kpi-valor">${fmt(pol)}</div><div class="kpi-sub">Sacarosa promedio</div></div>
     <div class="kpi-card morado"><div class="kpi-label">Brix Ponderado</div><div class="kpi-valor">${fmt(brix)}</div><div class="kpi-sub">Sólidos solubles</div></div>
     <div class="kpi-card morado"><div class="kpi-label">Pureza Ponderada</div><div class="kpi-valor">${fmt(pur)}</div><div class="kpi-sub">% sacarosa/brix</div></div>
@@ -1301,7 +1307,18 @@ async function cargarVariedades() {
   const D = window._datosResumen || {}
 
   // ── TABLA: Comportamiento por Ciclo (con totales fila Y columna)
-  const { data } = await sb.from('zag225_lotes').select('variedad,ciclo,area_cosechada,tm_cosechadas').eq('zafra', ZAFRA_ACTUAL).not('variedad','is',null)
+  // Paginar zag225_lotes
+  let data = [], from=0, page=1000
+  while(true){
+    const {data: rows, error} = await sb.from('zag225_lotes')
+      .select('variedad,ciclo,area_cosechada,tm_cosechadas')
+      .not('variedad','is',null)
+      .range(from, from+page-1)
+    if(error||!rows||!rows.length) break
+    data = data.concat(rows)
+    if(rows.length<page) break
+    from += page
+  }
   const ciclos = [...new Set(data.map(r=>r.ciclo))].filter(Boolean).sort((a,b)=>a-b)
   const vars = {}
   data.forEach(r => {
@@ -1407,7 +1424,7 @@ async function cargarVariedades() {
   // ── CHART: TM por Distrito (zag225 cerrados)
   if(window._chartTmDist)window._chartTmDist.destroy()
   if(document.getElementById('chart-tm-distrito')){
-    const { data: dd } = await sb.from('zag225_lotes').select('distrito,tm_cosechadas,tm_estimadas').eq('zafra', ZAFRA_ACTUAL).not('distrito','is',null)
+    const { data: dd } = await sb.from('zag225_lotes').select('distrito,tm_cosechadas,tm_estimadas').not('distrito','is',null)
     const dist={}
     ;(dd||[]).forEach(r=>{
       const k=r.distrito; if(!dist[k])dist[k]={tmC:0,tmE:0}
@@ -1451,7 +1468,16 @@ async function cargarVariedades() {
 // ═══════════════════════════════════════════════════════
 async function cargarMadurantes() {
   const cols = 'finca,finca_id,lote,area_cosechada,tm_cosechadas,tch_real,pol,brix,madurante,inhibidor,dosis_madurante,dosis_inhibidor,fecha_madurante,fecha_inhibidor,area_madurante,area_inhibidor,fin_cosecha'
-  const { data, error } = await sb.from('zag225_lotes').select(cols).eq('zafra', ZAFRA_ACTUAL)
+  // Paginar
+  let data = [], from=0, page=1000, error=null
+  while(true){
+    const r = await sb.from('zag225_lotes').select(cols).range(from, from+page-1)
+    if(r.error){ error = r.error; break }
+    if(!r.data || !r.data.length) break
+    data = data.concat(r.data)
+    if(r.data.length<page) break
+    from += page
+  }
 
   if(error){
     document.getElementById('kpi-madurantes').innerHTML =
@@ -1556,99 +1582,45 @@ async function cargarMadurantes() {
 }
 
 async function cargarAvance() {
-  // ESTIMADO real: viene de planificacion (todos los lotes programados, no solo cosechados)
-  // COSECHADO real: viene de zag212_boletas (báscula) o sumando zag225_lotes
-  // Usamos: estimado de planificacion + cosechado de zag225_lotes (lotes cerrados)
-  //         + cosechado de zag212_boletas (lotes abiertos cosechándose actualmente)
-
-  // 1. Planificación (estimado por finca/distrito)
-  let allPlan = [], from=0, page=1000
+  // Datos de zag225_lotes (suma directa, paginado)
+  let allRows = [], from=0, page=1000
   while(true){
-    const {data, error} = await sb.from('planificacion')
-      .select('codigo_plantio,zona_geo,distrito,nombre_finca,cod_finca,ton_estimadas,distancia,secuencia')
-      .ilike('secuencia','PRODUCCI%')
+    const {data, error} = await sb.from('zag225_lotes')
+      .select('finca_id,finca,distrito,area_cosechada,area_total,tm_cosechadas,tm_estimadas,distancia')
       .range(from, from+page-1)
     if(error||!data||!data.length) break
-    allPlan = allPlan.concat(data)
+    allRows = allRows.concat(data)
     if(data.length<page) break
     from += page
   }
-  // Excluir semilleros si los hubiera
-  const PLAN = allPlan.filter(r => {
-    const z = (r.zona_geo||'').toUpperCase()
-    return !z.includes('SEMILLA') && !z.includes('SEMILLERO')
-  })
-
-  // 2. Lotes cosechados (zag225_lotes) - lotes ya cerrados
-  const { data: lotesC } = await sb.from('zag225_lotes')
-    .select('finca_id,finca,distrito,tm_cosechadas')
-    .eq('zafra', ZAFRA_ACTUAL)
-    .not('distrito','is',null)
-
-  // 3. Boletas zag212 - lotes en progreso
-  let allBol = [], fromB=0
-  while(true){
-    const {data, error} = await sb.from('zag212_boletas')
-      .select('finca_lote,peso_ton,origen_corte')
-      .in('origen_corte', ['CAÑA QUEMADA','CAÑA CRUDA'])
-      .range(fromB, fromB+page-1)
-    if(error||!data||!data.length) break
-    allBol = allBol.concat(data)
-    if(data.length<page) break
-    fromB += page
-  }
-
-  // Cosechado por finca_lote desde boletas
-  const cosBol = {}
-  allBol.forEach(b => {
-    const k = b.finca_lote
-    if(!k) return
-    cosBol[k] = (cosBol[k]||0) + (parseFloat(b.peso_ton)||0)
-  })
-
-  // Cosechado por finca y distrito (zag225 cerrados + boletas en proceso, evitando doble conteo)
-  // Para evitar doble conteo: si un lote está en zag225_lotes (cerrado), no se cuenta de boletas
-  // Aproximación práctica: sumamos ambos por finca (lo que más coincide con tu Power BI)
-  // Ajuste mejor: solo sumamos boletas de lotes que NO están en zag225_lotes
-  const lotesCerrados = new Set()
-  ;(lotesC||[]).forEach(r => {
-    if(r.finca_id) lotesCerrados.add(String(r.finca_id))
-  })
+  console.log('Avance: filas zag225_lotes', allRows.length)
 
   // ── Por DISTRITO
   const dist = {}
-  PLAN.forEach(r => {
-    const d = r.distrito || 'N/D'
-    if(!dist[d]) dist[d] = {tmEst:0, tmCos:0, distSum:0, distCnt:0}
-    dist[d].tmEst += parseFloat(r.ton_estimadas)||0
-    if(r.distancia){ dist[d].distSum += parseFloat(r.distancia); dist[d].distCnt += 1 }
-  })
-  ;(lotesC||[]).forEach(r => {
-    const d = r.distrito || 'N/D'
-    if(!dist[d]) dist[d] = {tmEst:0, tmCos:0, distSum:0, distCnt:0}
-    dist[d].tmCos += parseFloat(r.tm_cosechadas)||0
-  })
-
   // ── Por FINCA
   const fincas = {}
-  PLAN.forEach(r => {
-    const id = r.cod_finca || r.codigo_plantio?.split('-')[0] || 'N/D'
-    const nom = r.nombre_finca || id
-    if(!fincas[id]) fincas[id] = {nombre:nom, distrito:r.distrito, tmEst:0, tmCos:0, distSum:0, distCnt:0}
-    fincas[id].tmEst += parseFloat(r.ton_estimadas)||0
+  allRows.forEach(r => {
+    const d = r.distrito || 'N/D'
+    if(!dist[d]) dist[d] = {tmEst:0, tmCos:0, distSum:0, distCnt:0, area:0, areaT:0}
+    dist[d].tmEst += parseFloat(r.tm_estimadas)||0
+    dist[d].tmCos += parseFloat(r.tm_cosechadas)||0
+    dist[d].area  += parseFloat(r.area_cosechada)||0
+    dist[d].areaT += parseFloat(r.area_total)||0
+    if(r.distancia){ dist[d].distSum += parseFloat(r.distancia); dist[d].distCnt += 1 }
+
+    const id = r.finca_id || 'N/D'
+    if(!fincas[id]) fincas[id] = {nombre:r.finca||id, distrito:r.distrito, tmEst:0, tmCos:0, distSum:0, distCnt:0, area:0, areaT:0}
+    fincas[id].tmEst += parseFloat(r.tm_estimadas)||0
+    fincas[id].tmCos += parseFloat(r.tm_cosechadas)||0
+    fincas[id].area  += parseFloat(r.area_cosechada)||0
+    fincas[id].areaT += parseFloat(r.area_total)||0
     if(r.distancia){ fincas[id].distSum += parseFloat(r.distancia); fincas[id].distCnt += 1 }
   })
-  ;(lotesC||[]).forEach(r => {
-    const id = r.finca_id
-    if(!id) return
-    if(!fincas[id]) fincas[id] = {nombre:r.finca, distrito:r.distrito, tmEst:0, tmCos:0, distSum:0, distCnt:0}
-    fincas[id].tmCos += parseFloat(r.tm_cosechadas)||0
-    if(!fincas[id].nombre) fincas[id].nombre = r.finca
-  })
 
-  // ── KPIs
+  // ── Totales globales
   const totEst = Object.values(dist).reduce((s,d)=>s+d.tmEst, 0)
   const totCos = Object.values(dist).reduce((s,d)=>s+d.tmCos, 0)
+  const totArea = Object.values(dist).reduce((s,d)=>s+d.area, 0)
   const totPend = Math.max(0, totEst - totCos)
   const avancePct = totEst>0 ? totCos/totEst*100 : 0
 
@@ -1658,7 +1630,8 @@ async function cargarAvance() {
       <div class="kpi-sub">${fmt(avancePct,1)}% del estimado</div></div>
     <div class="kpi-card"><div class="kpi-label">TM Estimado</div><div class="kpi-valor">${fmt(totEst,0)}</div><div class="kpi-sub">Toneladas de caña</div></div>
     <div class="kpi-card rojo"><div class="kpi-label">TM Pendiente</div><div class="kpi-valor">${fmt(totPend,0)}</div><div class="kpi-sub">Toneladas de caña</div></div>
-    <div class="kpi-card naranja"><div class="kpi-label">% Avance</div><div class="kpi-valor">${fmt(avancePct,1)}%</div><div class="kpi-sub">Del plan estimado</div></div>
+    <div class="kpi-card naranja"><div class="kpi-label">% Avance</div><div class="kpi-valor">${fmt(avancePct,1)}%</div><div class="kpi-sub">Del estimado total</div></div>
+    <div class="kpi-card"><div class="kpi-label">Área Cosechada</div><div class="kpi-valor">${fmt(totArea,0)}</div><div class="kpi-sub">Hectáreas</div></div>
   `
 
   // ── TABLA POR DISTRITO
@@ -1677,9 +1650,12 @@ async function cargarAvance() {
       <td><span class="${av>=90?'cel-positivo':av>=70?'cel-neutro':'cel-negativo'}">${fmt(av,1)}%</span></td>
     </tr>`
   })
-  const totDistProm = Object.values(dist).reduce((s,d)=>s+(d.distCnt>0?d.distSum/d.distCnt:0), 0) / Math.max(Object.keys(dist).length,1)
+  // total promedio ponderado de distancia: sum(dist*area)/sum(area), pero usamos promedio simple
+  let totDistSum = 0, totDistCnt = 0
+  Object.values(dist).forEach(d => { totDistSum += d.distSum; totDistCnt += d.distCnt })
+  const totDistProm = totDistCnt>0 ? totDistSum/totDistCnt : 0
   h1 += `<tr class="total-row"><td>Total</td><td>${fmt(totEst,0)}</td><td>${fmt(totCos,0)}</td><td>${fmt(totPend,0)}</td><td>${fmt(totDistProm,2)} km</td><td>${fmt(avancePct,1)}%</td></tr>`
-  document.querySelector('#tabla-avance tbody').innerHTML = h1
+  document.querySelector('#tabla-avance tbody').innerHTML = h1 || '<tr><td colspan="6">Sin datos</td></tr>'
 
   // ── TABLA POR FINCA
   let h2=''
@@ -1700,6 +1676,8 @@ async function cargarAvance() {
         <td><span class="${av>=90?'cel-positivo':av>=70?'cel-neutro':'cel-negativo'}">${fmt(av,1)}%</span></td>
       </tr>`
     })
+  // Fila total
+  h2 += `<tr class="total-row"><td colspan="3">TOTAL</td><td>${fmt(totEst,0)}</td><td>${fmt(totCos,0)}</td><td>${fmt(totPend,0)}</td><td>${fmt(totDistProm,2)} km</td><td>${fmt(avancePct,1)}%</td></tr>`
   document.querySelector('#tabla-avance-fincas tbody').innerHTML = h2 || '<tr><td colspan="8">Sin datos</td></tr>'
 }
 
