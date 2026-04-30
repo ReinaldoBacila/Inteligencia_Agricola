@@ -692,6 +692,14 @@
         <option value="Secano">Secano</option>
       </select>
     </div>
+    <div class="filtro-grupo">
+      <label>Estado</label>
+      <select id="filtro-finca-estado" onchange="cargarFincas()">
+        <option value="">Todas</option>
+        <option value="cerrada">Cerradas</option>
+        <option value="abierta">Abiertas</option>
+      </select>
+    </div>
   </div>
 
   <div class="tabla-wrap">
@@ -893,14 +901,22 @@
 </div>
 
 <script>
+// Capturar cualquier error JS para que sea visible en consola sin romper el flujo
+window.addEventListener('error', e => console.error('[Error JS]', e.message, 'en', e.filename+':'+e.lineno))
+window.addEventListener('unhandledrejection', e => console.error('[Promise rechazada]', e.reason))
+
 const SUPABASE_URL = 'https://dhbyjqmdcezdiucxeqpp.supabase.co'
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRoYnlqcW1kY2V6ZGl1Y3hlcXBwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMzI2NjEsImV4cCI6MjA5MjcwODY2MX0.TwRDctpOab02EsGo6q6-Zx0vtdLPlxn_mhowxu93EF0'
 const sb = supabase.createClient ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
-// Desregistrar el plugin de datalabels globalmente — se activará solo donde se pase explícitamente
-if(typeof Chart !== 'undefined' && typeof ChartDataLabels !== 'undefined'){
-  Chart.unregister(ChartDataLabels)
-}
+// Desregistrar el plugin de datalabels globalmente (envuelto en try por si la versión cambia API)
+try {
+  if(typeof Chart !== 'undefined' && typeof ChartDataLabels !== 'undefined'){
+    Chart.unregister(ChartDataLabels)
+  }
+} catch(e){ console.warn('No se pudo desregistrar ChartDataLabels:', e) }
+// Helper seguro para obtener el plugin (devuelve [] si no existe)
+const DLPLUGIN = (typeof ChartDataLabels !== 'undefined') ? [ChartDataLabels] : []
 
 
 const fmt = (n, dec=2) => n == null ? '—' : Number(n).toLocaleString('es-HN', {minimumFractionDigits:dec, maximumFractionDigits:dec})
@@ -948,25 +964,33 @@ function irA(id) {
 }
 
 async function cargarSemanas() {
-  const { data } = await sb.from('zag225_lotes').select('semana').not('semana','is',null).order('semana')
-  const semanas = [...new Set(data.map(r => r.semana))].sort((a,b)=>a-b)
-  const sel = document.getElementById('filtro-semana')
-  semanas.forEach(s => {
-    const o = document.createElement('option')
-    o.value = s; o.textContent = 'SEM-' + s
-    sel.appendChild(o)
-  })
+  try {
+    const { data, error } = await sb.from('zag225_lotes').select('semana').not('semana','is',null).order('semana')
+    if(error){ console.warn('cargarSemanas error:', error); return }
+    const semanas = [...new Set((data||[]).map(r => r.semana))].sort((a,b)=>a-b)
+    const sel = document.getElementById('filtro-semana')
+    if(!sel) return
+    semanas.forEach(s => {
+      const o = document.createElement('option')
+      o.value = s; o.textContent = 'SEM-' + s
+      sel.appendChild(o)
+    })
+  } catch(e){ console.warn('cargarSemanas excepción:', e) }
 }
 
 async function cargarFincasSelect() {
-  const { data } = await sb.from('zag225_lotes').select('finca').order('finca')
-  const fincas = [...new Set(data.map(r => r.finca))].sort()
-  const sel = document.getElementById('filtro-lote-finca')
-  fincas.forEach(f => {
-    const o = document.createElement('option')
-    o.value = f; o.textContent = f
-    sel.appendChild(o)
-  })
+  try {
+    const { data, error } = await sb.from('zag225_lotes').select('finca').order('finca')
+    if(error){ console.warn('cargarFincasSelect error:', error); return }
+    const fincas = [...new Set((data||[]).map(r => r.finca).filter(Boolean))].sort()
+    const sel = document.getElementById('filtro-lote-finca')
+    if(!sel) return
+    fincas.forEach(f => {
+      const o = document.createElement('option')
+      o.value = f; o.textContent = f
+      sel.appendChild(o)
+    })
+  } catch(e){ console.warn('cargarFincasSelect excepción:', e) }
 }
 
 async function cargarDistrito() {
@@ -1095,11 +1119,67 @@ async function cargarFincas() {
   const dist = document.getElementById('filtro-finca-distrito').value
   const ten  = document.getElementById('filtro-finca-tenencia').value
   const riego= document.getElementById('filtro-finca-riego').value
+  const estado = document.getElementById('filtro-finca-estado').value
 
   // Año anterior
   const { data: histF } = await sb.from('v_hist_finca').select('*')
   const fincaAnt = {}
   ;(histF||[]).forEach(r => { fincaAnt[r['Cod finca']] = parseFloat(r.tch)||0 })
+
+  // ── Calcular fincas CERRADAS (todos los lotes de planificacion están en zag225)
+  // Solo cargamos esto si hay filtro de estado activo (para no impactar performance)
+  let fincasCerradas = new Set()
+  let fincasConPlan = new Set()  // todas las fincas que tienen al menos 1 lote en planificacion
+  if(estado){
+    function _cleanCode(v){
+      if(v==null) return ''
+      if(typeof v==='number') return Number.isInteger(v)?String(v):String(Math.round(v))
+      return String(v).trim().toUpperCase()
+    }
+    // Set de codigo_plantio cerrados (en zag225)
+    const cerradosPlantios = new Set()
+    let pf = 0, page = 1000
+    while(true){
+      const {data, error} = await sb.from('zag225_lotes').select('finca_id,lote').range(pf, pf+page-1)
+      if(error||!data||!data.length) break
+      data.forEach(r => {
+        const cf = _cleanCode(r.finca_id), cl = _cleanCode(r.lote)
+        if(cf && cl) cerradosPlantios.add(cf+cl)
+      })
+      if(data.length<page) break
+      pf += page
+    }
+    // Recorrer planificacion y agrupar por cod_finca (o codigo_plantio derivado)
+    const fincaLotes = {}  // cod_finca → {total, cerrados}
+    pf = 0
+    while(true){
+      const {data, error} = await sb.from('planificacion').select('*').range(pf, pf+page-1)
+      if(error||!data||!data.length) break
+      data.forEach(r => {
+        const sec = (r.secuencia||'').toString().toUpperCase().trim()
+        if(sec !== 'PRODUCCIÓN' && sec !== 'PRODUCCION') return
+        const k = _cleanCode(r.codigo_plantio)
+        if(!k) return
+        let fc = _cleanCode(r.cod_finca)
+        if(!fc){
+          const m = k.match(/^([A-Za-z]+\d{2,3})(\d{1,3})$/)
+          fc = m ? m[1] : k.substring(0, Math.max(3, k.length-1))
+        }
+        if(!fc) return
+        if(!fincaLotes[fc]) fincaLotes[fc] = {total:0, cerrados:0}
+        fincaLotes[fc].total++
+        if(cerradosPlantios.has(k)) fincaLotes[fc].cerrados++
+        fincasConPlan.add(fc)
+      })
+      if(data.length<page) break
+      pf += page
+    }
+    // Marcar Cerradas: total>0 y total===cerrados
+    Object.entries(fincaLotes).forEach(([fc,c]) => {
+      if(c.total>0 && c.total===c.cerrados) fincasCerradas.add(fc)
+    })
+    console.log(`Filtro Estado=${estado} | Total fincas: ${fincasConPlan.size} | Cerradas: ${fincasCerradas.size}`)
+  }
 
   // Paginar zag225_lotes
   let data = [], from=0, page=1000
@@ -1133,10 +1213,21 @@ async function cargarFincas() {
     fincas[k].edadTm += (r.edad||0)*(r.tm_cosechadas||0)
   })
 
+  // Aplicar filtro de Estado
+  let fincasFiltradas = Object.values(fincas)
+  if(estado){
+    function _norm(v){ return v==null?'':String(v).trim().toUpperCase() }
+    fincasFiltradas = fincasFiltradas.filter(g => {
+      const fcN = _norm(g.id)
+      const esCerrada = fincasCerradas.has(fcN)
+      return estado==='cerrada' ? esCerrada : !esCerrada
+    })
+  }
+
   let html = ''
   // Acumuladores para fila TOTAL
   let TtmC=0, TtmE=0, Tarea=0, TareaT=0, TpolTm=0, TbrixTm=0, TpurTm=0, ThumTm=0, TcicloTm=0, TedadTm=0
-  Object.values(fincas).sort((a,b) => (b.tmC/b.area||0)-(a.tmC/a.area||0)).forEach(g => {
+  fincasFiltradas.sort((a,b) => (b.tmC/b.area||0)-(a.tmC/a.area||0)).forEach(g => {
     const tch = g.area>0?g.tmC/g.area:0
     const tche= g.areaT>0?g.tmE/g.areaT:0
     const pol  = g.tmC>0?g.polTm/g.tmC:0
@@ -1881,53 +1972,52 @@ async function cargarAvance() {
   }
 
   // ── 2. Cargar zag212_boletas — agrupar TM cosechadas por (cod_finca||cod_lote)
-  //     SOLO cuando origen_corte ∈ {CAÑA QUEMADA, CAÑA CRUDA}
-  const cosechadoMap = {}     // codigo_plantio → TM
-  const enZag212Set = new Set() // codigo_plantio que aparece en zag212 (para Status=Abierto)
-  from = 0
-  while(true){
-    const {data, error} = await sb.from('zag212_boletas')
-      .select('cod_finca,cod_lote,peso_ton,origen_corte')
-      .in('origen_corte',['CAÑA QUEMADA','CAÑA CRUDA'])
-  // ── 2. Cargar zag212_boletas — agrupar TM cosechadas por (cod_finca||cod_lote)
-  //     SOLO cuando origen_corte ∈ {CAÑA QUEMADA, CAÑA CRUDA}
-  // Helper: convertir cualquier valor a string limpio (sin decimales si es número entero, sin espacios)
+  //     SOLO cuando origen_corte ∈ {CAÑA QUEMADA, CAÑA CRUDA} (case-insensitive, tolerando espacios)
+  // Helper: convertir cualquier valor a string limpio y mayúsculas (para match consistente)
   function cleanCode(v){
     if(v==null) return ''
     if(typeof v === 'number'){
-      // Si es entero úsalo tal cual; si tiene decimales (no debería) redondea
       return Number.isInteger(v) ? String(v) : String(Math.round(v))
     }
-    return String(v).trim()
+    return String(v).trim().toUpperCase()
   }
   const cosechadoMap = {}     // codigo_plantio → TM
   const enZag212Set = new Set()
   from = 0
   let zag212Sample = null
+  let zag212Total = 0
+  // Traemos sin filtro de origen_corte (se filtra en JS para tolerar variantes)
   while(true){
-    const {data, error} = await sb.from('zag212_boletas')
-      .select('cod_finca,cod_lote,peso_ton,origen_corte')
-      .in('origen_corte',['CAÑA QUEMADA','CAÑA CRUDA'])
+    const {data, error, count} = await sb.from('zag212_boletas')
+      .select('cod_finca,cod_lote,peso_ton,origen_corte', {count:'exact'})
       .range(from, from+page-1)
-    if(error){ console.error('Error zag212:', error); break }
-    if(!data||!data.length) break
+    if(error){ console.error('❌ Error zag212:', error); break }
+    if(from===0) console.log('Zag212 count total reportado por Supabase:', count)
+    if(!data||!data.length){
+      if(from===0) console.warn('⚠️ Zag212 NO devolvió datos en la primera página. Posible RLS bloqueando.')
+      break
+    }
+    zag212Total += data.length
     if(!zag212Sample && data.length){
-      zag212Sample = data.slice(0,3).map(r=>({cf:r.cod_finca, cl:r.cod_lote, oc:r.origen_corte}))
+      zag212Sample = data.slice(0,5).map(r=>({cf:r.cod_finca, cl:r.cod_lote, pt:r.peso_ton, oc:r.origen_corte}))
       console.log('Zag212 muestra cruda:', JSON.stringify(zag212Sample))
     }
     data.forEach(r => {
+      const oc = (r.origen_corte||'').toString().toUpperCase().trim()
+      const ocOk = oc.includes('QUEMADA') || oc.includes('CRUDA')
+      if(!ocOk) return
       const cf = cleanCode(r.cod_finca)
       const cl = cleanCode(r.cod_lote)
       if(!cf||!cl) return
-      const k = cf + cl  // ej: 'C05'+'1' = 'C051'
+      const k = cf + cl
       cosechadoMap[k] = (cosechadoMap[k]||0) + (parseFloat(r.peso_ton)||0)
       enZag212Set.add(k)
     })
     if(data.length<page) break
     from += page
   }
-  console.log('Zag212 cod_plantio únicos:', enZag212Set.size)
-  console.log('Zag212 ejemplos de keys:', [...enZag212Set].slice(0,5))
+  console.log(`Zag212 filas leídas: ${zag212Total} | Únicos finca-lote: ${enZag212Set.size}`)
+  console.log('Zag212 ejemplos de keys:', [...enZag212Set].slice(0,10))
 
   // ── 3. Cargar zag225_lotes — set de codigo_plantio cerrados
   const enZag225Set = new Set()
@@ -1975,15 +2065,19 @@ async function cargarAvance() {
       if(noMatchSamples.length < 5) noMatchSamples.push(k)
     }
 
-    let status, pend
+    let status, pend, cosechadoFinal
     if(enZag225Set.has(k)){
       status = 'Cerrado'
+      // Lotes cerrados: cosechado se topea al estimado (no mostrar >100%)
+      cosechadoFinal = Math.min(cosechado, tmEst)
       pend = 0
     } else if(enZag212Set.has(k)){
       status = 'Abierto'
+      cosechadoFinal = cosechado
       pend = Math.max(0, tmEst - cosechado)
     } else {
       status = 'Pendiente cosechar'
+      cosechadoFinal = 0
       pend = tmEst
     }
 
@@ -2004,7 +2098,7 @@ async function cargarAvance() {
     // ── DISTRITO
     if(!dist[distrito]) dist[distrito] = {tmEst:0,tmCos:0,tmPend:0,distSum:0,distCnt:0,lotes:0}
     dist[distrito].tmEst  += tmEst
-    dist[distrito].tmCos  += cosechado
+    dist[distrito].tmCos  += cosechadoFinal
     dist[distrito].tmPend += pend
     dist[distrito].lotes++
     if(distancia>0){ dist[distrito].distSum += distancia; dist[distrito].distCnt++ }
@@ -2012,14 +2106,14 @@ async function cargarAvance() {
     // ── FINCA
     if(!fincas[fincaCod]) fincas[fincaCod] = {distrito,nombre,tmEst:0,tmCos:0,tmPend:0,distSum:0,distCnt:0,lotes:0}
     fincas[fincaCod].tmEst  += tmEst
-    fincas[fincaCod].tmCos  += cosechado
+    fincas[fincaCod].tmCos  += cosechadoFinal
     fincas[fincaCod].tmPend += pend
     fincas[fincaCod].lotes++
     if(distancia>0){ fincas[fincaCod].distSum += distancia; fincas[fincaCod].distCnt++ }
 
     // ── TOTALES
     totEst  += tmEst
-    totCos  += cosechado
+    totCos  += cosechadoFinal
     totPend += pend
     if(distancia>0){ totDistSum += distancia; totDistCnt++ }
   })
@@ -2029,6 +2123,11 @@ async function cargarAvance() {
 
   console.log(`Match diagnóstico — Plan: ${plan.length} | Match: ${matchCount} | Sin match: ${noMatchCount}`)
   console.log('Ejemplos plan SIN match en zag212/zag225:', noMatchSamples)
+  // Log comparativo: primeras keys de plan vs zag212 para ver desalineación de formato
+  const planKeys = plan.slice(0,5).map(r=>cleanCode(r.codigo_plantio))
+  console.log('Keys PLAN (primeras 5):    ', JSON.stringify(planKeys))
+  console.log('Keys ZAG212 (primeras 10): ', JSON.stringify([...enZag212Set].slice(0,10)))
+  console.log('Keys ZAG225 (primeras 10): ', JSON.stringify([...enZag225Set].slice(0,10)))
   console.log(`TOTALES — Estimado: ${fmt(totEst,0)} | Cosechado: ${fmt(totCos,0)} | Pendiente: ${fmt(totPend,0)}`)
 
   // ── KPIs
@@ -2111,12 +2210,14 @@ async function doLogout() {
 }
 
 async function mostrarApp() {
+  // Primero salir del login y mostrar el menú — pase lo que pase con las cargas
   document.getElementById('pag-login').classList.add('oculto')
+  irA('pag-menu')
   const hoy = new Date()
   const _fh=document.getElementById('fecha-header'); if(_fh) _fh.textContent = hoy.toLocaleDateString('es-HN',{weekday:'long',year:'numeric',month:'long',day:'numeric'})
-  await cargarSemanas()
-  await cargarFincasSelect()
-  irA('pag-menu')
+  // Cargas auxiliares (no bloquean la entrada al sistema)
+  try { await cargarSemanas() } catch(e){ console.warn('cargarSemanas falló:', e) }
+  try { await cargarFincasSelect() } catch(e){ console.warn('cargarFincasSelect falló:', e) }
 }
 
 async function init() {

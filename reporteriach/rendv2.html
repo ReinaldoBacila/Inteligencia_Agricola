@@ -1,0 +1,2233 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rendimientos Agrícolas | Chumbagua</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --azul: #1a3a6b;
+    --azul-medio: #2a5298;
+    --azul-claro: #3d7abf;
+    --verde: #2d7a3a;
+    --verde-claro: #3a9e4a;
+    --naranja: #d4521a;
+    --rojo: #c0392b;
+    --gris: #f4f4f2;
+    --blanco: #ffffff;
+    --texto: #1a1a2e;
+    --positivo-bg: #2d7a3a;
+    --negativo-bg: #c0392b;
+    --neutro-bg: #f0a500;
+  }
+
+    *{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased}
+  :root{
+    /* PALETA C — Mix Marca Chumbagua */
+    --brand:        #1e3f7a;
+    --brand-dark:   #162e5a;
+    --brand-2:      #2d6e3e;
+    --brand-2-dark: #1e5028;
+    --brand-soft:   #dde7f5;
+    --brand-2-soft: #dcebe0;
+    --brand-bg:     #f5f8fc;
+    --brand-2-bg:   #f4faf6;
+    --accent-1:     #e8a020;
+    --accent-2:     #a85d2c;
+    --accent-3:     #7d4ea8;
+    --accent-4:     #0d8a9c;
+    --accent-5:     #c0594d;
+    --pos:          #16a34a;
+    --pos-bg:       #f0fdf4;
+    --neg:          #dc2626;
+    --neg-bg:       #fef2f2;
+    --gris-fondo:   #fafafa;
+    --gris-borde:   #ededed;
+    --gris-borde-soft:#f4f4f5;
+    --texto:        #0a0a0a;
+    --texto-soft:   #666;
+    --texto-muted:  #999;
+    /* Aliases retrocompatibles */
+    --azul: #1e3f7a;
+    --azul-medio: #2a5298;
+    --azul-claro: #3d7abf;
+    --verde: #2d6e3e;
+    --verde-claro: #3a8a4e;
+    --dorado: #e8a020;
+    --naranja: #c97d1a;
+    --rojo: #c0392b;
+    --gris: #fafafa;
+    --blanco: #ffffff;
+  }
+  body{
+    font-family:'Geist',-apple-system,BlinkMacSystemFont,sans-serif;
+    background:var(--gris-fondo);color:var(--texto);
+    min-height:100vh;font-size:14px;
+  }
+
+  /* ────────────────────── HEADER (estilo cosecha) ────────────────────── */
+  .header{
+    background:white;border-bottom:1px solid var(--gris-borde);
+    padding:12px 28px;display:flex;align-items:center;justify-content:space-between;
+    position:sticky;top:0;z-index:100;gap:18px;min-height:62px;
+  }
+  .brand-blk{display:flex;align-items:center;gap:12px;flex-shrink:0}
+  .brand-logo{
+    width:36px;height:36px;
+    background:linear-gradient(135deg,var(--brand),var(--brand-2));
+    border-radius:9px;display:flex;align-items:center;justify-content:center;
+    color:white;font-weight:700;font-size:14px;letter-spacing:-0.5px;
+    box-shadow:0 2px 6px rgba(30,63,122,0.25);
+  }
+  .brand-name{font-size:15px;font-weight:600;letter-spacing:-0.3px;color:var(--texto)}
+  .brand-name span{color:var(--texto-soft);font-weight:400;margin-left:6px;font-size:13px}
+
+  .header-pagina{flex:1;text-align:center;min-width:0}
+  .header-pagina-titulo{
+    font-size:20px;font-weight:600;color:var(--texto);
+    letter-spacing:-0.5px;line-height:1.15;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .header-pagina-sub{font-size:11.5px;color:var(--texto-soft);margin-top:2px;line-height:1;font-weight:500}
+
+  .header-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;position:relative}
+  .btn-portal-icon{
+    width:34px;height:34px;border-radius:8px;
+    border:1px solid var(--gris-borde);background:white;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;color:var(--texto-soft);transition:all .15s;padding:0;
+  }
+  .btn-portal-icon:hover{background:var(--brand-bg);color:var(--brand);border-color:var(--brand-soft)}
+  .btn-atras-hdr{
+    display:flex;align-items:center;gap:5px;padding:6px 12px 6px 9px;
+    border:1px solid var(--gris-borde);border-radius:7px;background:white;
+    font-family:inherit;font-size:12px;font-weight:600;
+    color:var(--brand);cursor:pointer;transition:all .15s;flex-shrink:0;
+  }
+  .btn-atras-hdr:hover{background:var(--brand-bg);border-color:var(--brand);color:var(--brand-dark)}
+  .btn-atras-hdr svg{flex-shrink:0}
+  .avatar{
+    width:34px;height:34px;border-radius:9px;
+    background:linear-gradient(135deg,var(--brand-2),#4a8e5d);
+    color:white;display:flex;align-items:center;justify-content:center;
+    font-weight:600;font-size:12px;cursor:pointer;
+    box-shadow:0 2px 6px rgba(45,110,62,0.25);user-select:none;
+  }
+  .user-dropdown{
+    position:absolute;top:42px;right:0;background:white;
+    border:1px solid var(--gris-borde);border-radius:10px;
+    box-shadow:0 8px 24px rgba(0,0,0,0.1);
+    padding:14px 16px 10px;min-width:240px;z-index:200;display:none;
+  }
+  .user-dropdown.abierto{display:block}
+  .udd-header{padding-bottom:10px;border-bottom:1px solid var(--gris-borde-soft);margin-bottom:8px}
+  .udd-nombre{font-size:14px;font-weight:600;color:var(--texto);letter-spacing:-0.2px}
+  .udd-cargo{font-size:11px;color:var(--texto-soft);margin-top:2px}
+  .udd-email{font-size:10px;color:var(--texto-muted);margin-top:3px;font-family:'Geist Mono',monospace;word-break:break-all}
+  .udd-btn{
+    display:block;width:100%;padding:8px 10px;background:none;
+    border:1px solid var(--neg-bg);color:var(--neg);
+    border-radius:7px;font-family:inherit;font-size:12px;font-weight:600;
+    cursor:pointer;text-align:center;transition:all .15s;
+  }
+  .udd-btn:hover{background:var(--neg-bg);border-color:var(--neg)}
+
+  /* ────────────────────── PÁGINAS ────────────────────── */
+  .page{display:none;padding:20px 32px 24px}
+  .page.active{display:block}
+
+  /* ────────────────────── MENÚ ────────────────────── */
+  .menu-page{max-width:1400px;margin:0 auto;padding:0}
+  .menu-hero{
+    padding:32px 36px 30px;
+    background:linear-gradient(135deg,#fafafa,var(--brand-bg) 50%, var(--brand-2-bg));
+    border-radius:16px;margin-bottom:24px;
+    position:relative;overflow:hidden;text-align:left;
+    border:1px solid var(--gris-borde);
+  }
+  .menu-hero::before{
+    content:'';position:absolute;top:-50px;right:-50px;width:300px;height:300px;
+    background:radial-gradient(circle,var(--brand-2-soft),transparent 70%);opacity:0.5;
+  }
+  .menu-hero::after{
+    content:'';position:absolute;bottom:-80px;left:-80px;width:300px;height:300px;
+    background:radial-gradient(circle,var(--brand-soft),transparent 70%);opacity:0.5;
+  }
+  .menu-hero-eyebrow{
+    display:inline-flex;align-items:center;gap:6px;
+    font-family:'Geist Mono',monospace;font-size:11px;color:var(--brand-2);
+    background:white;padding:5px 12px;border:1px solid var(--brand-2-soft);
+    border-radius:100px;margin-bottom:14px;font-weight:500;position:relative;z-index:1;
+  }
+  .menu-hero-eyebrow::before{
+    content:'';width:6px;height:6px;background:var(--brand-2);border-radius:50%;
+    animation:pulse 2s infinite;
+  }
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+  .menu-hero h1{
+    font-size:48px;font-weight:600;letter-spacing:-2px;line-height:1.05;
+    color:var(--texto);position:relative;z-index:1;
+  }
+  .menu-hero h1 .grad{
+    background:linear-gradient(90deg,var(--brand),var(--brand-2));
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  }
+  .menu-hero p{
+    font-size:13px;color:var(--texto-soft);margin-top:14px;
+    max-width:600px;line-height:1.5;position:relative;z-index:1;
+  }
+  .menu-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:28px}
+  .menu-btn{
+    background:white;border:1px solid #e0e4ec;border-radius:12px;
+    padding:24px;text-align:left;cursor:pointer;
+    transition:all .2s;font-family:inherit;color:var(--texto);
+    position:relative;overflow:hidden;display:flex;flex-direction:column;gap:6px;
+    box-shadow:0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03);
+  }
+  .menu-btn::before{
+    content:'';position:absolute;left:0;top:0;bottom:0;width:4px;
+    background:var(--brand);opacity:0.7;transition:all .2s;
+  }
+  .menu-btn::after{
+    content:'';position:absolute;inset:0;border-radius:12px;
+    background:linear-gradient(135deg,transparent 60%,rgba(30,63,122,0.025));
+    pointer-events:none;
+  }
+  .menu-btn:hover{
+    transform:translateY(-3px);border-color:var(--brand);
+    box-shadow:0 8px 20px rgba(30,63,122,0.12), 0 2px 4px rgba(0,0,0,0.05);
+  }
+  .menu-btn:hover::before{opacity:1;width:5px}
+  .menu-btn-icon{
+    width:38px;height:38px;border-radius:10px;
+    display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:6px;
+  }
+  .menu-btn-titulo{font-size:16px;font-weight:600;letter-spacing:-0.3px}
+  .menu-btn .sub{font-size:13px;color:var(--texto-soft);font-weight:400;line-height:1.4}
+  .menu-btn-arrow{
+    margin-top:8px;font-size:12px;font-weight:600;color:var(--brand);
+    display:flex;align-items:center;gap:4px;
+  }
+  .menu-btn-arrow::after{content:'→';transition:transform .15s}
+  .menu-btn:hover .menu-btn-arrow::after{transform:translateX(3px)}
+  .menu-btn.azul::before{background:var(--brand);opacity:0.7}
+  .menu-btn.azul .menu-btn-icon{background:var(--brand-soft);color:var(--brand)}
+  .menu-btn.azul .menu-btn-arrow{color:var(--brand)}
+  .menu-btn.verde::before{background:var(--brand-2);opacity:0.7}
+  .menu-btn.verde .menu-btn-icon{background:var(--brand-2-soft);color:var(--brand-2)}
+  .menu-btn.verde .menu-btn-arrow{color:var(--brand-2)}
+  .menu-btn.verde:hover{border-color:var(--brand-2-soft)}
+  .menu-btn.naranja::before{background:var(--accent-1);opacity:0.7}
+  .menu-btn.naranja .menu-btn-icon{background:#fcefd8;color:var(--accent-1)}
+  .menu-btn.naranja .menu-btn-arrow{color:var(--accent-1)}
+  .menu-btn.naranja:hover{border-color:#fcefd8}
+  .menu-btn.morado::before{background:var(--accent-3);opacity:0.7}
+  .menu-btn.morado .menu-btn-icon{background:#e8dff0;color:var(--accent-3)}
+  .menu-btn.morado .menu-btn-arrow{color:var(--accent-3)}
+  .menu-btn.morado:hover{border-color:#e8dff0}
+  .menu-btn.rojo::before{background:var(--accent-5);opacity:0.7}
+  .menu-btn.rojo .menu-btn-icon{background:#fce8e4;color:var(--accent-5)}
+  .menu-btn.rojo .menu-btn-arrow{color:var(--accent-5)}
+  .menu-btn.rojo:hover{border-color:#fce8e4}
+  /* compatibilidad clases viejas */
+  .menu-btn.azul-osc{background:white}
+  .menu-btn.azul-osc::before{background:var(--brand-dark);opacity:0.7}
+  .menu-btn.azul-osc .menu-btn-icon{background:var(--brand-soft);color:var(--brand-dark)}
+  .menu-btn.azul-osc .menu-btn-arrow{color:var(--brand-dark)}
+  .menu-btn.verde-osc{background:white}
+  .menu-btn.verde-osc::before{background:var(--brand-2-dark);opacity:0.7}
+  .menu-btn.verde-osc .menu-btn-icon{background:var(--brand-2-soft);color:var(--brand-2-dark)}
+  .menu-btn.verde-osc .menu-btn-arrow{color:var(--brand-2-dark)}
+  .menu-btn.cyan{background:white}
+  .menu-btn.cyan::before{background:var(--accent-4);opacity:0.7}
+  .menu-btn.cyan .menu-btn-icon{background:#d8f0f3;color:var(--accent-4)}
+  .menu-btn.cyan .menu-btn-arrow{color:var(--accent-4)}
+
+  /* Botón atrás (interno de páginas) */
+  .back-btn{
+    background:white;border:1px solid var(--gris-borde);border-radius:6px;
+    padding:5px 11px;font-family:inherit;font-size:11.5px;font-weight:600;
+    color:var(--brand);cursor:pointer;
+    display:inline-flex;align-items:center;gap:3px;transition:all .15s;
+  }
+  .back-btn:hover{background:var(--brand-bg);border-color:var(--brand);color:var(--brand-dark)}
+
+  /* Encabezado de páginas internas */
+  .pag-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:12px;flex-wrap:wrap}
+  .pag-hdr-titulo{
+    font-size:18px;font-weight:600;color:var(--texto);
+    letter-spacing:-0.4px;line-height:1.2;
+  }
+  .pag-hdr-sub{font-size:12px;color:var(--texto-soft);margin-top:2px}
+  .pag-hdr-actions{display:flex;align-items:center;gap:10px;flex-shrink:0}
+  .depto-badge{
+    font-size:11px;font-weight:600;color:var(--brand-2);
+    background:var(--brand-2-soft);padding:4px 11px;border-radius:100px;
+    white-space:nowrap;font-family:'Geist Mono',monospace;letter-spacing:0.2px;
+  }
+
+  /* Pie de página - estilo unificado con cosecha.html */
+  .pie-pagina{
+    text-align:center;font-size:12px;color:var(--texto-soft);
+    padding:18px 0 10px;margin-top:22px;
+    border-top:1px solid var(--gris-borde-soft);
+    font-family:'Geist',sans-serif;letter-spacing:0;font-style:normal;
+  }
+  .pie-pagina strong{color:var(--brand);font-weight:600}
+  .pie-pagina .sep{color:var(--texto-muted);margin:0 8px}
+
+.back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--naranja);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 18px;
+    font-family:'Geist Mono',monospace;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-bottom: 20px;
+  }
+
+  .back-btn:hover { filter: brightness(1.1); }
+
+  /* ── FILTROS ── */
+  .filtros{
+    display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;
+    margin-bottom:14px;background:white;padding:12px 16px;
+    border-radius:10px;border:1px solid var(--gris-borde);
+  }
+  .filtro-grupo{display:flex;flex-direction:column;gap:4px}
+  .filtro-grupo label{font-size:11px;font-weight:600;color:var(--texto-soft);letter-spacing:0.3px}
+  .filtro-grupo select, .filtro-grupo input{
+    border:1px solid var(--gris-borde);border-radius:6px;padding:6px 10px;
+    font-size:13px;min-width:140px;background:white;color:var(--texto);
+    font-family:inherit;outline:none;transition:all .15s;
+  }
+  .filtro-grupo select:focus, .filtro-grupo input:focus{
+    border-color:var(--brand);box-shadow:0 0 0 2px var(--brand-soft);
+  }
+
+  /* ── TABLA ── */
+  .seccion-titulo{
+    font-size:11px;font-weight:600;color:var(--texto-soft);
+    letter-spacing:1.2px;text-transform:uppercase;
+    margin-bottom:10px;margin-top:14px;padding-left:10px;
+    border-left:3px solid var(--brand);
+    display:flex;align-items:center;gap:8px;
+  }
+
+  /* ────────────────────── TABLAS ────────────────────── */
+  .tabla-wrap{
+    overflow-x:auto;margin-bottom:12px;
+    border-radius:10px;border:1px solid var(--gris-borde);background:white;
+  }
+  table{width:100%;border-collapse:collapse;font-size:13px;background:white}
+  thead tr{background:linear-gradient(90deg,var(--brand-soft),var(--brand-2-soft));border-bottom:2px solid var(--brand)}
+  thead th{
+    font-size:11px;font-weight:700;padding:10px 12px;text-align:center;
+    color:var(--brand);letter-spacing:0.6px;text-transform:uppercase;
+    background:transparent;
+  }
+  thead th:first-child{border-radius:10px 0 0 0;text-align:left;padding-left:14px}
+  thead th:last-child{border-radius:0 10px 0 0;padding-right:14px}
+  tbody tr{border-bottom:1px solid #eef0f4;background:white;transition:background .12s}
+  tbody tr:nth-child(even){background:#fbfcfd}
+  tbody tr:hover{background:var(--brand-bg) !important}
+  tbody td{padding:8px 12px;text-align:center;color:var(--texto);font-weight:500;font-variant-numeric:tabular-nums}
+  tbody td:first-child{text-align:left;padding-left:14px;font-weight:500}
+  tbody td:last-child{padding-right:14px}
+  tbody tr.total-row{background:#eef2f8 !important;color:var(--brand);font-weight:700;border-top:2px solid var(--brand)}
+  tbody tr.total-row td{color:var(--brand);font-weight:700;font-size:13.5px}
+  tbody tr.total-row td:first-child{color:var(--brand);font-weight:800}
+
+  .cel-positivo {
+    background: var(--pos-bg);
+    color: var(--pos);
+    font-weight: 700;
+    border-radius: 5px;
+    padding: 3px 8px;
+    display: inline-block;
+    font-size: 12px;
+  }
+
+  .cel-negativo {
+    background: var(--neg-bg);
+    color: var(--neg);
+    font-weight: 700;
+    border-radius: 5px;
+    padding: 3px 8px;
+    display: inline-block;
+    font-size: 12px;
+  }
+
+  .cel-neutro {
+    background: #fef3c7;
+    color: #92400e;
+    font-weight: 700;
+    border-radius: 5px;
+    padding: 3px 8px;
+    display: inline-block;
+    font-size: 12px;
+  }
+
+  /* ── KPIs ── */
+  .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:18px}
+  .kpi-card{
+    background:white;border-radius:10px;padding:14px 16px;
+    border:1px solid #e0e4ec;border-top:3px solid var(--brand);
+    transition:transform .15s, box-shadow .15s;
+    box-shadow:0 1px 3px rgba(0,0,0,0.04);
+    display:flex;flex-direction:column;justify-content:space-between;
+    min-height:108px;
+  }
+  .kpi-card:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,0.06)}
+  .kpi-card.verde{border-top-color:var(--brand-2)}
+  .kpi-card.naranja{border-top-color:var(--accent-1)}
+  .kpi-card.rojo{border-top-color:var(--accent-5)}
+  .kpi-card.morado{border-top-color:var(--accent-3)}
+  .kpi-card.cyan{border-top-color:var(--accent-4)}
+  .kpi-label{
+    font-size:11px;font-weight:600;color:var(--brand);
+    letter-spacing:0.4px;margin-bottom:0;text-transform:uppercase;
+  }
+  .kpi-card.verde .kpi-label{color:var(--brand-2)}
+  .kpi-card.naranja .kpi-label{color:var(--accent-1)}
+  .kpi-card.rojo .kpi-label{color:var(--accent-5)}
+  .kpi-card.morado .kpi-label{color:var(--accent-3)}
+  .kpi-card.cyan .kpi-label{color:var(--accent-4)}
+  .kpi-valor{
+    font-size:30px;font-weight:700;color:var(--texto);
+    letter-spacing:-1.2px;line-height:1;font-variant-numeric:tabular-nums;
+    margin-top:8px;
+  }
+  .kpi-sub{font-size:11.5px;color:var(--texto-soft);margin-top:6px;display:flex;align-items:center;gap:6px;font-weight:500}
+  .progress-wrap{
+    height:5px;background:#eef0f4;border-radius:3px;
+    overflow:hidden;margin:6px 0 0;
+  }
+  .progress-bar{
+    height:100%;background:linear-gradient(90deg,var(--brand-2),#4a8e5d);
+    border-radius:3px;transition:width .3s ease;
+  }
+
+  /* ── LOADING ── */
+  .loading {
+    text-align: center;
+    padding: 40px;
+    color: #888;
+    font-size: 14px;
+  }
+
+  /* ── LOGIN ── */
+  #pag-login {
+    position: fixed;
+    inset: 0;
+    background: var(--azul);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+  }
+  #pag-login.oculto { display: none; }
+  .login-box {
+    background: white;
+    border-radius: 12px;
+    padding: 40px 48px;
+    width: 100%;
+    max-width: 380px;
+    text-align: center;
+  }
+  .login-logo {
+    font-family:'Geist Mono',monospace;
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--azul);
+    margin-bottom: 4px;
+  }
+  .login-sub { font-size: 11px; color: #888; margin-bottom: 28px; letter-spacing: 1px; }
+  .login-titulo { font-family:'Geist Mono',monospace; font-size:17px; font-weight:700; color:var(--azul); margin-bottom:20px; }
+  .login-input { width:100%; padding:11px 14px; border:1.5px solid #ddd; border-radius:6px; font-size:14px; margin-bottom:10px; outline:none; font-family:'Geist',sans-serif; box-sizing:border-box; }
+  .login-input:focus { border-color: var(--azul-medio); }
+  .login-btn { width:100%; padding:12px; background:var(--azul); color:white; border:none; border-radius:6px; font-family:'Geist Mono',monospace; font-size:16px; font-weight:700; cursor:pointer; margin-top:6px; letter-spacing:0.5px; }
+  .login-btn:hover { background: var(--azul-medio); }
+  .login-btn:disabled { background:#aaa; cursor:not-allowed; }
+  .login-error { color:var(--rojo); font-size:13px; margin-top:10px; min-height:18px; }
+  .logout-btn { background:none; border:1px solid #ccc; border-radius:4px; padding:4px 12px; font-size:12px; cursor:pointer; color:#666; }
+  .logout-btn:hover { background:#f0f0f0; }
+
+  /* ── CHARTS COMPACTOS (Resumen) ── */
+  .charts-grid{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+    gap:14px;margin-top:6px;margin-bottom:14px;
+  }
+  .charts-grid.tres{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+  .chart-box{
+    background:white;border:1px solid var(--gris-borde);border-radius:10px;
+    padding:14px 14px 10px;box-shadow:0 1px 3px rgba(0,0,0,0.04);
+    display:flex;flex-direction:column;
+  }
+  .chart-title{
+    font-size:11px;font-weight:700;color:var(--brand);letter-spacing:0.6px;
+    text-transform:uppercase;margin-bottom:8px;padding-left:8px;
+    border-left:3px solid var(--brand);
+  }
+  .chart-canvas-wrap{
+    position:relative;height:220px;width:100%;
+  }
+  .chart-canvas-wrap.alta{height:280px}
+  .chart-canvas-wrap.baja{height:160px}
+  .chart-box canvas{max-height:100%}
+
+  /* ── MATRIZ VARIEDADES × CICLO compacta con formato condicional ── */
+  .matriz-wrap{
+    overflow-x:auto;border-radius:10px;border:1px solid var(--gris-borde);
+    background:white;margin-bottom:14px;
+  }
+  table.matriz-var{font-size:12px;width:100%;border-collapse:collapse}
+  table.matriz-var thead tr{
+    background:linear-gradient(90deg,var(--brand-soft),var(--brand-2-soft));
+    border-bottom:2px solid var(--brand);
+  }
+  table.matriz-var thead th{
+    font-size:10.5px;font-weight:700;padding:7px 8px;text-align:center;
+    color:var(--brand);letter-spacing:0.4px;text-transform:uppercase;
+  }
+  table.matriz-var thead th:first-child{text-align:left;padding-left:12px}
+  table.matriz-var tbody td{
+    padding:5px 8px;text-align:center;font-size:11.5px;font-weight:500;
+    font-variant-numeric:tabular-nums;border-bottom:1px solid #f0f2f5;
+  }
+  table.matriz-var tbody td:first-child{
+    text-align:left;font-weight:600;padding-left:12px;background:white !important;
+    color:var(--texto);
+  }
+  table.matriz-var tr.total-row td{
+    background:#eef2f8 !important;color:var(--brand);
+    font-weight:700;border-top:2px solid var(--brand);
+  }
+  table.matriz-var tr.total-row td:first-child{
+    color:var(--brand);font-weight:800;background:#eef2f8 !important;
+  }
+  /* total columna lateral */
+  table.matriz-var td.total-col{
+    background:var(--brand-bg) !important;font-weight:700;color:var(--brand);
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="pag-login">
+  <div class="login-box">
+    <div class="login-logo">CHUMBAGUA</div>
+    <div class="login-sub">AZÚCAR · ENERGÍA · HONDURAS</div>
+    <div class="login-titulo">Acceso al Sistema</div>
+    <input class="login-input" type="email" id="login-email" placeholder="Correo electrónico" />
+    <input class="login-input" type="password" id="login-pass" placeholder="Contraseña" onkeydown="if(event.key==='Enter')doLogin()" />
+    <button class="login-btn" id="login-btn" onclick="doLogin()">INGRESAR</button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<div class="header" id="hdr">
+  <div class="brand-blk">
+    <div class="brand-logo">CH</div>
+    <div class="brand-name">Chumbagua <span>· Inteligencia Agrícola</span></div>
+  </div>
+  <div class="header-pagina">
+    <div class="header-pagina-titulo" id="hdr-titulo">Rendimientos Agrícolas</div>
+    <div class="header-pagina-sub" id="hdr-subtitulo">Compañía Azucarera Chumbagua</div>
+  </div>
+  <div class="header-actions">
+    <button class="btn-atras-hdr" id="btn-atras-hdr" onclick="irA('pag-menu')" title="Volver al menú" style="display:none">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      <span>Atrás</span>
+    </button>
+    <button class="btn-portal-icon" onclick="window.location.href='index.html'" title="Ir al portal">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    </button>
+    <div class="avatar" id="user-avatar" title="Mi sesión">RB</div>
+  </div>
+</div>
+
+<!-- MENÚ PRINCIPAL -->
+<div id="pag-menu" class="page active">
+  <div class="menu-page">
+    <div class="menu-hero">
+      <h1>Rendimientos <span class="grad">Agrícolas</span></h1>
+      <p>TCH histórico, comportamiento por finca, lote, distrito y variedad. Datos derivados de SAP en tiempo real.</p>
+    </div>
+    <div class="menu-grid">
+      <button class="menu-btn azul" onclick="irA('pag-resumen')">
+        <div class="menu-btn-icon">📊</div>
+        <div class="menu-btn-titulo">Resumen Rendimientos</div>
+        <span class="sub">KPIs generales y composición global</span>
+        <span class="menu-btn-arrow">Abrir módulo</span>
+      </button>
+      <button class="menu-btn azul" onclick="irA('pag-fincas')">
+        <div class="menu-btn-icon">🌱</div>
+        <div class="menu-btn-titulo">Rendimiento por Finca</div>
+        <span class="sub">TCH por finca con comparativo histórico</span>
+        <span class="menu-btn-arrow">Abrir módulo</span>
+      </button>
+      <button class="menu-btn verde" onclick="irA('pag-distrito')">
+        <div class="menu-btn-icon">🗺️</div>
+        <div class="menu-btn-titulo">Distritos & Propietario</div>
+        <span class="sub">Por tenencia y distrito</span>
+        <span class="menu-btn-arrow">Abrir módulo</span>
+      </button>
+      <button class="menu-btn verde" onclick="irA('pag-lotes')">
+        <div class="menu-btn-icon">📑</div>
+        <div class="menu-btn-titulo">Rendimiento por Lote</div>
+        <span class="sub">Detalle por lote</span>
+        <span class="menu-btn-arrow">Abrir módulo</span>
+      </button>
+      <button class="menu-btn naranja" onclick="irA('pag-avance')">
+        <div class="menu-btn-icon">📈</div>
+        <div class="menu-btn-titulo">Avance de Cosecha</div>
+        <span class="sub">Por distrito · Plan vs Real</span>
+        <span class="menu-btn-arrow">Abrir módulo</span>
+      </button>
+      <button class="menu-btn morado" onclick="irA('pag-madurantes')">
+        <div class="menu-btn-icon">💊</div>
+        <div class="menu-btn-titulo">Análisis Madurantes</div>
+        <span class="sub">Aplicación de madurantes e inhibidores</span>
+        <span class="menu-btn-arrow">Abrir módulo</span>
+      </button>
+    </div>
+    <p class="pie-pagina"><strong>by Departamento de Estadística Agrícola</strong><span class="sep">|</span>Compañía Azucarera Chumbagua<span class="sep">|</span>Zafra 2025–2026</p>
+  </div>
+</div>
+
+<!-- DISTRITOS & PROPIETARIO -->
+<div id="pag-distrito" class="page">
+  
+  <div class="filtros">
+    <div class="filtro-grupo">
+      <label>Semana</label>
+      <select id="filtro-semana" onchange="cargarDistrito()">
+        <option value="">Todas</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="seccion-titulo">COMPARATIVO POR PROPIETARIO</div>
+  <div class="tabla-wrap">
+    <table id="tabla-tenencia">
+      <thead><tr>
+        <th>TENENCIA</th>
+        <th>ÁREA (HAS)</th>
+        <th>TCH EST.</th>
+        <th>TCH</th>
+        <th>DIF. TCH</th>
+        <th>TCH 2024</th>
+        <th>DIF. TCH 2024</th>
+        <th>TM COSECHADAS</th>
+      </tr></thead>
+      <tbody><tr><td colspan="8" class="loading">Cargando datos...</td></tr></tbody>
+    </table>
+  </div>
+
+  <div class="seccion-titulo">COMPARATIVO POR DISTRITO</div>
+  <div class="tabla-wrap">
+    <table id="tabla-distrito">
+      <thead><tr>
+        <th>DISTRITO</th>
+        <th>ÁREA (HAS)</th>
+        <th>TCH EST.</th>
+        <th>TCH</th>
+        <th>DIF. TCH</th>
+        <th>EDAD</th>
+        <th>CICLO</th>
+        <th>TCH 2024</th>
+        <th>DIF. TCH 2024</th>
+        <th>EDAD 2024</th>
+        <th>TM COSECHADAS</th>
+      </tr></thead>
+      <tbody><tr><td colspan="11" class="loading">Cargando datos...</td></tr></tbody>
+    </table>
+  </div>
+  </div>
+
+<!-- FINCAS -->
+<div id="pag-fincas" class="page">
+  
+  <div class="filtros">
+    <div class="filtro-grupo">
+      <label>Distrito</label>
+      <select id="filtro-finca-distrito" onchange="cargarFincas()">
+        <option value="">Todos</option>
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+      </select>
+    </div>
+    <div class="filtro-grupo">
+      <label>Tenencia</label>
+      <select id="filtro-finca-tenencia" onchange="cargarFincas()">
+        <option value="">Todas</option>
+        <option value="A">ALQUILADO</option>
+        <option value="P">PROPIO</option>
+        <option value="I">INDEPENDIENTE</option>
+      </select>
+    </div>
+    <div class="filtro-grupo">
+      <label>Riego</label>
+      <select id="filtro-finca-riego" onchange="cargarFincas()">
+        <option value="">Todos</option>
+        <option value="Aspersión">Aspersión</option>
+        <option value="Goteo">Goteo</option>
+        <option value="Gravedad">Gravedad</option>
+        <option value="Secano">Secano</option>
+      </select>
+    </div>
+    <div class="filtro-grupo">
+      <label>Estado</label>
+      <select id="filtro-finca-estado" onchange="cargarFincas()">
+        <option value="">Todas</option>
+        <option value="cerrada">Cerradas</option>
+        <option value="abierta">Abiertas</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="tabla-wrap">
+    <table id="tabla-fincas">
+      <thead><tr>
+        <th>D</th>
+        <th>FINCA ID</th>
+        <th>FINCA</th>
+        <th>ÁREA HA</th>
+        <th>TM COSECH.</th>
+        <th>TCH EST.</th>
+        <th>TCH</th>
+        <th>DIF TCH</th>
+        <th>TCH 2024</th>
+        <th>DIF TCH 2024</th>
+        <th>POL</th>
+        <th>BRIX</th>
+        <th>PUREZA</th>
+        <th>HUMEDAD</th>
+        <th>CICLO</th>
+        <th>EDAD</th>
+        <th>FIN COSECHA</th>
+      </tr></thead>
+      <tbody><tr><td colspan="17" class="loading">Cargando datos...</td></tr></tbody>
+    </table>
+  </div>
+  </div>
+
+<!-- RESUMEN -->
+<div id="pag-resumen" class="page">
+
+  <div class="kpi-grid" id="kpi-resumen">
+    <div class="loading">Cargando...</div>
+  </div>
+
+  <div class="seccion-titulo">COMPOSICIÓN DE LA COSECHA</div>
+  <div class="charts-grid">
+    <div class="chart-box">
+      <div class="chart-title">RENDIMIENTOS POR RIEGO</div>
+      <div class="chart-canvas-wrap"><canvas id="chart-riego"></canvas></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-title">% TIPO DE CORTE</div>
+      <div class="chart-canvas-wrap"><canvas id="chart-tipo-corte"></canvas></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-title">% TIPO DE CAÑA</div>
+      <div class="chart-canvas-wrap"><canvas id="chart-tipo-cana"></canvas></div>
+    </div>
+  </div>
+
+  <div class="seccion-titulo">EVOLUCIÓN SEMANAL Y POR VARIEDAD</div>
+  <div class="charts-grid">
+    <div class="chart-box" style="grid-column:span 2;min-width:0">
+      <div class="chart-title">RENDIMIENTOS POR SEMANA</div>
+      <div class="chart-canvas-wrap"><canvas id="chart-semana"></canvas></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-title">TCH POR VARIEDAD (TOP 15)</div>
+      <div class="chart-canvas-wrap alta"><canvas id="chart-variedad"></canvas></div>
+    </div>
+  </div>
+
+  <div class="seccion-titulo">AVANCE Y DISTRIBUCIÓN</div>
+  <div class="charts-grid">
+    <div class="chart-box">
+      <div class="chart-title">AVANCE DE COSECHA</div>
+      <div class="chart-canvas-wrap"><canvas id="chart-gauge-avance"></canvas></div>
+      <div id="gauge-avance-texto" style="text-align:center;margin-top:8px;font-size:12px;color:var(--texto-soft);">—</div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-title">TM COSECHADAS POR DISTRITO</div>
+      <div class="chart-canvas-wrap"><canvas id="chart-tm-distrito"></canvas></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-title">TM COSECHADAS POR FRENTE</div>
+      <div class="chart-canvas-wrap"><canvas id="chart-tm-frente"></canvas></div>
+    </div>
+  </div>
+
+  <div class="seccion-titulo">TCH POR VARIEDAD Y CICLO (TM/HA)</div>
+  <div class="matriz-wrap">
+    <table class="matriz-var" id="tabla-variedades">
+      <thead><tr id="thead-variedades"></tr></thead>
+      <tbody id="tbody-variedades"><tr><td class="loading">Cargando...</td></tr></tbody>
+    </table>
+  </div>
+
+  </div>
+
+<!-- LOTES -->
+<div id="pag-lotes" class="page">
+  
+  <div class="filtros">
+    <div class="filtro-grupo">
+      <label>Finca</label>
+      <select id="filtro-lote-finca" onchange="cargarLotes()">
+        <option value="">Todas</option>
+      </select>
+    </div>
+  </div>
+  <div class="tabla-wrap">
+    <table id="tabla-lotes">
+      <thead><tr>
+        <th>FINCA</th><th>LOTE</th><th>ÁREA</th><th>TCH EST.</th>
+        <th>TCH</th><th>DIF TCH</th><th>TCH 2024</th><th>DIF TCH 2024</th>
+        <th>POL</th><th>BRIX</th>
+        <th>PUREZA</th><th>EDAD</th><th>CICLO</th><th>FIN COSECHA</th>
+      </tr></thead>
+      <tbody><tr><td colspan="14" class="loading">Cargando datos...</td></tr></tbody>
+    </table>
+  </div>
+  </div>
+
+<!-- ANÁLISIS MADURANTES -->
+<div id="pag-madurantes" class="page">
+
+  <div class="kpi-grid" id="kpi-madurantes">
+    <div class="loading">Cargando...</div>
+  </div>
+
+  <div class="seccion-titulo">APLICACIÓN POR PRODUCTO</div>
+  <div class="tabla-wrap">
+    <table id="tabla-madurantes-prod">
+      <thead><tr>
+        <th>Producto</th>
+        <th>Tipo</th>
+        <th>Lotes Aplicados</th>
+        <th>Área (HA)</th>
+        <th>Dosis Promedio</th>
+        <th>TM Cosechadas</th>
+        <th>TCH Promedio</th>
+        <th>POL Ponderado</th>
+      </tr></thead>
+      <tbody><tr><td colspan="8" class="loading">Cargando...</td></tr></tbody>
+    </table>
+  </div>
+
+  <div class="seccion-titulo" style="margin-top:18px;">DETALLE POR LOTE CON MADURANTE</div>
+  <div class="tabla-wrap">
+    <table id="tabla-madurantes-lotes">
+      <thead><tr>
+        <th>Finca</th>
+        <th>Lote</th>
+        <th>Madurante</th>
+        <th>Dosis</th>
+        <th>Fecha Aplic.</th>
+        <th>Inhibidor</th>
+        <th>Dosis</th>
+        <th>Fecha Aplic.</th>
+        <th>Días Aplic→Cosecha</th>
+        <th>TCH</th>
+        <th>POL</th>
+      </tr></thead>
+      <tbody><tr><td colspan="11" class="loading">Cargando...</td></tr></tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- AVANCE -->
+<div id="pag-avance" class="page">
+
+  <div class="kpi-grid" id="kpi-avance">
+    <div class="loading">Cargando...</div>
+  </div>
+
+  <div class="seccion-titulo">AVANCE POR DISTRITO</div>
+  <div class="tabla-wrap">
+    <table id="tabla-avance">
+      <thead><tr>
+        <th>Distrito</th>
+        <th>TM Estimado</th>
+        <th>TM Cosechado</th>
+        <th>TM Pendiente</th>
+        <th>Distancia Prom.</th>
+        <th>% Avance</th>
+      </tr></thead>
+      <tbody><tr><td colspan="6" class="loading">Cargando...</td></tr></tbody>
+    </table>
+  </div>
+
+  <div class="seccion-titulo" style="margin-top:18px;">AVANCE POR FINCA</div>
+  <div class="tabla-wrap">
+    <table id="tabla-avance-fincas">
+      <thead><tr>
+        <th>Distrito</th>
+        <th>Cód. Finca</th>
+        <th>Finca</th>
+        <th>TM Estimado</th>
+        <th>TM Cosechado</th>
+        <th>TM Pendiente</th>
+        <th>Distancia Prom.</th>
+        <th>% Avance</th>
+      </tr></thead>
+      <tbody><tr><td colspan="8" class="loading">Cargando...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+// Capturar cualquier error JS para que sea visible en consola sin romper el flujo
+window.addEventListener('error', e => console.error('[Error JS]', e.message, 'en', e.filename+':'+e.lineno))
+window.addEventListener('unhandledrejection', e => console.error('[Promise rechazada]', e.reason))
+
+const SUPABASE_URL = 'https://dhbyjqmdcezdiucxeqpp.supabase.co'
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRoYnlqcW1kY2V6ZGl1Y3hlcXBwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMzI2NjEsImV4cCI6MjA5MjcwODY2MX0.TwRDctpOab02EsGo6q6-Zx0vtdLPlxn_mhowxu93EF0'
+const sb = supabase.createClient ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+// Desregistrar el plugin de datalabels globalmente (envuelto en try por si la versión cambia API)
+try {
+  if(typeof Chart !== 'undefined' && typeof ChartDataLabels !== 'undefined'){
+    Chart.unregister(ChartDataLabels)
+  }
+} catch(e){ console.warn('No se pudo desregistrar ChartDataLabels:', e) }
+// Helper seguro para obtener el plugin (devuelve [] si no existe)
+const DLPLUGIN = (typeof ChartDataLabels !== 'undefined') ? [ChartDataLabels] : []
+
+
+const fmt = (n, dec=2) => n == null ? '—' : Number(n).toLocaleString('es-HN', {minimumFractionDigits:dec, maximumFractionDigits:dec})
+const fmtFecha = d => d ? new Date(d+'T00:00:00').toLocaleDateString('es-HN') : '—'
+
+function celDif(val) {
+  if (val == null) return '—'
+  const v = Number(val)
+  const cls = v > 0.1 ? 'cel-positivo' : v < -0.1 ? 'cel-negativo' : 'cel-neutro'
+  return `<span class="${cls}">${v > 0 ? '+' : ''}${fmt(v)}</span>`
+}
+
+// Mapa de títulos por página
+const TITULOS_PAGS = {
+  'pag-menu':       ['',                            ''],
+  'pag-resumen':    ['Resumen Rendimientos',        'KPIs · Composición · Variedades · Zafra 2025–2026'],
+  'pag-fincas':     ['Rendimiento por Finca',       'TCH por finca con comparativo histórico'],
+  'pag-distrito':   ['Distritos & Propietario',     'Por tenencia y distrito'],
+  'pag-lotes':      ['Rendimiento por Lote',        'Detalle por lote'],
+  'pag-avance':     ['Avance de Cosecha',           'Plan vs Real · Lógica planificación'],
+  'pag-madurantes': ['Análisis Madurantes',         'Aplicación de madurantes e inhibidores']
+}
+
+function irA(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'))
+  document.getElementById(id).classList.add('active')
+  window.scrollTo({top:0,behavior:'smooth'})
+  if (id === 'pag-distrito') cargarDistrito()
+  if (id === 'pag-fincas') cargarFincas()
+  if (id === 'pag-resumen') cargarResumen()
+  if (id === 'pag-lotes') cargarLotes()
+  if (id === 'pag-avance') cargarAvance()
+  if (id === 'pag-madurantes') cargarMadurantes()
+
+  // Actualizar header dinámico
+  const t = TITULOS_PAGS[id] || ['Rendimientos Agrícolas','Compañía Azucarera Chumbagua']
+  const tit = document.getElementById('hdr-titulo')
+  const sub = document.getElementById('hdr-subtitulo')
+  if(tit) tit.textContent = t[0]
+  if(sub) sub.textContent = t[1]
+  const pagBox = document.querySelector('.header-pagina')
+  if(pagBox) pagBox.style.visibility = (t[0]==='') ? 'hidden' : 'visible'
+  const btnAtras = document.getElementById('btn-atras-hdr')
+  if(btnAtras) btnAtras.style.display = (id==='pag-menu') ? 'none' : 'flex'
+}
+
+async function cargarSemanas() {
+  try {
+    const { data, error } = await sb.from('zag225_lotes').select('semana').not('semana','is',null).order('semana')
+    if(error){ console.warn('cargarSemanas error:', error); return }
+    const semanas = [...new Set((data||[]).map(r => r.semana))].sort((a,b)=>a-b)
+    const sel = document.getElementById('filtro-semana')
+    if(!sel) return
+    semanas.forEach(s => {
+      const o = document.createElement('option')
+      o.value = s; o.textContent = 'SEM-' + s
+      sel.appendChild(o)
+    })
+  } catch(e){ console.warn('cargarSemanas excepción:', e) }
+}
+
+async function cargarFincasSelect() {
+  try {
+    const { data, error } = await sb.from('zag225_lotes').select('finca').order('finca')
+    if(error){ console.warn('cargarFincasSelect error:', error); return }
+    const fincas = [...new Set((data||[]).map(r => r.finca).filter(Boolean))].sort()
+    const sel = document.getElementById('filtro-lote-finca')
+    if(!sel) return
+    fincas.forEach(f => {
+      const o = document.createElement('option')
+      o.value = f; o.textContent = f
+      sel.appendChild(o)
+    })
+  } catch(e){ console.warn('cargarFincasSelect excepción:', e) }
+}
+
+async function cargarDistrito() {
+  const semana = document.getElementById('filtro-semana').value
+
+  // Cargar año anterior
+  const { data: histTen } = await sb.from('v_hist_tenencia').select('*')
+  const { data: histDist } = await sb.from('v_hist_distrito').select('*')
+  const tenAnterior = {}
+  ;(histTen||[]).forEach(r => { tenAnterior[r.Tenencia] = parseFloat(r.tch)||0 })
+  const distAnterior = {}
+  ;(histDist||[]).forEach(r => {
+    distAnterior[r.Distrito] = { tch: parseFloat(r.tch)||0, edad: parseFloat(r.edad)||0 }
+  })
+
+  // Paginar tenencia
+  let dt = [], from=0, page=1000
+  while(true){
+    let q1 = sb.from('zag225_lotes').select('tenencia,area_cosechada,area_total,tm_cosechadas,tm_estimadas,tch_real,tch_estimado').in('tenencia',['A','P','I']).range(from, from+page-1)
+    if (semana) q1 = q1.eq('semana', semana)
+    const {data: rows, error} = await q1
+    if(error||!rows||!rows.length) break
+    dt = dt.concat(rows)
+    if(rows.length<page) break
+    from += page
+  }
+
+  const tenMap = { A: 'ALQUILADO', P: 'PROPIO', I: 'INDEPENDIENTE' }
+  const tenMapRev = { ALQUILADO:'A', PROPIO:'P', INDEPENDIENTE:'I' }
+  const grupos = {}
+  dt.forEach(r => {
+    const k = r.tenencia
+    if (!grupos[k]) grupos[k] = {area:0,tmC:0,tmE:0,areaT:0}
+    grupos[k].area  += r.area_cosechada || 0
+    grupos[k].tmC   += r.tm_cosechadas || 0
+    grupos[k].tmE   += r.tm_estimadas || 0
+    grupos[k].areaT += r.area_total || 0
+  })
+
+  let totArea=0,totTmC=0,totTmE=0,totAreaT=0
+  let html = ''
+  ;['A','P','I'].forEach(k => {
+    if (!grupos[k]) return
+    const g = grupos[k]
+    const tch = g.area > 0 ? g.tmC/g.area : 0
+    const tche = g.areaT > 0 ? g.tmE/g.areaT : 0
+    const dif = tch - tche
+    const tchAnt = tenAnterior[tenMap[k]]||0
+    const difAnt = tch - tchAnt
+    totArea+=g.area; totTmC+=g.tmC; totTmE+=g.tmE; totAreaT+=g.areaT
+    html += `<tr>
+      <td style="font-weight:600;text-align:left">${tenMap[k]}</td>
+      <td>${fmt(g.area)}</td>
+      <td>${fmt(tche)}</td>
+      <td style="font-weight:700">${fmt(tch)}</td>
+      <td>${celDif(dif)}</td>
+      <td style="font-weight:600">${tchAnt>0?fmt(tchAnt):'—'}</td>
+      <td>${tchAnt>0?celDif(difAnt):'—'}</td>
+      <td>${fmt(g.tmC)}</td>
+    </tr>`
+  })
+  const totTch = totArea > 0 ? totTmC/totArea : 0
+  const totTche = totAreaT > 0 ? totTmE/totAreaT : 0
+  const totTchAnt = Object.values(tenAnterior).reduce((s,v)=>s+v,0)/Math.max(Object.values(tenAnterior).filter(v=>v>0).length,1)
+  html += `<tr class="total-row"><td>Total</td><td>${fmt(totArea)}</td><td>${fmt(totTche)}</td><td>${fmt(totTch)}</td><td>${fmt(totTch-totTche,2)}</td><td>${fmt(totTchAnt)}</td><td>${fmt(totTch-totTchAnt,2)}</td><td>${fmt(totTmC)}</td></tr>`
+  document.querySelector('#tabla-tenencia tbody').innerHTML = html
+
+  // Paginar distrito
+  let dd = []
+  from=0
+  while(true){
+    let q2 = sb.from('zag225_lotes').select('distrito,area_cosechada,area_total,tm_cosechadas,tm_estimadas,edad,ciclo').not('distrito','is',null).range(from, from+page-1)
+    if (semana) q2 = q2.eq('semana', semana)
+    const {data: rows, error} = await q2
+    if(error||!rows||!rows.length) break
+    dd = dd.concat(rows)
+    if(rows.length<page) break
+    from += page
+  }
+
+  const dist = {}
+  dd.forEach(r => {
+    const k = r.distrito
+    if (!dist[k]) dist[k] = {area:0,tmC:0,tmE:0,areaT:0,edadTm:0,cicloTm:0}
+    dist[k].area   += r.area_cosechada || 0
+    dist[k].tmC    += r.tm_cosechadas || 0
+    dist[k].tmE    += r.tm_estimadas || 0
+    dist[k].areaT  += r.area_total || 0
+    dist[k].edadTm += (r.edad||0) * (r.tm_cosechadas||0)
+    dist[k].cicloTm+= (r.ciclo||0) * (r.tm_cosechadas||0)
+  })
+
+  let html2 = ''
+  let tA=0,tTmC=0,tTmE=0,tAT=0,tEdTm=0,tCiTm=0
+  Object.keys(dist).sort((a,b)=>a-b).forEach(k => {
+    const g = dist[k]
+    const tch = g.area > 0 ? g.tmC/g.area : 0
+    const tche = g.areaT > 0 ? g.tmE/g.areaT : 0
+    const edad = g.tmC > 0 ? g.edadTm/g.tmC : 0
+    const ciclo = g.tmC > 0 ? g.cicloTm/g.tmC : 0
+    const ant = distAnterior[parseInt(k)]||{}
+    const tchAnt = ant.tch||0
+    const edadAnt = ant.edad||0
+    tA+=g.area;tTmC+=g.tmC;tTmE+=g.tmE;tAT+=g.areaT;tEdTm+=g.edadTm;tCiTm+=g.cicloTm
+    html2 += `<tr>
+      <td style="font-weight:700">${k}</td>
+      <td>${fmt(g.area)}</td>
+      <td>${fmt(tche)}</td>
+      <td style="font-weight:700">${fmt(tch)}</td>
+      <td>${celDif(tch-tche)}</td>
+      <td>${fmt(edad)}</td>
+      <td>${fmt(ciclo)}</td>
+      <td style="font-weight:600">${tchAnt>0?fmt(tchAnt):'—'}</td>
+      <td>${tchAnt>0?celDif(tch-tchAnt):'—'}</td>
+      <td>${edadAnt>0?fmt(edadAnt):'—'}</td>
+      <td>${fmt(g.tmC)}</td>
+    </tr>`
+  })
+  const tTch=tA>0?tTmC/tA:0, tTche=tAT>0?tTmE/tAT:0
+  const tEdad=tTmC>0?tEdTm/tTmC:0, tCiclo=tTmC>0?tCiTm/tTmC:0
+  html2 += `<tr class="total-row"><td>Total</td><td>${fmt(tA)}</td><td>${fmt(tTche)}</td><td>${fmt(tTch)}</td><td>${fmt(tTch-tTche,2)}</td><td>${fmt(tEdad)}</td><td>${fmt(tCiclo)}</td><td>—</td><td>—</td><td>—</td><td>${fmt(tTmC)}</td></tr>`
+  document.querySelector('#tabla-distrito tbody').innerHTML = html2
+}
+
+async function cargarFincas() {
+  const dist = document.getElementById('filtro-finca-distrito').value
+  const ten  = document.getElementById('filtro-finca-tenencia').value
+  const riego= document.getElementById('filtro-finca-riego').value
+  const estado = document.getElementById('filtro-finca-estado').value
+
+  // Año anterior
+  const { data: histF } = await sb.from('v_hist_finca').select('*')
+  const fincaAnt = {}
+  ;(histF||[]).forEach(r => { fincaAnt[r['Cod finca']] = parseFloat(r.tch)||0 })
+
+  // ── Calcular fincas CERRADAS (todos los lotes de planificacion están en zag225)
+  // Solo cargamos esto si hay filtro de estado activo (para no impactar performance)
+  let fincasCerradas = new Set()
+  let fincasConPlan = new Set()  // todas las fincas que tienen al menos 1 lote en planificacion
+  if(estado){
+    function _cleanCode(v){
+      if(v==null) return ''
+      if(typeof v==='number') return Number.isInteger(v)?String(v):String(Math.round(v))
+      return String(v).trim().toUpperCase()
+    }
+    // Set de codigo_plantio cerrados (en zag225)
+    const cerradosPlantios = new Set()
+    let pf = 0, page = 1000
+    while(true){
+      const {data, error} = await sb.from('zag225_lotes').select('finca_id,lote').range(pf, pf+page-1)
+      if(error||!data||!data.length) break
+      data.forEach(r => {
+        const cf = _cleanCode(r.finca_id), cl = _cleanCode(r.lote)
+        if(cf && cl) cerradosPlantios.add(cf+cl)
+      })
+      if(data.length<page) break
+      pf += page
+    }
+    // Recorrer planificacion y agrupar por cod_finca (o codigo_plantio derivado)
+    const fincaLotes = {}  // cod_finca → {total, cerrados}
+    pf = 0
+    while(true){
+      const {data, error} = await sb.from('planificacion').select('*').range(pf, pf+page-1)
+      if(error||!data||!data.length) break
+      data.forEach(r => {
+        const sec = (r.secuencia||'').toString().toUpperCase().trim()
+        if(sec !== 'PRODUCCIÓN' && sec !== 'PRODUCCION') return
+        const k = _cleanCode(r.codigo_plantio)
+        if(!k) return
+        let fc = _cleanCode(r.cod_finca)
+        if(!fc){
+          const m = k.match(/^([A-Za-z]+\d{2,3})(\d{1,3})$/)
+          fc = m ? m[1] : k.substring(0, Math.max(3, k.length-1))
+        }
+        if(!fc) return
+        if(!fincaLotes[fc]) fincaLotes[fc] = {total:0, cerrados:0}
+        fincaLotes[fc].total++
+        if(cerradosPlantios.has(k)) fincaLotes[fc].cerrados++
+        fincasConPlan.add(fc)
+      })
+      if(data.length<page) break
+      pf += page
+    }
+    // Marcar Cerradas: total>0 y total===cerrados
+    Object.entries(fincaLotes).forEach(([fc,c]) => {
+      if(c.total>0 && c.total===c.cerrados) fincasCerradas.add(fc)
+    })
+    console.log(`Filtro Estado=${estado} | Total fincas: ${fincasConPlan.size} | Cerradas: ${fincasCerradas.size}`)
+  }
+
+  // Paginar zag225_lotes
+  let data = [], from=0, page=1000
+  while(true){
+    let q = sb.from('zag225_lotes').select('distrito,finca_id,finca,area_cosechada,area_total,tm_cosechadas,tm_estimadas,tch_real,tch_estimado,pol,brix,pureza,humedad,ciclo,edad,fin_cosecha,tenencia,tipo_riego')
+      .order('tch_real',{ascending:false})
+      .range(from, from+page-1)
+    if (dist)  q = q.eq('distrito', dist)
+    if (ten)   q = q.eq('tenencia', ten)
+    if (riego) q = q.eq('tipo_riego', riego)
+    const {data: rows, error} = await q
+    if(error||!rows||!rows.length) break
+    data = data.concat(rows)
+    if(rows.length<page) break
+    from += page
+  }
+
+  const fincas = {}
+  data.forEach(r => {
+    const k = r.finca_id
+    if (!fincas[k]) fincas[k] = {dist:r.distrito,id:r.finca_id,nombre:r.finca,area:0,tmC:0,tmE:0,areaT:0,polTm:0,brixTm:0,purTm:0,humTm:0,cicloTm:0,edadTm:0,finCos:r.fin_cosecha}
+    fincas[k].area   += r.area_cosechada||0
+    fincas[k].tmC    += r.tm_cosechadas||0
+    fincas[k].tmE    += r.tm_estimadas||0
+    fincas[k].areaT  += r.area_total||0
+    fincas[k].polTm  += (r.pol||0)*(r.tm_cosechadas||0)
+    fincas[k].brixTm += (r.brix||0)*(r.tm_cosechadas||0)
+    fincas[k].purTm  += (r.pureza||0)*(r.tm_cosechadas||0)
+    fincas[k].humTm  += (r.humedad||0)*(r.tm_cosechadas||0)
+    fincas[k].cicloTm+= (r.ciclo||0)*(r.tm_cosechadas||0)
+    fincas[k].edadTm += (r.edad||0)*(r.tm_cosechadas||0)
+  })
+
+  // Aplicar filtro de Estado
+  let fincasFiltradas = Object.values(fincas)
+  if(estado){
+    function _norm(v){ return v==null?'':String(v).trim().toUpperCase() }
+    fincasFiltradas = fincasFiltradas.filter(g => {
+      const fcN = _norm(g.id)
+      const esCerrada = fincasCerradas.has(fcN)
+      return estado==='cerrada' ? esCerrada : !esCerrada
+    })
+  }
+
+  let html = ''
+  // Acumuladores para fila TOTAL
+  let TtmC=0, TtmE=0, Tarea=0, TareaT=0, TpolTm=0, TbrixTm=0, TpurTm=0, ThumTm=0, TcicloTm=0, TedadTm=0
+  fincasFiltradas.sort((a,b) => (b.tmC/b.area||0)-(a.tmC/a.area||0)).forEach(g => {
+    const tch = g.area>0?g.tmC/g.area:0
+    const tche= g.areaT>0?g.tmE/g.areaT:0
+    const pol  = g.tmC>0?g.polTm/g.tmC:0
+    const brix = g.tmC>0?g.brixTm/g.tmC:0
+    const pur  = g.tmC>0?g.purTm/g.tmC:0
+    const hum  = g.tmC>0?g.humTm/g.tmC:0
+    const cic  = g.tmC>0?g.cicloTm/g.tmC:0
+    const edad = g.tmC>0?g.edadTm/g.tmC:0
+    const tchAnt = fincaAnt[g.id]||0
+    Tarea += g.area; TareaT += g.areaT; TtmC += g.tmC; TtmE += g.tmE
+    TpolTm += g.polTm; TbrixTm += g.brixTm; TpurTm += g.purTm
+    ThumTm += g.humTm; TcicloTm += g.cicloTm; TedadTm += g.edadTm
+    html += `<tr>
+      <td>${g.dist}</td><td style="font-weight:600">${g.id}</td>
+      <td style="text-align:left;font-weight:600">${g.nombre}</td>
+      <td>${fmt(g.area)}</td><td>${fmt(g.tmC)}</td>
+      <td>${fmt(tche)}</td>
+      <td style="font-weight:700">${fmt(tch)}</td>
+      <td>${celDif(tch-tche)}</td>
+      <td style="font-weight:600">${tchAnt>0?fmt(tchAnt):'—'}</td>
+      <td>${tchAnt>0?celDif(tch-tchAnt):'—'}</td>
+      <td>${fmt(pol)}</td><td>${fmt(brix)}</td><td>${fmt(pur)}</td>
+      <td>${fmt(hum)}</td><td>${fmt(cic,1)}</td><td>${fmt(edad)}</td>
+      <td>${fmtFecha(g.finCos)}</td>
+    </tr>`
+  })
+  // Fila TOTAL
+  const TtchT = Tarea>0?TtmC/Tarea:0
+  const TtcheT = TareaT>0?TtmE/TareaT:0
+  const Tpol = TtmC>0?TpolTm/TtmC:0
+  const Tbrix = TtmC>0?TbrixTm/TtmC:0
+  const Tpur = TtmC>0?TpurTm/TtmC:0
+  const Thum = TtmC>0?ThumTm/TtmC:0
+  const Tcic = TtmC>0?TcicloTm/TtmC:0
+  const Tedad = TtmC>0?TedadTm/TtmC:0
+  html += `<tr class="total-row">
+    <td colspan="3">TOTAL</td>
+    <td>${fmt(Tarea,2)}</td><td>${fmt(TtmC,0)}</td>
+    <td>${fmt(TtcheT)}</td><td>${fmt(TtchT)}</td>
+    <td>${fmt(TtchT-TtcheT,2)}</td><td>—</td><td>—</td>
+    <td>${fmt(Tpol)}</td><td>${fmt(Tbrix)}</td><td>${fmt(Tpur)}</td>
+    <td>${fmt(Thum)}</td><td>${fmt(Tcic,1)}</td><td>${fmt(Tedad)}</td>
+    <td>—</td>
+  </tr>`
+  document.querySelector('#tabla-fincas tbody').innerHTML = html || '<tr><td colspan="17">Sin datos</td></tr>'
+}
+
+async function cargarLotes() {
+  const finca = document.getElementById('filtro-lote-finca').value
+  const { data: histL } = await sb.from('v_hist_lote').select('*')
+  const loteAnt = {}
+  ;(histL||[]).forEach(r => { loteAnt[r['Finca-Lote']] = parseFloat(r.tch)||0 })
+
+  // Paginar para traer todos los lotes (no solo los primeros 1000)
+  let allRows = [], from = 0, page = 1000
+  while(true){
+    let q = sb.from('zag225_lotes')
+      .select('finca,finca_id,lote,area_cosechada,area_total,tm_cosechadas,tm_estimadas,tch_real,tch_estimado,pol,brix,pureza,humedad,edad,ciclo,fin_cosecha')
+      
+      .order('tch_real',{ascending:false})
+      .range(from, from+page-1)
+    if (finca) q = q.eq('finca', finca)
+    const { data, error } = await q
+    if(error || !data || !data.length) break
+    allRows = allRows.concat(data)
+    if(data.length < page) break
+    from += page
+  }
+
+  // Deduplicar por (finca_id, lote) — quedamos con el primero (zafra más reciente)
+  const seen = new Set()
+  const data = []
+  allRows.forEach(r => {
+    const k = `${r.finca_id||''}__${r.lote||''}`
+    if(seen.has(k)) return
+    seen.add(k)
+    data.push(r)
+  })
+
+  // Ordenar por TCH descendente
+  data.sort((a,b) => (parseFloat(b.tch_real)||0) - (parseFloat(a.tch_real)||0))
+
+  let html = ''
+  let TtmC=0, Tarea=0, TareaT=0, TtmE=0, TpolTm=0, TbrixTm=0, TpurTm=0, TedadTm=0, TcicloTm=0
+  data.forEach(r => {
+    const tch = r.area_cosechada>0?r.tm_cosechadas/r.area_cosechada:0
+    const tche= r.area_total>0?r.tm_estimadas/r.area_total:0
+    const key = (r.finca_id||'') + String(r.lote||'')
+    const tchAnt = loteAnt[key]||0
+    Tarea += parseFloat(r.area_cosechada)||0
+    TareaT += parseFloat(r.area_total)||0
+    TtmC += parseFloat(r.tm_cosechadas)||0
+    TtmE += parseFloat(r.tm_estimadas)||0
+    TpolTm += (parseFloat(r.pol)||0) * (parseFloat(r.tm_cosechadas)||0)
+    TbrixTm += (parseFloat(r.brix)||0) * (parseFloat(r.tm_cosechadas)||0)
+    TpurTm += (parseFloat(r.pureza)||0) * (parseFloat(r.tm_cosechadas)||0)
+    TedadTm += (parseFloat(r.edad)||0) * (parseFloat(r.tm_cosechadas)||0)
+    TcicloTm += (parseFloat(r.ciclo)||0) * (parseFloat(r.tm_cosechadas)||0)
+    html += `<tr>
+      <td style="text-align:left">${r.finca}</td><td>${r.lote}</td>
+      <td>${fmt(r.area_cosechada)}</td><td>${fmt(tche)}</td>
+      <td style="font-weight:700">${fmt(tch)}</td><td>${celDif(tch-tche)}</td>
+      <td style="font-weight:600">${tchAnt>0?fmt(tchAnt):'—'}</td>
+      <td>${tchAnt>0?celDif(tch-tchAnt):'—'}</td>
+      <td>${fmt(r.pol)}</td><td>${fmt(r.brix)}</td><td>${fmt(r.pureza)}</td>
+      <td>${fmt(r.edad)}</td><td>${fmt(r.ciclo,1)}</td><td>${fmtFecha(r.fin_cosecha)}</td>
+    </tr>`
+  })
+  // Fila TOTAL
+  const TtchT = Tarea>0?TtmC/Tarea:0
+  const TtcheT = TareaT>0?TtmE/TareaT:0
+  const Tpol = TtmC>0?TpolTm/TtmC:0
+  const Tbrix = TtmC>0?TbrixTm/TtmC:0
+  const Tpur = TtmC>0?TpurTm/TtmC:0
+  const Tedad = TtmC>0?TedadTm/TtmC:0
+  const Tciclo = TtmC>0?TcicloTm/TtmC:0
+  html += `<tr class="total-row">
+    <td colspan="2">TOTAL (${data.length} lotes)</td>
+    <td>${fmt(Tarea,2)}</td><td>${fmt(TtcheT)}</td>
+    <td>${fmt(TtchT)}</td><td>${fmt(TtchT-TtcheT,2)}</td>
+    <td>—</td><td>—</td>
+    <td>${fmt(Tpol)}</td><td>${fmt(Tbrix)}</td><td>${fmt(Tpur)}</td>
+    <td>${fmt(Tedad)}</td><td>${fmt(Tciclo,1)}</td><td>—</td>
+  </tr>`
+  document.querySelector('#tabla-lotes tbody').innerHTML = html || '<tr><td colspan="14">Sin datos</td></tr>'
+}
+
+async function cargarResumen() {
+  // ── Datos de zag225_lotes (paginado para traer TODO)
+  let allRows = [], from=0, page=1000
+  while(true){
+    const {data: rows, error} = await sb.from('zag225_lotes')
+      .select('area_cosechada,area_total,tm_cosechadas,tm_estimadas,tch_real,edad,pol,brix,pureza,humedad,tipo_riego,semana,variedad,ciclo,distrito')
+      .range(from, from+page-1)
+    if(error||!rows||!rows.length) break
+    allRows = allRows.concat(rows)
+    if(rows.length<page) break
+    from += page
+  }
+  console.log('zag225_lotes filas cargadas:', allRows.length)
+
+  let area=0,areaT=0,tmC=0,tmE=0,edTm=0,polTm=0,brixTm=0,purTm=0,humTm=0,cicloTm=0
+  const riegoMap={}, semMap={}, varMap={}
+  // Para matriz var × ciclo
+  const ciclosSet = new Set()
+  const vars = {}
+  // Para TM por distrito
+  const distMap = {}
+
+  // Normalizar distrito: planificacion='DISTRITO 1' → '1', zag225='1' → '1'
+  function normDistrito(d){
+    if(d==null) return 'N/D'
+    const s = String(d).trim()
+    const m = s.match(/(\d+)/)
+    return m ? m[1] : s
+  }
+
+  allRows.forEach(r => {
+    const ac = parseFloat(r.area_cosechada)||0
+    const at = parseFloat(r.area_total)||0
+    const tc = parseFloat(r.tm_cosechadas)||0
+    const te = parseFloat(r.tm_estimadas)||0
+    area  += ac
+    areaT += at
+    tmC   += tc
+    tmE   += te
+    edTm  += (parseFloat(r.edad)||0)*tc
+    polTm += (parseFloat(r.pol)||0)*tc
+    brixTm+= (parseFloat(r.brix)||0)*tc
+    purTm += (parseFloat(r.pureza)||0)*tc
+    humTm += (parseFloat(r.humedad)||0)*tc
+    cicloTm += (parseFloat(r.ciclo)||0)*tc
+    if(r.tipo_riego){
+      if(!riegoMap[r.tipo_riego])riegoMap[r.tipo_riego]={area:0,tm:0}
+      riegoMap[r.tipo_riego].area+=ac
+      riegoMap[r.tipo_riego].tm+=tc
+    }
+    if(r.semana){
+      if(!semMap[r.semana])semMap[r.semana]={area:0,tm:0}
+      semMap[r.semana].area+=ac
+      semMap[r.semana].tm+=tc
+    }
+    if(r.variedad){
+      if(!varMap[r.variedad])varMap[r.variedad]={area:0,tm:0}
+      varMap[r.variedad].area+=ac
+      varMap[r.variedad].tm+=tc
+      if(!vars[r.variedad]) vars[r.variedad]={tmTot:0,areaTot:0,ciclos:{}}
+      vars[r.variedad].tmTot+=tc
+      vars[r.variedad].areaTot+=ac
+      if(r.ciclo!=null){
+        ciclosSet.add(r.ciclo)
+        const k=r.ciclo
+        if(!vars[r.variedad].ciclos[k]) vars[r.variedad].ciclos[k]={tm:0,area:0}
+        vars[r.variedad].ciclos[k].tm+=tc
+        vars[r.variedad].ciclos[k].area+=ac
+      }
+    }
+    if(r.distrito!=null){
+      const k=normDistrito(r.distrito)
+      if(!distMap[k]) distMap[k]={tmC:0,tmE:0}
+      distMap[k].tmC+=tc
+      distMap[k].tmE+=te
+    }
+  })
+
+  // ── Cargar planificacion (tm_re_estimado por distrito) — usado en Gauge y TM Distrito
+  // Para reflejar estimado real de planificación (no solo lotes ya en zag225)
+  let totEstPlan = 0
+  const distEstPlan = {}
+  let pf = 0
+  while(true){
+    // Traer todo y filtrar PRODUCCIÓN en JS para evitar problemas de URL-encoding con la tilde
+    const {data: rowsP, error: errP} = await sb.from('planificacion')
+      .select('distrito,tm_re_estimado,secuencia')
+      .range(pf, pf+page-1)
+    if(errP||!rowsP||!rowsP.length) break
+    rowsP.forEach(r => {
+      const sec = (r.secuencia||'').toString().toUpperCase().trim()
+      // Aceptar PRODUCCIÓN o PRODUCCION (con o sin tilde)
+      if(sec !== 'PRODUCCIÓN' && sec !== 'PRODUCCION') return
+      const v = parseFloat(r.tm_re_estimado)||0
+      totEstPlan += v
+      const k = normDistrito(r.distrito)
+      distEstPlan[k] = (distEstPlan[k]||0) + v
+    })
+    if(rowsP.length<page) break
+    pf += page
+  }
+  console.log('Planificacion estim totales:', totEstPlan, 'distritos:', Object.keys(distEstPlan))
+
+  // Tipo corte desde v_cosecha_resumen
+  const { data: z212 } = await sb.from('v_cosecha_resumen').select('fte_corte,tm_cosechado')
+  const corteMap={MANUAL:0,MECANIZADO:0}
+  ;(z212||[]).forEach(r => {
+    const t = (r.fte_corte<=3||r.fte_corte===6)?'MANUAL':'MECANIZADO'
+    corteMap[t]=(corteMap[t]||0)+(parseFloat(r.tm_cosechado)||0)
+  })
+  // Tipo caña: quemada vs cruda (excluyendo SEMILLA)
+  const { data: z212b } = await sb.from('v_cosecha_resumen').select('origen_corte,tm_cosechado')
+  const canaMap={}
+  ;(z212b||[]).forEach(r => {
+    const k=r.origen_corte||'N/D'
+    // Excluir todo lo que sea semilla
+    if(k.toUpperCase().includes('SEMILLA')) return
+    canaMap[k]=(canaMap[k]||0)+(parseFloat(r.tm_cosechado)||0)
+  })
+  // Frentes desde v_cosecha_resumen
+  const { data: fts } = await sb.from('v_cosecha_resumen').select('fte_corte,tm_cosechado')
+  const FRENTES = {1:'1 - Interno Manual',2:'2 - Externo Manual',3:'3 - Camiones Alq.',4:'4 - Interno Mecanizado',5:'5 - Externo Mecanizado',6:'6 - Verde Manual'}
+  const fteMap={}
+  ;(fts||[]).forEach(r=>{
+    const k=r.fte_corte; if(!k)return
+    fteMap[k]=(fteMap[k]||0)+(parseFloat(r.tm_cosechado)||0)
+  })
+
+  // ── KPIs
+  const tch  = area>0 ? tmC/area : 0
+  const tche = areaT>0 ? tmE/areaT : 0
+  const edad = tmC>0 ? edTm/tmC : 0
+  const pol  = tmC>0 ? polTm/tmC : 0
+  const brix = tmC>0 ? brixTm/tmC : 0
+  const pur  = tmC>0 ? purTm/tmC : 0
+  const hum  = tmC>0 ? humTm/tmC : 0
+  const ciclo = tmC>0 ? cicloTm/tmC : 0
+  // Diferencia TM (Cos - Est): positivo = bueno (verde), negativo = malo (rojo)
+  const difTM = tmC - tmE
+  const difTCH = tch - tche
+  const avance = tmE>0 ? tmC/tmE*100 : 0
+  // Estilos para Diferencia
+  const cssDifTM  = difTM  >= 0 ? 'verde' : 'rojo'
+  const cssDifTCH = difTCH >= 0 ? 'verde' : 'rojo'
+  const sgnTM  = difTM  >= 0 ? '+' : ''
+  const sgnTCH = difTCH >= 0 ? '+' : ''
+
+  document.getElementById('kpi-resumen').innerHTML = `
+    <div class="kpi-card verde"><div class="kpi-label">TM Cosechado</div><div class="kpi-valor">${fmt(tmC,0)}</div>
+      <div class="progress-wrap"><div class="progress-bar" style="width:${Math.min(avance,100).toFixed(1)}%"></div></div>
+      <div class="kpi-sub">${fmt(avance,1)}% del estimado</div></div>
+    <div class="kpi-card"><div class="kpi-label">TM Estimado</div><div class="kpi-valor">${fmt(tmE,0)}</div><div class="kpi-sub">Toneladas de caña</div></div>
+    <div class="kpi-card ${cssDifTM}"><div class="kpi-label">Diferencia TM</div><div class="kpi-valor">${sgnTM}${fmt(difTM,0)}</div><div class="kpi-sub">Cosechado − Estimado</div></div>
+    <div class="kpi-card naranja"><div class="kpi-label">TCH Real</div><div class="kpi-valor">${fmt(tch)}</div>
+      <div class="kpi-sub">TM/HA · POL ${fmt(pol)}</div></div>
+    <div class="kpi-card"><div class="kpi-label">TCH Estimado</div><div class="kpi-valor">${fmt(tche)}</div><div class="kpi-sub">TM/HA proyectado</div></div>
+    <div class="kpi-card ${cssDifTCH}"><div class="kpi-label">Diferencia TCH</div><div class="kpi-valor">${sgnTCH}${fmt(difTCH,2)}</div><div class="kpi-sub">Real − Estimado</div></div>
+    <div class="kpi-card"><div class="kpi-label">Área Cosechada</div><div class="kpi-valor">${fmt(area,0)}</div><div class="kpi-sub">Hectáreas</div></div>
+    <div class="kpi-card morado"><div class="kpi-label">Brix Ponderado</div><div class="kpi-valor">${fmt(brix)}</div><div class="kpi-sub">Sólidos solubles</div></div>
+    <div class="kpi-card morado"><div class="kpi-label">Pureza Ponderada</div><div class="kpi-valor">${fmt(pur)}</div><div class="kpi-sub">% sacarosa/brix</div></div>
+    <div class="kpi-card cyan"><div class="kpi-label">Humedad Ponderada</div><div class="kpi-valor">${fmt(hum)}</div><div class="kpi-sub">% en caña</div></div>
+    <div class="kpi-card cyan"><div class="kpi-label">Edad Ponderada</div><div class="kpi-valor">${fmt(edad)}</div><div class="kpi-sub">Meses promedio</div></div>
+    <div class="kpi-card cyan"><div class="kpi-label">Ciclo Ponderado</div><div class="kpi-valor">${fmt(ciclo,1)}</div><div class="kpi-sub">Ponderado por TM</div></div>
+  `
+
+  // ── CHART: Riego (barras has + línea TCH dashed estilo)
+  const rL=Object.keys(riegoMap), rA=rL.map(k=>riegoMap[k].area), rT=rL.map(k=>riegoMap[k].area>0?riegoMap[k].tm/riegoMap[k].area:0)
+  if(window._chartRiego)window._chartRiego.destroy()
+  if(document.getElementById('chart-riego')){
+    window._chartRiego=new Chart(document.getElementById('chart-riego').getContext('2d'),{
+      type:'bar',
+      data:{labels:rL,datasets:[
+        {label:'Has Cos.',data:rA,backgroundColor:'#3d7abf',yAxisID:'y',order:2,borderRadius:3},
+        {label:'TCH',data:rT.map(v=>+v.toFixed(2)),type:'line',
+          borderColor:'#e8a020',backgroundColor:'#fff',
+          borderDash:[6,4],borderWidth:2.5,
+          yAxisID:'y1',tension:0.35,
+          pointRadius:6,pointBackgroundColor:'#fff',pointBorderColor:'#e8a020',pointBorderWidth:2.5,
+          order:1
+        }
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{
+          legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,usePointStyle:true}},
+          datalabels:{display:false}
+        },
+        scales:{
+          y:{beginAtZero:true,ticks:{font:{size:10}}},
+          y1:{position:'right',grid:{display:false},ticks:{font:{size:10}},beginAtZero:true},
+          x:{ticks:{font:{size:10}}}
+        }}
+    })
+  }
+
+  // ── CHART: Tipo Corte
+  if(window._chartCorte)window._chartCorte.destroy()
+  if(document.getElementById('chart-tipo-corte')){
+    const totCorte = Object.values(corteMap).reduce((s,v)=>s+v,0)
+    window._chartCorte=new Chart(document.getElementById('chart-tipo-corte').getContext('2d'),{
+      type:'doughnut',
+      data:{labels:Object.keys(corteMap),datasets:[{data:Object.values(corteMap),backgroundColor:['#1e3f7a','#2d6e3e'],borderWidth:2,borderColor:'#fff'}]},
+      options:{responsive:true,maintainAspectRatio:false,cutout:'55%',
+        layout:{padding:{top:18,bottom:18,left:18,right:18}},
+        plugins:{
+          legend:{position:'bottom',labels:{font:{size:11},boxWidth:10}},
+          tooltip:{callbacks:{label:c=>{
+            const pct = totCorte>0 ? (c.parsed/totCorte*100).toFixed(1) : 0
+            return `${c.label}: ${fmt(c.parsed,0)} TM (${pct}%)`
+          }}},
+          datalabels:{
+            anchor:'end',align:'end',offset:6,
+            color:ctx=>ctx.dataset.backgroundColor[ctx.dataIndex],
+            font:{size:11,weight:'700'},
+            formatter:(v)=>{ const pct = totCorte>0 ? (v/totCorte*100) : 0; return pct>=1 ? pct.toFixed(1)+'%' : '' }
+          }
+        }
+      },
+      plugins:[ChartDataLabels]
+    })
+  }
+
+  // ── CHART: Tipo Caña (sin SEMILLA)
+  if(window._chartCana)window._chartCana.destroy()
+  if(document.getElementById('chart-tipo-cana')){
+    const totCana = Object.values(canaMap).reduce((s,v)=>s+v,0)
+    // Colores específicos por tipo
+    const coloresCana = Object.keys(canaMap).map(k => {
+      const u = k.toUpperCase()
+      if(u.includes('QUEMADA')) return '#c0594d'
+      if(u.includes('CRUDA')) return '#e8a020'
+      return '#7d4ea8'
+    })
+    window._chartCana=new Chart(document.getElementById('chart-tipo-cana').getContext('2d'),{
+      type:'doughnut',
+      data:{labels:Object.keys(canaMap),datasets:[{data:Object.values(canaMap),backgroundColor:coloresCana,borderWidth:2,borderColor:'#fff'}]},
+      options:{responsive:true,maintainAspectRatio:false,cutout:'55%',
+        layout:{padding:{top:18,bottom:18,left:18,right:18}},
+        plugins:{
+          legend:{position:'bottom',labels:{font:{size:11},boxWidth:10}},
+          tooltip:{callbacks:{label:c=>{
+            const pct = totCana>0 ? (c.parsed/totCana*100).toFixed(1) : 0
+            return `${c.label}: ${fmt(c.parsed,0)} TM (${pct}%)`
+          }}},
+          datalabels:{
+            anchor:'end',align:'end',offset:6,
+            color:ctx=>ctx.dataset.backgroundColor[ctx.dataIndex],
+            font:{size:11,weight:'700'},
+            formatter:(v)=>{ const pct = totCana>0 ? (v/totCana*100) : 0; return pct>=1 ? pct.toFixed(1)+'%' : '' }
+          }
+        }
+      },
+      plugins:[ChartDataLabels]
+    })
+  }
+
+  // ── CHART: Semana (barras has + línea TCH dashed estilo)
+  const sems=Object.keys(semMap).map(Number).sort((a,b)=>a-b)
+  if(window._chartSem)window._chartSem.destroy()
+  if(document.getElementById('chart-semana')){
+    window._chartSem=new Chart(document.getElementById('chart-semana').getContext('2d'),{
+      type:'bar',
+      data:{labels:sems.map(s=>'S-'+s),datasets:[
+        {label:'Has Cos.',data:sems.map(s=>semMap[s].area),backgroundColor:'#3d7abf',yAxisID:'y',order:2,borderRadius:3},
+        {label:'TCH',data:sems.map(s=>+(semMap[s].area>0?semMap[s].tm/semMap[s].area:0).toFixed(2)),type:'line',
+          borderColor:'#e8a020',backgroundColor:'#fff',
+          borderDash:[6,4],borderWidth:2.5,
+          yAxisID:'y1',tension:0.35,
+          pointRadius:5,pointBackgroundColor:'#fff',pointBorderColor:'#e8a020',pointBorderWidth:2.5,
+          order:1
+        }
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{
+          legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,usePointStyle:true}},
+          datalabels:{display:false}
+        },
+        scales:{
+          y:{beginAtZero:true,ticks:{font:{size:10}}},
+          y1:{position:'right',grid:{display:false},ticks:{font:{size:10}},beginAtZero:true},
+          x:{ticks:{font:{size:9}}}
+        }}
+    })
+  }
+
+  // ── CHART: TCH por Variedad (top 15)
+  const varTop=Object.entries(varMap).filter(([,g])=>g.area>0).map(([v,g])=>({v,tch:g.tm/g.area})).sort((a,b)=>b.tch-a.tch).slice(0,15)
+  if(window._chartVar)window._chartVar.destroy()
+  if(document.getElementById('chart-variedad')){
+    window._chartVar=new Chart(document.getElementById('chart-variedad').getContext('2d'),{
+      type:'bar',
+      data:{labels:varTop.map(x=>x.v),datasets:[{label:'TCH',data:varTop.map(x=>+x.tch.toFixed(2)),backgroundColor:'#2d6e3e',borderRadius:3}]},
+      options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},datalabels:{display:false}},
+        scales:{x:{beginAtZero:true,ticks:{font:{size:10}}},y:{ticks:{font:{size:10}}}}}
+    })
+  }
+
+  // ── CHART: Gauge avance (TM Estim de planificacion + TM Cos de zag225)
+  if(window._chartGauge)window._chartGauge.destroy()
+  if(document.getElementById('chart-gauge-avance')){
+    const tmEstGauge = totEstPlan         // suma tm_re_estimado de planificacion
+    const tmCosGauge = tmC                // suma tm_cosechadas de zag225_lotes
+    const pendGauge = Math.max(0, tmEstGauge - tmCosGauge)
+    const avanceGauge = tmEstGauge>0 ? tmCosGauge/tmEstGauge*100 : 0
+    window._chartGauge=new Chart(document.getElementById('chart-gauge-avance').getContext('2d'),{
+      type:'doughnut',
+      data:{datasets:[{data:[tmCosGauge, pendGauge], backgroundColor:['#2d6e3e','#eef0f4'], borderWidth:0}]},
+      options:{responsive:true,maintainAspectRatio:false,cutout:'72%',
+        plugins:{legend:{display:false},
+        datalabels:{display:false},
+        tooltip:{callbacks:{label:c=>`${c.dataIndex===0?'Cosechado':'Pendiente'}: ${fmt(c.parsed,0)} TM`}}}}
+    })
+    document.getElementById('gauge-avance-texto').innerHTML =
+      `<div style="font-size:20px;font-weight:700;color:var(--brand-2);">${fmt(tmCosGauge,0)} TM</div>
+       <div style="font-size:11px;color:var(--texto-soft);">de ${fmt(tmEstGauge,0)} · ${fmt(avanceGauge,1)}%</div>`
+  }
+
+  // ── CHART: TM por Distrito (Est = planificacion, Cos = zag225)
+  if(window._chartTmDist)window._chartTmDist.destroy()
+  if(document.getElementById('chart-tm-distrito')){
+    // Unir distritos NORMALIZADOS (ambas fuentes ya están en formato '1','2',...)
+    const labs = [...new Set([...Object.keys(distEstPlan), ...Object.keys(distMap)])]
+      .filter(k=>k!=='N/D')
+      .sort((a,b)=>String(a).localeCompare(String(b),'es',{numeric:true}))
+    window._chartTmDist=new Chart(document.getElementById('chart-tm-distrito').getContext('2d'),{
+      type:'bar',
+      data:{labels:labs.map(l=>'D-'+l), datasets:[
+        {label:'Estimado', data:labs.map(k=>distEstPlan[k]||0), backgroundColor:'#1e3f7a',borderRadius:3},
+        {label:'Cosechado', data:labs.map(k=>(distMap[k]||{}).tmC||0), backgroundColor:'#3d7abf',borderRadius:3}
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{
+          legend:{position:'bottom',labels:{font:{size:10},boxWidth:10}},
+          datalabels:{display:false}
+        },
+        scales:{y:{beginAtZero:true,ticks:{font:{size:10}}},x:{ticks:{font:{size:10}}}}}
+    })
+  }
+
+  // ── CHART: TM por Frente
+  if(window._chartTmFte)window._chartTmFte.destroy()
+  if(document.getElementById('chart-tm-frente')){
+    // Excluir Fte 8 (anomalía) y cualquier frente fuera del catálogo 1-6
+    const ftL = Object.keys(fteMap).map(Number).filter(k=>k>=1 && k<=6).sort((a,b)=>a-b)
+    window._chartTmFte=new Chart(document.getElementById('chart-tm-frente').getContext('2d'),{
+      type:'bar',
+      data:{labels:ftL.map(k=>FRENTES[k]||('Fte '+k)), datasets:[
+        {label:'TM Cosechadas', data:ftL.map(k=>fteMap[k]), backgroundColor:'#e8a020', borderRadius:3}
+      ]},
+      options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+        layout:{padding:{right:60}},
+        plugins:{
+          legend:{display:false},
+          datalabels:{
+            display:true, anchor:'end', align:'end', offset:4,
+            color:'#a85d2c', font:{size:10,weight:'700'},
+            formatter:v=>fmt(v,0)
+          }
+        },
+        scales:{x:{beginAtZero:true,ticks:{font:{size:10}}},y:{ticks:{font:{size:9}}}}},
+      plugins:[ChartDataLabels]
+    })
+  }
+
+  // ── MATRIZ Variedad × Ciclo (TCH = tm/area) con formato condicional
+  const ciclos = [...ciclosSet].filter(c=>c!=null).sort((a,b)=>a-b)
+  // Calcular min/max TCH de las celdas para escalar gradiente
+  const tchValues = []
+  Object.values(vars).forEach(g => {
+    Object.values(g.ciclos).forEach(cx => {
+      if(cx.area>0) tchValues.push(cx.tm/cx.area)
+    })
+  })
+  const tchMin = tchValues.length ? Math.min(...tchValues) : 0
+  const tchMax = tchValues.length ? Math.max(...tchValues) : 1
+  const tchMid = (tchMin + tchMax) / 2
+
+  // Función para color condicional (rojo suave → blanco → verde suave)
+  function colorTCH(v){
+    if(v==null||isNaN(v)) return ''
+    // 0 = rojo, 0.5 = blanco, 1 = verde
+    const t = tchMax > tchMin ? (v - tchMin)/(tchMax - tchMin) : 0.5
+    if(t < 0.5){
+      // rojo suave a blanco
+      const k = t / 0.5  // 0..1
+      const r = 253, g = Math.round(232 + (255-232)*k), b = Math.round(232 + (255-232)*k)
+      return `background:rgb(${r},${g},${b})`
+    } else {
+      // blanco a verde suave
+      const k = (t - 0.5) / 0.5  // 0..1
+      const r = Math.round(255 - (255-230)*k), g = 255, b = Math.round(255 - (255-235)*k)
+      return `background:rgb(${r},${g},${b})`
+    }
+  }
+
+  const th = document.getElementById('thead-variedades')
+  th.innerHTML = `<th>Variedad</th>`
+    + ciclos.map(c=>`<th>${String(c).padStart(2,'0')}</th>`).join('')
+    + `<th>Total</th>`
+
+  const totCiclos = {}
+  ciclos.forEach(c => totCiclos[c] = {tm:0, area:0})
+  let totTm=0, totArea=0
+  let html = ''
+  Object.entries(vars).sort((a,b)=>b[1].tmTot-a[1].tmTot).forEach(([v,g]) => {
+    const total = g.areaTot>0?g.tmTot/g.areaTot:0
+    totTm += g.tmTot
+    totArea += g.areaTot
+    html += `<tr><td>${v}</td>`
+      + ciclos.map(c => {
+          const cx = g.ciclos[c]
+          if (!cx||cx.area===0) return `<td style="color:#ccc">—</td>`
+          totCiclos[c].tm += cx.tm
+          totCiclos[c].area += cx.area
+          const tchCel = cx.tm/cx.area
+          return `<td style="${colorTCH(tchCel)}">${fmt(tchCel)}</td>`
+        }).join('')
+      + `<td class="total-col">${fmt(total)}</td></tr>`
+  })
+  html += `<tr class="total-row"><td>TOTAL</td>`
+    + ciclos.map(c => {
+        const t = totCiclos[c]
+        return `<td>${t.area>0?fmt(t.tm/t.area):'—'}</td>`
+      }).join('')
+    + `<td>${totArea>0?fmt(totTm/totArea):'—'}</td></tr>`
+  document.getElementById('tbody-variedades').innerHTML = html
+}
+
+// ═══════════════════════════════════════════════════════
+// ANÁLISIS MADURANTES
+// ═══════════════════════════════════════════════════════
+async function cargarMadurantes() {
+  const cols = 'finca,finca_id,lote,area_cosechada,tm_cosechadas,tch_real,pol,brix,madurante,inhibidor,dosis_madurante,dosis_inhibidor,fecha_madurante,fecha_inhibidor,area_madurante,area_inhibidor,fin_cosecha'
+  // Paginar
+  let data = [], from=0, page=1000, error=null
+  while(true){
+    const r = await sb.from('zag225_lotes').select(cols).range(from, from+page-1)
+    if(r.error){ error = r.error; break }
+    if(!r.data || !r.data.length) break
+    data = data.concat(r.data)
+    if(r.data.length<page) break
+    from += page
+  }
+
+  if(error){
+    document.getElementById('kpi-madurantes').innerHTML =
+      `<div class="kpi-card rojo"><div class="kpi-label">Error</div><div class="kpi-valor" style="font-size:14px;">${error.message}</div>
+       <div class="kpi-sub">Verifica que la tabla tenga columnas de madurante</div></div>`
+    document.querySelector('#tabla-madurantes-prod tbody').innerHTML = '<tr><td colspan="8">No se pudieron cargar los datos</td></tr>'
+    document.querySelector('#tabla-madurantes-lotes tbody').innerHTML = '<tr><td colspan="11">No se pudieron cargar los datos</td></tr>'
+    return
+  }
+
+  const conMad = (data||[]).filter(r => r.madurante || r.inhibidor)
+
+  // ── KPIs
+  const totLotes = conMad.length
+  const totLotesMad = (data||[]).filter(r=>r.madurante).length
+  const totLotesInh = (data||[]).filter(r=>r.inhibidor).length
+  const totArea = conMad.reduce((s,r)=>s+(parseFloat(r.area_cosechada)||0),0)
+  const totTm = conMad.reduce((s,r)=>s+(parseFloat(r.tm_cosechadas)||0),0)
+  const tchProm = totArea>0 ? totTm/totArea : 0
+  const polTm = conMad.reduce((s,r)=>s+(parseFloat(r.pol)||0)*(parseFloat(r.tm_cosechadas)||0), 0)
+  const polProm = totTm>0 ? polTm/totTm : 0
+
+  document.getElementById('kpi-madurantes').innerHTML = `
+    <div class="kpi-card morado"><div class="kpi-label">Lotes con Aplicación</div><div class="kpi-valor">${totLotes}</div><div class="kpi-sub">Madurante o inhibidor</div></div>
+    <div class="kpi-card verde"><div class="kpi-label">Con Madurante</div><div class="kpi-valor">${totLotesMad}</div><div class="kpi-sub">Lotes</div></div>
+    <div class="kpi-card naranja"><div class="kpi-label">Con Inhibidor</div><div class="kpi-valor">${totLotesInh}</div><div class="kpi-sub">Lotes</div></div>
+    <div class="kpi-card"><div class="kpi-label">Área Total</div><div class="kpi-valor">${fmt(totArea,0)}</div><div class="kpi-sub">Hectáreas</div></div>
+    <div class="kpi-card"><div class="kpi-label">TM Cosechadas</div><div class="kpi-valor">${fmt(totTm,0)}</div><div class="kpi-sub">Toneladas</div></div>
+    <div class="kpi-card naranja"><div class="kpi-label">TCH Promedio</div><div class="kpi-valor">${fmt(tchProm)}</div><div class="kpi-sub">TM/HA</div></div>
+    <div class="kpi-card morado"><div class="kpi-label">POL Ponderado</div><div class="kpi-valor">${fmt(polProm)}</div><div class="kpi-sub">Sacarosa</div></div>
+  `
+
+  // ── Tabla por producto (madurantes + inhibidores combinados)
+  const productos = {}
+  ;(data||[]).forEach(r => {
+    if(r.madurante){
+      const k = `M-${r.madurante}`
+      if(!productos[k]) productos[k]={tipo:'Madurante',nombre:r.madurante,lotes:0,area:0,dosis:0,dosisCnt:0,tm:0,tmTotPol:0}
+      productos[k].lotes++
+      productos[k].area += parseFloat(r.area_madurante||r.area_cosechada)||0
+      if(r.dosis_madurante){productos[k].dosis += parseFloat(r.dosis_madurante); productos[k].dosisCnt++}
+      productos[k].tm += parseFloat(r.tm_cosechadas)||0
+      productos[k].tmTotPol += (parseFloat(r.pol)||0)*(parseFloat(r.tm_cosechadas)||0)
+    }
+    if(r.inhibidor){
+      const k = `I-${r.inhibidor}`
+      if(!productos[k]) productos[k]={tipo:'Inhibidor',nombre:r.inhibidor,lotes:0,area:0,dosis:0,dosisCnt:0,tm:0,tmTotPol:0}
+      productos[k].lotes++
+      productos[k].area += parseFloat(r.area_inhibidor||r.area_cosechada)||0
+      if(r.dosis_inhibidor){productos[k].dosis += parseFloat(r.dosis_inhibidor); productos[k].dosisCnt++}
+      productos[k].tm += parseFloat(r.tm_cosechadas)||0
+      productos[k].tmTotPol += (parseFloat(r.pol)||0)*(parseFloat(r.tm_cosechadas)||0)
+    }
+  })
+  let h1 = ''
+  Object.values(productos).sort((a,b)=>b.tm-a.tm).forEach(p => {
+    const dosisProm = p.dosisCnt>0 ? p.dosis/p.dosisCnt : 0
+    const tch = p.area>0 ? p.tm/p.area : 0
+    const polProm = p.tm>0 ? p.tmTotPol/p.tm : 0
+    h1 += `<tr>
+      <td>${p.nombre}</td>
+      <td><span class="${p.tipo==='Madurante'?'cel-positivo':'cel-neutro'}" style="padding:2px 8px;font-size:11px;">${p.tipo}</span></td>
+      <td>${p.lotes}</td>
+      <td>${fmt(p.area,2)}</td>
+      <td>${fmt(dosisProm,3)}</td>
+      <td>${fmt(p.tm,0)}</td>
+      <td style="font-weight:700">${fmt(tch)}</td>
+      <td>${fmt(polProm)}</td>
+    </tr>`
+  })
+  document.querySelector('#tabla-madurantes-prod tbody').innerHTML = h1 || '<tr><td colspan="8">Sin datos de aplicación de madurantes/inhibidores</td></tr>'
+
+  // ── Tabla detalle por lote
+  let h2 = ''
+  conMad.sort((a,b)=>(parseFloat(b.tch_real)||0)-(parseFloat(a.tch_real)||0)).forEach(r => {
+    const fechaMad = r.fecha_madurante
+    const fechaInh = r.fecha_inhibidor
+    const fechaCos = r.fin_cosecha
+    let dias = '—'
+    if(fechaCos){
+      const fAplic = fechaMad || fechaInh
+      if(fAplic){
+        const d1 = new Date(fAplic), d2 = new Date(fechaCos)
+        if(!isNaN(d1) && !isNaN(d2)) dias = Math.round((d2-d1)/(1000*60*60*24))
+      }
+    }
+    h2 += `<tr>
+      <td>${r.finca||'—'}</td>
+      <td>${r.lote||'—'}</td>
+      <td>${r.madurante||'—'}</td>
+      <td>${r.dosis_madurante?fmt(r.dosis_madurante,3):'—'}</td>
+      <td>${fmtFecha(r.fecha_madurante)}</td>
+      <td>${r.inhibidor||'—'}</td>
+      <td>${r.dosis_inhibidor?fmt(r.dosis_inhibidor,3):'—'}</td>
+      <td>${fmtFecha(r.fecha_inhibidor)}</td>
+      <td>${dias}</td>
+      <td style="font-weight:700">${fmt(r.tch_real)}</td>
+      <td>${fmt(r.pol)}</td>
+    </tr>`
+  })
+  document.querySelector('#tabla-madurantes-lotes tbody').innerHTML = h2 || '<tr><td colspan="11">Sin lotes con aplicación registrada</td></tr>'
+}
+
+async function cargarAvance() {
+  // ═══════════════════════════════════════════════════════
+  // LÓGICA replicando DAX de Power BI:
+  // - Base: planificacion (secuencia='PRODUCCIÓN'), una fila por codigo_plantio
+  // - Cosechado por lote: SUM peso_ton de zag212_boletas
+  //   WHERE cod_finca||cod_lote = codigo_plantio
+  //     AND origen_corte IN ('CAÑA QUEMADA','CAÑA CRUDA')
+  // - Status:
+  //     existe en zag225_lotes  → Cerrado
+  //     existe en zag212_boletas → Abierto
+  //     ninguno                  → Pendiente cosechar
+  // - Pendiente:
+  //     Pendiente → tm_re_estimado
+  //     Cerrado   → 0
+  //     Abierto   → max(0, tm_re_estimado - cosechado)
+  // ═══════════════════════════════════════════════════════
+
+  // Mostrar loading
+  document.getElementById('kpi-avance').innerHTML = '<div class="loading">Calculando avance...</div>'
+  document.querySelector('#tabla-avance tbody').innerHTML = '<tr><td colspan="6" class="loading">Procesando datos...</td></tr>'
+  document.querySelector('#tabla-avance-fincas tbody').innerHTML = '<tr><td colspan="8" class="loading">Procesando datos...</td></tr>'
+
+  // ── 1. Cargar PLANIFICACIÓN — paginado (filtramos PRODUCCIÓN en JS)
+  // Normalizar distrito: 'DISTRITO 1' → '1' para consistencia con zag225
+  function normDistrito(d){
+    if(d==null) return 'N/D'
+    const s = String(d).trim()
+    const m = s.match(/(\d+)/)
+    return m ? m[1] : s
+  }
+  // Helper: tomar el primer campo no nulo entre varios candidatos
+  function getField(r, ...names){
+    for(const n of names){
+      if(r[n]!=null && r[n]!=='') return r[n]
+    }
+    return null
+  }
+  let plan = [], from=0, page=1000
+  // Usamos '*' para no fallar si alguna columna se llama distinto.
+  // Filtramos PRODUCCIÓN en JS (la tilde rompe el filtro .eq de PostgREST en URL)
+  while(true){
+    const {data, error} = await sb.from('planificacion')
+      .select('*')
+      .range(from, from+page-1)
+    if(error){
+      console.error('Error cargando planificacion:', error)
+      break
+    }
+    if(!data||!data.length) break
+    const filtered = data.filter(r => {
+      const sec = (r.secuencia||'').toString().toUpperCase().trim()
+      return sec === 'PRODUCCIÓN' || sec === 'PRODUCCION'
+    })
+    plan = plan.concat(filtered)
+    if(data.length<page) break
+    from += page
+  }
+  console.log('Planificacion filas (PRODUCCIÓN):', plan.length)
+  if(plan.length>0){
+    console.log('Columnas planificacion:', Object.keys(plan[0]))
+    console.log('Planificacion muestra:', JSON.stringify(plan.slice(0,3).map(r=>({
+      codigo_plantio: r.codigo_plantio,
+      cod_finca: r.cod_finca,
+      cod_lote: r.cod_lote,
+      nombre_plantio: r.nombre_plantio,
+      distrito: r.distrito,
+      tm_re_estimado: r.tm_re_estimado
+    }))))
+  }
+
+  // ── 2. Cargar zag212_boletas — agrupar TM cosechadas por (cod_finca||cod_lote)
+  //     SOLO cuando origen_corte ∈ {CAÑA QUEMADA, CAÑA CRUDA} (case-insensitive, tolerando espacios)
+  // Helper: convertir cualquier valor a string limpio y mayúsculas (para match consistente)
+  function cleanCode(v){
+    if(v==null) return ''
+    if(typeof v === 'number'){
+      return Number.isInteger(v) ? String(v) : String(Math.round(v))
+    }
+    return String(v).trim().toUpperCase()
+  }
+  const cosechadoMap = {}     // codigo_plantio → TM
+  const enZag212Set = new Set()
+  from = 0
+  let zag212Sample = null
+  let zag212Total = 0
+  // Traemos sin filtro de origen_corte (se filtra en JS para tolerar variantes)
+  while(true){
+    const {data, error, count} = await sb.from('zag212_boletas')
+      .select('cod_finca,cod_lote,peso_ton,origen_corte', {count:'exact'})
+      .range(from, from+page-1)
+    if(error){ console.error('❌ Error zag212:', error); break }
+    if(from===0) console.log('Zag212 count total reportado por Supabase:', count)
+    if(!data||!data.length){
+      if(from===0) console.warn('⚠️ Zag212 NO devolvió datos en la primera página. Posible RLS bloqueando.')
+      break
+    }
+    zag212Total += data.length
+    if(!zag212Sample && data.length){
+      zag212Sample = data.slice(0,5).map(r=>({cf:r.cod_finca, cl:r.cod_lote, pt:r.peso_ton, oc:r.origen_corte}))
+      console.log('Zag212 muestra cruda:', JSON.stringify(zag212Sample))
+    }
+    data.forEach(r => {
+      const oc = (r.origen_corte||'').toString().toUpperCase().trim()
+      const ocOk = oc.includes('QUEMADA') || oc.includes('CRUDA')
+      if(!ocOk) return
+      const cf = cleanCode(r.cod_finca)
+      const cl = cleanCode(r.cod_lote)
+      if(!cf||!cl) return
+      const k = cf + cl
+      cosechadoMap[k] = (cosechadoMap[k]||0) + (parseFloat(r.peso_ton)||0)
+      enZag212Set.add(k)
+    })
+    if(data.length<page) break
+    from += page
+  }
+  console.log(`Zag212 filas leídas: ${zag212Total} | Únicos finca-lote: ${enZag212Set.size}`)
+  console.log('Zag212 ejemplos de keys:', [...enZag212Set].slice(0,10))
+
+  // ── 3. Cargar zag225_lotes — set de codigo_plantio cerrados
+  const enZag225Set = new Set()
+  from = 0
+  while(true){
+    const {data, error} = await sb.from('zag225_lotes')
+      .select('finca_id,lote')
+      .range(from, from+page-1)
+    if(error||!data||!data.length) break
+    data.forEach(r => {
+      const cf = cleanCode(r.finca_id)
+      const cl = cleanCode(r.lote)
+      if(!cf||!cl) return
+      enZag225Set.add(cf + cl)
+    })
+    if(data.length<page) break
+    from += page
+  }
+  console.log('Zag225 cod_plantio cerrados:', enZag225Set.size)
+  console.log('Zag225 ejemplos de keys:', [...enZag225Set].slice(0,5))
+
+  // ── 4. Calcular Status, Cosechado y Pendiente por lote, y agrupar
+  const dist = {}
+  const fincas = {}
+  let totEst=0, totCos=0, totPend=0, totDistSum=0, totDistCnt=0
+
+  let matchCount = 0  // diagnóstico
+  let noMatchCount = 0
+  let noMatchSamples = []
+
+  plan.forEach(r => {
+    // codigo_plantio ya viene listo (ej: "C051", "C0510") — usar tal cual
+    const k = cleanCode(r.codigo_plantio)
+    if(!k) return
+    const tmEst = parseFloat(getField(r,'tm_re_estimado','tm_reestimado','tm_re_estimadas','tm_reestimadas','tm_estimadas'))||0
+    const cosechado = cosechadoMap[k]||0
+
+    // Diagnóstico: contar matches
+    if(cosechado > 0) matchCount++
+    else if(enZag212Set.has(k) || enZag225Set.has(k)) {
+      // está en alguna pero no en cosechadoMap (raro pero posible si solo aparece en zag225)
+      matchCount++
+    } else {
+      noMatchCount++
+      if(noMatchSamples.length < 5) noMatchSamples.push(k)
+    }
+
+    let status, pend, cosechadoFinal
+    if(enZag225Set.has(k)){
+      status = 'Cerrado'
+      // Lotes cerrados: cosechado se topea al estimado (no mostrar >100%)
+      cosechadoFinal = Math.min(cosechado, tmEst)
+      pend = 0
+    } else if(enZag212Set.has(k)){
+      status = 'Abierto'
+      cosechadoFinal = cosechado
+      pend = Math.max(0, tmEst - cosechado)
+    } else {
+      status = 'Pendiente cosechar'
+      cosechadoFinal = 0
+      pend = tmEst
+    }
+
+    const distrito = normDistrito(r.distrito)
+    // Usar cod_finca directo si existe, sino derivarlo de codigo_plantio
+    // codigo_plantio "C051" → cod_finca "C05" (3 chars), "C0510" → "C05" (3 chars)
+    let fincaCod = cleanCode(r.cod_finca)
+    if(!fincaCod){
+      // Derivar de codigo_plantio: tomar la parte alfa+los primeros dígitos hasta longitud-1
+      // Asumiendo formato "C05" + lote (1+ dígitos): extraer prefijo no-último-bloque
+      const m = k.match(/^([A-Za-z]+\d{2,3})(\d{1,3})$/)
+      fincaCod = m ? m[1] : k.substring(0, Math.max(3, k.length-1))
+    }
+    if(!fincaCod) fincaCod = 'N/D'
+    const nombre = getField(r,'nombre_plantio','nombre_finca','finca','nombre') || fincaCod
+    const distancia = parseFloat(getField(r,'distancia','distancia_km'))||0
+
+    // ── DISTRITO
+    if(!dist[distrito]) dist[distrito] = {tmEst:0,tmCos:0,tmPend:0,distSum:0,distCnt:0,lotes:0}
+    dist[distrito].tmEst  += tmEst
+    dist[distrito].tmCos  += cosechadoFinal
+    dist[distrito].tmPend += pend
+    dist[distrito].lotes++
+    if(distancia>0){ dist[distrito].distSum += distancia; dist[distrito].distCnt++ }
+
+    // ── FINCA
+    if(!fincas[fincaCod]) fincas[fincaCod] = {distrito,nombre,tmEst:0,tmCos:0,tmPend:0,distSum:0,distCnt:0,lotes:0}
+    fincas[fincaCod].tmEst  += tmEst
+    fincas[fincaCod].tmCos  += cosechadoFinal
+    fincas[fincaCod].tmPend += pend
+    fincas[fincaCod].lotes++
+    if(distancia>0){ fincas[fincaCod].distSum += distancia; fincas[fincaCod].distCnt++ }
+
+    // ── TOTALES
+    totEst  += tmEst
+    totCos  += cosechadoFinal
+    totPend += pend
+    if(distancia>0){ totDistSum += distancia; totDistCnt++ }
+  })
+
+  const avancePct = totEst>0 ? totCos/totEst*100 : 0
+  const totDistProm = totDistCnt>0 ? totDistSum/totDistCnt : 0
+
+  console.log(`Match diagnóstico — Plan: ${plan.length} | Match: ${matchCount} | Sin match: ${noMatchCount}`)
+  console.log('Ejemplos plan SIN match en zag212/zag225:', noMatchSamples)
+  // Log comparativo: primeras keys de plan vs zag212 para ver desalineación de formato
+  const planKeys = plan.slice(0,5).map(r=>cleanCode(r.codigo_plantio))
+  console.log('Keys PLAN (primeras 5):    ', JSON.stringify(planKeys))
+  console.log('Keys ZAG212 (primeras 10): ', JSON.stringify([...enZag212Set].slice(0,10)))
+  console.log('Keys ZAG225 (primeras 10): ', JSON.stringify([...enZag225Set].slice(0,10)))
+  console.log(`TOTALES — Estimado: ${fmt(totEst,0)} | Cosechado: ${fmt(totCos,0)} | Pendiente: ${fmt(totPend,0)}`)
+
+  // ── KPIs
+  document.getElementById('kpi-avance').innerHTML = `
+    <div class="kpi-card verde"><div class="kpi-label">TM Cosechado</div><div class="kpi-valor">${fmt(totCos,0)}</div>
+      <div class="progress-wrap"><div class="progress-bar" style="width:${Math.min(avancePct,100).toFixed(1)}%"></div></div>
+      <div class="kpi-sub">${fmt(avancePct,1)}% del estimado</div></div>
+    <div class="kpi-card"><div class="kpi-label">TM Estimado</div><div class="kpi-valor">${fmt(totEst,0)}</div><div class="kpi-sub">Plan re-estimado</div></div>
+    <div class="kpi-card rojo"><div class="kpi-label">TM Pendiente</div><div class="kpi-valor">${fmt(totPend,0)}</div><div class="kpi-sub">Por cosechar</div></div>
+    <div class="kpi-card naranja"><div class="kpi-label">% Avance</div><div class="kpi-valor">${fmt(avancePct,1)}%</div><div class="kpi-sub">Cosechado / Estimado</div></div>
+    <div class="kpi-card"><div class="kpi-label">Lotes Total</div><div class="kpi-valor">${plan.length}</div><div class="kpi-sub">En planificación</div></div>
+  `
+
+  // ── TABLA POR DISTRITO
+  let h1=''
+  Object.keys(dist).sort((a,b)=>String(a).localeCompare(String(b),'es',{numeric:true})).forEach(k=>{
+    const g = dist[k]
+    const av = g.tmEst>0 ? g.tmCos/g.tmEst*100 : 0
+    const distProm = g.distCnt>0 ? g.distSum/g.distCnt : 0
+    h1 += `<tr>
+      <td style="font-weight:700">${k==='N/D'?'N/D':'Distrito '+k}</td>
+      <td>${fmt(g.tmEst,0)}</td>
+      <td>${fmt(g.tmCos,0)}</td>
+      <td>${fmt(g.tmPend,0)}</td>
+      <td>${fmt(distProm,2)} km</td>
+      <td><span class="${av>=90?'cel-positivo':av>=70?'cel-neutro':'cel-negativo'}">${fmt(av,1)}%</span></td>
+    </tr>`
+  })
+  h1 += `<tr class="total-row"><td>Total</td><td>${fmt(totEst,0)}</td><td>${fmt(totCos,0)}</td><td>${fmt(totPend,0)}</td><td>${fmt(totDistProm,2)} km</td><td>${fmt(avancePct,1)}%</td></tr>`
+  document.querySelector('#tabla-avance tbody').innerHTML = h1 || '<tr><td colspan="6">Sin datos</td></tr>'
+
+  // ── TABLA POR FINCA
+  let h2=''
+  Object.entries(fincas)
+    .sort((a,b)=>(b[1].tmEst-a[1].tmEst))
+    .forEach(([cod,g])=>{
+      const av = g.tmEst>0 ? g.tmCos/g.tmEst*100 : 0
+      const distProm = g.distCnt>0 ? g.distSum/g.distCnt : 0
+      h2 += `<tr>
+        <td style="font-weight:600">${g.distrito && g.distrito!=='N/D' ? 'Distrito '+g.distrito : '—'}</td>
+        <td style="font-weight:600">${cod}</td>
+        <td>${g.nombre||'—'}</td>
+        <td>${fmt(g.tmEst,0)}</td>
+        <td>${fmt(g.tmCos,0)}</td>
+        <td>${fmt(g.tmPend,0)}</td>
+        <td>${fmt(distProm,2)} km</td>
+        <td><span class="${av>=90?'cel-positivo':av>=70?'cel-neutro':'cel-negativo'}">${fmt(av,1)}%</span></td>
+      </tr>`
+    })
+  h2 += `<tr class="total-row"><td colspan="3">TOTAL</td><td>${fmt(totEst,0)}</td><td>${fmt(totCos,0)}</td><td>${fmt(totPend,0)}</td><td>${fmt(totDistProm,2)} km</td><td>${fmt(avancePct,1)}%</td></tr>`
+  document.querySelector('#tabla-avance-fincas tbody').innerHTML = h2 || '<tr><td colspan="8">Sin datos</td></tr>'
+}
+
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim()
+  const pass  = document.getElementById('login-pass').value
+  const btn   = document.getElementById('login-btn')
+  const err   = document.getElementById('login-error')
+  if (!email || !pass) { err.textContent = 'Ingresa tu correo y contraseña.'; return }
+  btn.disabled = true
+  btn.textContent = 'Ingresando...'
+  err.textContent = ''
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: pass })
+  if (error) {
+    err.textContent = 'Credenciales incorrectas. Intenta de nuevo.'
+    btn.disabled = false
+    btn.textContent = 'INGRESAR'
+  } else {
+    mostrarApp()
+  }
+}
+
+async function doLogout() {
+  await sb.auth.signOut()
+  document.getElementById('pag-login').classList.remove('oculto')
+  document.getElementById('login-email').value = ''
+  document.getElementById('login-pass').value = ''
+  document.getElementById('login-btn').disabled = false
+  document.getElementById('login-btn').textContent = 'INGRESAR'
+}
+
+async function mostrarApp() {
+  // Primero salir del login y mostrar el menú — pase lo que pase con las cargas
+  document.getElementById('pag-login').classList.add('oculto')
+  irA('pag-menu')
+  const hoy = new Date()
+  const _fh=document.getElementById('fecha-header'); if(_fh) _fh.textContent = hoy.toLocaleDateString('es-HN',{weekday:'long',year:'numeric',month:'long',day:'numeric'})
+  // Cargas auxiliares (no bloquean la entrada al sistema)
+  try { await cargarSemanas() } catch(e){ console.warn('cargarSemanas falló:', e) }
+  try { await cargarFincasSelect() } catch(e){ console.warn('cargarFincasSelect falló:', e) }
+}
+
+async function init() {
+  const { data: { session } } = await sb.auth.getSession()
+  if (session) {
+    mostrarApp()
+  }
+}
+
+init()
+</script>
+</body>
+</html>
