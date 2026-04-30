@@ -6,6 +6,7 @@
 <title>Rendimientos Agrícolas | Chumbagua</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -467,6 +468,64 @@
   .login-error { color:var(--rojo); font-size:13px; margin-top:10px; min-height:18px; }
   .logout-btn { background:none; border:1px solid #ccc; border-radius:4px; padding:4px 12px; font-size:12px; cursor:pointer; color:#666; }
   .logout-btn:hover { background:#f0f0f0; }
+
+  /* ── CHARTS COMPACTOS (Resumen) ── */
+  .charts-grid{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+    gap:14px;margin-top:6px;margin-bottom:14px;
+  }
+  .charts-grid.tres{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+  .chart-box{
+    background:white;border:1px solid var(--gris-borde);border-radius:10px;
+    padding:14px 14px 10px;box-shadow:0 1px 3px rgba(0,0,0,0.04);
+    display:flex;flex-direction:column;
+  }
+  .chart-title{
+    font-size:11px;font-weight:700;color:var(--brand);letter-spacing:0.6px;
+    text-transform:uppercase;margin-bottom:8px;padding-left:8px;
+    border-left:3px solid var(--brand);
+  }
+  .chart-canvas-wrap{
+    position:relative;height:220px;width:100%;
+  }
+  .chart-canvas-wrap.alta{height:280px}
+  .chart-canvas-wrap.baja{height:160px}
+  .chart-box canvas{max-height:100%}
+
+  /* ── MATRIZ VARIEDADES × CICLO compacta con formato condicional ── */
+  .matriz-wrap{
+    overflow-x:auto;border-radius:10px;border:1px solid var(--gris-borde);
+    background:white;margin-bottom:14px;
+  }
+  table.matriz-var{font-size:12px;width:100%;border-collapse:collapse}
+  table.matriz-var thead tr{
+    background:linear-gradient(90deg,var(--brand-soft),var(--brand-2-soft));
+    border-bottom:2px solid var(--brand);
+  }
+  table.matriz-var thead th{
+    font-size:10.5px;font-weight:700;padding:7px 8px;text-align:center;
+    color:var(--brand);letter-spacing:0.4px;text-transform:uppercase;
+  }
+  table.matriz-var thead th:first-child{text-align:left;padding-left:12px}
+  table.matriz-var tbody td{
+    padding:5px 8px;text-align:center;font-size:11.5px;font-weight:500;
+    font-variant-numeric:tabular-nums;border-bottom:1px solid #f0f2f5;
+  }
+  table.matriz-var tbody td:first-child{
+    text-align:left;font-weight:600;padding-left:12px;background:white !important;
+    color:var(--texto);
+  }
+  table.matriz-var tr.total-row td{
+    background:#eef2f8 !important;color:var(--brand);
+    font-weight:700;border-top:2px solid var(--brand);
+  }
+  table.matriz-var tr.total-row td:first-child{
+    color:var(--brand);font-weight:800;background:#eef2f8 !important;
+  }
+  /* total columna lateral */
+  table.matriz-var td.total-col{
+    background:var(--brand-bg) !important;font-weight:700;color:var(--brand);
+  }
 </style>
 </head>
 <body>
@@ -536,12 +595,6 @@
         <div class="menu-btn-icon">📑</div>
         <div class="menu-btn-titulo">Rendimiento por Lote</div>
         <span class="sub">Detalle por lote</span>
-        <span class="menu-btn-arrow">Abrir módulo</span>
-      </button>
-      <button class="menu-btn naranja" onclick="irA('pag-variedades')">
-        <div class="menu-btn-icon">🧬</div>
-        <div class="menu-btn-titulo">Comportamiento Variedades</div>
-        <span class="sub">TCH por variedad y ciclo</span>
         <span class="menu-btn-arrow">Abrir módulo</span>
       </button>
       <button class="menu-btn naranja" onclick="irA('pag-avance')">
@@ -675,9 +728,62 @@
 
 <!-- RESUMEN -->
 <div id="pag-resumen" class="page">
-  
+
   <div class="kpi-grid" id="kpi-resumen">
     <div class="loading">Cargando...</div>
+  </div>
+
+  <div class="seccion-titulo">COMPOSICIÓN DE LA COSECHA</div>
+  <div class="charts-grid">
+    <div class="chart-box">
+      <div class="chart-title">RENDIMIENTOS POR RIEGO</div>
+      <div class="chart-canvas-wrap"><canvas id="chart-riego"></canvas></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-title">% TIPO DE CORTE</div>
+      <div class="chart-canvas-wrap"><canvas id="chart-tipo-corte"></canvas></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-title">% TIPO DE CAÑA</div>
+      <div class="chart-canvas-wrap"><canvas id="chart-tipo-cana"></canvas></div>
+    </div>
+  </div>
+
+  <div class="seccion-titulo">EVOLUCIÓN SEMANAL Y POR VARIEDAD</div>
+  <div class="charts-grid">
+    <div class="chart-box" style="grid-column:span 2;min-width:0">
+      <div class="chart-title">RENDIMIENTOS POR SEMANA</div>
+      <div class="chart-canvas-wrap"><canvas id="chart-semana"></canvas></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-title">TCH POR VARIEDAD (TOP 15)</div>
+      <div class="chart-canvas-wrap alta"><canvas id="chart-variedad"></canvas></div>
+    </div>
+  </div>
+
+  <div class="seccion-titulo">AVANCE Y DISTRIBUCIÓN</div>
+  <div class="charts-grid">
+    <div class="chart-box">
+      <div class="chart-title">AVANCE DE COSECHA</div>
+      <div class="chart-canvas-wrap"><canvas id="chart-gauge-avance"></canvas></div>
+      <div id="gauge-avance-texto" style="text-align:center;margin-top:8px;font-size:12px;color:var(--texto-soft);">—</div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-title">TM COSECHADAS POR DISTRITO</div>
+      <div class="chart-canvas-wrap"><canvas id="chart-tm-distrito"></canvas></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-title">TM COSECHADAS POR FRENTE</div>
+      <div class="chart-canvas-wrap"><canvas id="chart-tm-frente"></canvas></div>
+    </div>
+  </div>
+
+  <div class="seccion-titulo">TCH POR VARIEDAD Y CICLO (TM/HA)</div>
+  <div class="matriz-wrap">
+    <table class="matriz-var" id="tabla-variedades">
+      <thead><tr id="thead-variedades"></tr></thead>
+      <tbody id="tbody-variedades"><tr><td class="loading">Cargando...</td></tr></tbody>
+    </table>
   </div>
 
   </div>
@@ -705,65 +811,6 @@
     </table>
   </div>
   </div>
-
-<!-- VARIEDADES -->
-<div id="pag-variedades" class="page">
-
-  <!-- Tabla matriz de comportamiento por ciclo -->
-  <div class="seccion-titulo">COMPORTAMIENTO DE VARIEDADES POR CICLO</div>
-  <div class="tabla-wrap">
-    <table id="tabla-variedades">
-      <thead><tr id="thead-variedades"></tr></thead>
-      <tbody id="tbody-variedades"><tr><td class="loading">Cargando...</td></tr></tbody>
-    </table>
-  </div>
-
-  <!-- Gráficos: Riego + Tipo Corte + Tipo Caña -->
-  <div class="grid-3">
-    <div class="chart-box">
-      <div class="chart-title">RENDIMIENTOS POR RIEGO</div>
-      <canvas id="chart-riego" height="200"></canvas>
-    </div>
-    <div class="chart-box">
-      <div class="chart-title">% TIPO DE CORTE</div>
-      <canvas id="chart-tipo-corte" height="200"></canvas>
-    </div>
-    <div class="chart-box">
-      <div class="chart-title">% TIPO DE CAÑA</div>
-      <canvas id="chart-tipo-cana" height="200"></canvas>
-    </div>
-  </div>
-
-  <!-- Gráfico de rendimientos por semana -->
-  <div class="chart-box" style="margin-top:14px;">
-    <div class="chart-title">RENDIMIENTOS POR SEMANA</div>
-    <canvas id="chart-semana" height="80"></canvas>
-  </div>
-
-  <!-- Gráfico TCH por variedad -->
-  <div class="chart-box" style="margin-top:14px;">
-    <div class="chart-title">TCH POR VARIEDAD</div>
-    <canvas id="chart-variedad" height="100"></canvas>
-  </div>
-
-  <!-- Gauge avance + distritos + frentes (estilo imagen 4) -->
-  <div class="grid-3" style="margin-top:14px;">
-    <div class="chart-box">
-      <div class="chart-title">AVANCE DE COSECHA</div>
-      <canvas id="chart-gauge-avance" height="180"></canvas>
-      <div id="gauge-avance-texto" style="text-align:center;margin-top:10px;font-size:13px;color:var(--texto-soft);">—</div>
-    </div>
-    <div class="chart-box">
-      <div class="chart-title">TM COSECHADAS POR DISTRITO</div>
-      <canvas id="chart-tm-distrito" height="180"></canvas>
-    </div>
-    <div class="chart-box">
-      <div class="chart-title">TM COSECHADAS POR FRENTE</div>
-      <canvas id="chart-tm-frente" height="180"></canvas>
-    </div>
-  </div>
-
-</div>
 
 <!-- ANÁLISIS MADURANTES -->
 <div id="pag-madurantes" class="page">
@@ -856,6 +903,11 @@ const SUPABASE_URL = 'https://dhbyjqmdcezdiucxeqpp.supabase.co'
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRoYnlqcW1kY2V6ZGl1Y3hlcXBwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMzI2NjEsImV4cCI6MjA5MjcwODY2MX0.TwRDctpOab02EsGo6q6-Zx0vtdLPlxn_mhowxu93EF0'
 const sb = supabase.createClient ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
+// Desregistrar el plugin de datalabels globalmente — se activará solo donde se pase explícitamente
+if(typeof Chart !== 'undefined' && typeof ChartDataLabels !== 'undefined'){
+  Chart.unregister(ChartDataLabels)
+}
+
 
 const fmt = (n, dec=2) => n == null ? '—' : Number(n).toLocaleString('es-HN', {minimumFractionDigits:dec, maximumFractionDigits:dec})
 const fmtFecha = d => d ? new Date(d+'T00:00:00').toLocaleDateString('es-HN') : '—'
@@ -870,12 +922,11 @@ function celDif(val) {
 // Mapa de títulos por página
 const TITULOS_PAGS = {
   'pag-menu':       ['',                            ''],
-  'pag-resumen':    ['Resumen Rendimientos',        'KPIs generales · Zafra 2025–2026'],
+  'pag-resumen':    ['Resumen Rendimientos',        'KPIs · Composición · Variedades · Zafra 2025–2026'],
   'pag-fincas':     ['Rendimiento por Finca',       'TCH por finca con comparativo histórico'],
   'pag-distrito':   ['Distritos & Propietario',     'Por tenencia y distrito'],
   'pag-lotes':      ['Rendimiento por Lote',        'Detalle por lote'],
-  'pag-variedades': ['Comportamiento Variedades',   'TCH por variedad y ciclo'],
-  'pag-avance':     ['Avance de Cosecha',           'Por distrito · Plan vs Real'],
+  'pag-avance':     ['Avance de Cosecha',           'Plan vs Real · Lógica planificación'],
   'pag-madurantes': ['Análisis Madurantes',         'Aplicación de madurantes e inhibidores']
 }
 
@@ -887,7 +938,6 @@ function irA(id) {
   if (id === 'pag-fincas') cargarFincas()
   if (id === 'pag-resumen') cargarResumen()
   if (id === 'pag-lotes') cargarLotes()
-  if (id === 'pag-variedades') cargarVariedades()
   if (id === 'pag-avance') cargarAvance()
   if (id === 'pag-madurantes') cargarMadurantes()
 
@@ -1221,11 +1271,11 @@ async function cargarLotes() {
 }
 
 async function cargarResumen() {
-  // ── Datos de zag225_lotes (paginado para traer TODO, no solo 1000)
+  // ── Datos de zag225_lotes (paginado para traer TODO)
   let allRows = [], from=0, page=1000
   while(true){
     const {data: rows, error} = await sb.from('zag225_lotes')
-      .select('area_cosechada,area_total,tm_cosechadas,tm_estimadas,tch_real,edad,pol,brix,pureza,humedad,tipo_riego,semana,variedad')
+      .select('area_cosechada,area_total,tm_cosechadas,tm_estimadas,tch_real,edad,pol,brix,pureza,humedad,tipo_riego,semana,variedad,ciclo,distrito')
       .range(from, from+page-1)
     if(error||!rows||!rows.length) break
     allRows = allRows.concat(rows)
@@ -1234,23 +1284,94 @@ async function cargarResumen() {
   }
   console.log('zag225_lotes filas cargadas:', allRows.length)
 
-  let area=0,areaT=0,tmC=0,tmE=0,edTm=0,polTm=0,brixTm=0,purTm=0,humTm=0
+  let area=0,areaT=0,tmC=0,tmE=0,edTm=0,polTm=0,brixTm=0,purTm=0,humTm=0,cicloTm=0
   const riegoMap={}, semMap={}, varMap={}
+  // Para matriz var × ciclo
+  const ciclosSet = new Set()
+  const vars = {}
+  // Para TM por distrito
+  const distMap = {}
+
+  // Normalizar distrito: planificacion='DISTRITO 1' → '1', zag225='1' → '1'
+  function normDistrito(d){
+    if(d==null) return 'N/D'
+    const s = String(d).trim()
+    const m = s.match(/(\d+)/)
+    return m ? m[1] : s
+  }
+
   allRows.forEach(r => {
-    area  += parseFloat(r.area_cosechada)||0
-    areaT += parseFloat(r.area_total)||0
-    tmC   += parseFloat(r.tm_cosechadas)||0
-    tmE   += parseFloat(r.tm_estimadas)||0
-    // Ponderaciones por TM cosechada (fórmula: SUM(valor × tm_cosechada) / SUM(tm_cosechada))
-    edTm  += (parseFloat(r.edad)||0)*(parseFloat(r.tm_cosechadas)||0)
-    polTm += (parseFloat(r.pol)||0)*(parseFloat(r.tm_cosechadas)||0)
-    brixTm+= (parseFloat(r.brix)||0)*(parseFloat(r.tm_cosechadas)||0)
-    purTm += (parseFloat(r.pureza)||0)*(parseFloat(r.tm_cosechadas)||0)
-    humTm += (parseFloat(r.humedad)||0)*(parseFloat(r.tm_cosechadas)||0)
-    if(r.tipo_riego){if(!riegoMap[r.tipo_riego])riegoMap[r.tipo_riego]={area:0,tm:0};riegoMap[r.tipo_riego].area+=parseFloat(r.area_cosechada)||0;riegoMap[r.tipo_riego].tm+=parseFloat(r.tm_cosechadas)||0}
-    if(r.semana){if(!semMap[r.semana])semMap[r.semana]={area:0,tm:0};semMap[r.semana].area+=parseFloat(r.area_cosechada)||0;semMap[r.semana].tm+=parseFloat(r.tm_cosechadas)||0}
-    if(r.variedad){if(!varMap[r.variedad])varMap[r.variedad]={area:0,tm:0};varMap[r.variedad].area+=parseFloat(r.area_cosechada)||0;varMap[r.variedad].tm+=parseFloat(r.tm_cosechadas)||0}
+    const ac = parseFloat(r.area_cosechada)||0
+    const at = parseFloat(r.area_total)||0
+    const tc = parseFloat(r.tm_cosechadas)||0
+    const te = parseFloat(r.tm_estimadas)||0
+    area  += ac
+    areaT += at
+    tmC   += tc
+    tmE   += te
+    edTm  += (parseFloat(r.edad)||0)*tc
+    polTm += (parseFloat(r.pol)||0)*tc
+    brixTm+= (parseFloat(r.brix)||0)*tc
+    purTm += (parseFloat(r.pureza)||0)*tc
+    humTm += (parseFloat(r.humedad)||0)*tc
+    cicloTm += (parseFloat(r.ciclo)||0)*tc
+    if(r.tipo_riego){
+      if(!riegoMap[r.tipo_riego])riegoMap[r.tipo_riego]={area:0,tm:0}
+      riegoMap[r.tipo_riego].area+=ac
+      riegoMap[r.tipo_riego].tm+=tc
+    }
+    if(r.semana){
+      if(!semMap[r.semana])semMap[r.semana]={area:0,tm:0}
+      semMap[r.semana].area+=ac
+      semMap[r.semana].tm+=tc
+    }
+    if(r.variedad){
+      if(!varMap[r.variedad])varMap[r.variedad]={area:0,tm:0}
+      varMap[r.variedad].area+=ac
+      varMap[r.variedad].tm+=tc
+      if(!vars[r.variedad]) vars[r.variedad]={tmTot:0,areaTot:0,ciclos:{}}
+      vars[r.variedad].tmTot+=tc
+      vars[r.variedad].areaTot+=ac
+      if(r.ciclo!=null){
+        ciclosSet.add(r.ciclo)
+        const k=r.ciclo
+        if(!vars[r.variedad].ciclos[k]) vars[r.variedad].ciclos[k]={tm:0,area:0}
+        vars[r.variedad].ciclos[k].tm+=tc
+        vars[r.variedad].ciclos[k].area+=ac
+      }
+    }
+    if(r.distrito!=null){
+      const k=normDistrito(r.distrito)
+      if(!distMap[k]) distMap[k]={tmC:0,tmE:0}
+      distMap[k].tmC+=tc
+      distMap[k].tmE+=te
+    }
   })
+
+  // ── Cargar planificacion (tm_re_estimado por distrito) — usado en Gauge y TM Distrito
+  // Para reflejar estimado real de planificación (no solo lotes ya en zag225)
+  let totEstPlan = 0
+  const distEstPlan = {}
+  let pf = 0
+  while(true){
+    // Traer todo y filtrar PRODUCCIÓN en JS para evitar problemas de URL-encoding con la tilde
+    const {data: rowsP, error: errP} = await sb.from('planificacion')
+      .select('distrito,tm_re_estimado,secuencia')
+      .range(pf, pf+page-1)
+    if(errP||!rowsP||!rowsP.length) break
+    rowsP.forEach(r => {
+      const sec = (r.secuencia||'').toString().toUpperCase().trim()
+      // Aceptar PRODUCCIÓN o PRODUCCION (con o sin tilde)
+      if(sec !== 'PRODUCCIÓN' && sec !== 'PRODUCCION') return
+      const v = parseFloat(r.tm_re_estimado)||0
+      totEstPlan += v
+      const k = normDistrito(r.distrito)
+      distEstPlan[k] = (distEstPlan[k]||0) + v
+    })
+    if(rowsP.length<page) break
+    pf += page
+  }
+  console.log('Planificacion estim totales:', totEstPlan, 'distritos:', Object.keys(distEstPlan))
 
   // Tipo corte desde v_cosecha_resumen
   const { data: z212 } = await sb.from('v_cosecha_resumen').select('fte_corte,tm_cosechado')
@@ -1259,18 +1380,25 @@ async function cargarResumen() {
     const t = (r.fte_corte<=3||r.fte_corte===6)?'MANUAL':'MECANIZADO'
     corteMap[t]=(corteMap[t]||0)+(parseFloat(r.tm_cosechado)||0)
   })
-  // Tipo caña: quemada vs cruda via origen_cosecha de zag212
+  // Tipo caña: quemada vs cruda (excluyendo SEMILLA)
   const { data: z212b } = await sb.from('v_cosecha_resumen').select('origen_corte,tm_cosechado')
   const canaMap={}
   ;(z212b||[]).forEach(r => {
     const k=r.origen_corte||'N/D'
+    // Excluir todo lo que sea semilla
+    if(k.toUpperCase().includes('SEMILLA')) return
     canaMap[k]=(canaMap[k]||0)+(parseFloat(r.tm_cosechado)||0)
   })
+  // Frentes desde v_cosecha_resumen
+  const { data: fts } = await sb.from('v_cosecha_resumen').select('fte_corte,tm_cosechado')
+  const FRENTES = {1:'1 - Interno Manual',2:'2 - Externo Manual',3:'3 - Camiones Alq.',4:'4 - Interno Mecanizado',5:'5 - Externo Mecanizado',6:'6 - Verde Manual'}
+  const fteMap={}
+  ;(fts||[]).forEach(r=>{
+    const k=r.fte_corte; if(!k)return
+    fteMap[k]=(fteMap[k]||0)+(parseFloat(r.tm_cosechado)||0)
+  })
 
-  // CÁLCULOS:
-  // - TM Cosechado, TM Estimado: suma directa de zag225_lotes
-  // - TCH Real = TM cosechada / Área cosechada
-  // - Pol/Brix/Pureza/Humedad/Edad = SUM(valor × tm_cosechada) / SUM(tm_cosechada)
+  // ── KPIs
   const tch  = area>0 ? tmC/area : 0
   const tche = areaT>0 ? tmE/areaT : 0
   const edad = tmC>0 ? edTm/tmC : 0
@@ -1278,71 +1406,273 @@ async function cargarResumen() {
   const brix = tmC>0 ? brixTm/tmC : 0
   const pur  = tmC>0 ? purTm/tmC : 0
   const hum  = tmC>0 ? humTm/tmC : 0
-  const tmPend = Math.max(0, tmE - tmC)
+  const ciclo = tmC>0 ? cicloTm/tmC : 0
+  // Diferencia TM (Cos - Est): positivo = bueno (verde), negativo = malo (rojo)
+  const difTM = tmC - tmE
+  const difTCH = tch - tche
   const avance = tmE>0 ? tmC/tmE*100 : 0
+  // Estilos para Diferencia
+  const cssDifTM  = difTM  >= 0 ? 'verde' : 'rojo'
+  const cssDifTCH = difTCH >= 0 ? 'verde' : 'rojo'
+  const sgnTM  = difTM  >= 0 ? '+' : ''
+  const sgnTCH = difTCH >= 0 ? '+' : ''
 
   document.getElementById('kpi-resumen').innerHTML = `
     <div class="kpi-card verde"><div class="kpi-label">TM Cosechado</div><div class="kpi-valor">${fmt(tmC,0)}</div>
       <div class="progress-wrap"><div class="progress-bar" style="width:${Math.min(avance,100).toFixed(1)}%"></div></div>
       <div class="kpi-sub">${fmt(avance,1)}% del estimado</div></div>
     <div class="kpi-card"><div class="kpi-label">TM Estimado</div><div class="kpi-valor">${fmt(tmE,0)}</div><div class="kpi-sub">Toneladas de caña</div></div>
-    <div class="kpi-card rojo"><div class="kpi-label">TM Pendiente</div><div class="kpi-valor">${fmt(tmPend,0)}</div><div class="kpi-sub">Toneladas de caña</div></div>
-    <div class="kpi-card naranja"><div class="kpi-label">TCH Real</div><div class="kpi-valor">${fmt(tch)}</div><div class="kpi-sub">TM/HA cosechadas</div></div>
+    <div class="kpi-card ${cssDifTM}"><div class="kpi-label">Diferencia TM</div><div class="kpi-valor">${sgnTM}${fmt(difTM,0)}</div><div class="kpi-sub">Cosechado − Estimado</div></div>
+    <div class="kpi-card naranja"><div class="kpi-label">TCH Real</div><div class="kpi-valor">${fmt(tch)}</div>
+      <div class="kpi-sub">TM/HA · POL ${fmt(pol)}</div></div>
     <div class="kpi-card"><div class="kpi-label">TCH Estimado</div><div class="kpi-valor">${fmt(tche)}</div><div class="kpi-sub">TM/HA proyectado</div></div>
+    <div class="kpi-card ${cssDifTCH}"><div class="kpi-label">Diferencia TCH</div><div class="kpi-valor">${sgnTCH}${fmt(difTCH,2)}</div><div class="kpi-sub">Real − Estimado</div></div>
     <div class="kpi-card"><div class="kpi-label">Área Cosechada</div><div class="kpi-valor">${fmt(area,0)}</div><div class="kpi-sub">Hectáreas</div></div>
-    <div class="kpi-card morado"><div class="kpi-label">POL Ponderado</div><div class="kpi-valor">${fmt(pol)}</div><div class="kpi-sub">Sacarosa promedio</div></div>
     <div class="kpi-card morado"><div class="kpi-label">Brix Ponderado</div><div class="kpi-valor">${fmt(brix)}</div><div class="kpi-sub">Sólidos solubles</div></div>
     <div class="kpi-card morado"><div class="kpi-label">Pureza Ponderada</div><div class="kpi-valor">${fmt(pur)}</div><div class="kpi-sub">% sacarosa/brix</div></div>
     <div class="kpi-card cyan"><div class="kpi-label">Humedad Ponderada</div><div class="kpi-valor">${fmt(hum)}</div><div class="kpi-sub">% en caña</div></div>
     <div class="kpi-card cyan"><div class="kpi-label">Edad Ponderada</div><div class="kpi-valor">${fmt(edad)}</div><div class="kpi-sub">Meses promedio</div></div>
+    <div class="kpi-card cyan"><div class="kpi-label">Ciclo Ponderado</div><div class="kpi-valor">${fmt(ciclo,1)}</div><div class="kpi-sub">Ponderado por TM</div></div>
   `
 
-  // Guardar datos para reutilizar en cargarVariedades (charts)
-  window._datosResumen = { riegoMap, corteMap, canaMap, semMap, varMap, tmC, tmE, avance }
-}
-
-async function cargarVariedades() {
-  // ── Asegurar datos del Resumen (riegoMap, corteMap, etc.) cargados
-  if(!window._datosResumen) await cargarResumen()
-  const D = window._datosResumen || {}
-
-  // ── TABLA: Comportamiento por Ciclo (con totales fila Y columna)
-  // Paginar zag225_lotes
-  let data = [], from=0, page=1000
-  while(true){
-    const {data: rows, error} = await sb.from('zag225_lotes')
-      .select('variedad,ciclo,area_cosechada,tm_cosechadas')
-      .not('variedad','is',null)
-      .range(from, from+page-1)
-    if(error||!rows||!rows.length) break
-    data = data.concat(rows)
-    if(rows.length<page) break
-    from += page
+  // ── CHART: Riego (barras has + línea TCH dashed estilo)
+  const rL=Object.keys(riegoMap), rA=rL.map(k=>riegoMap[k].area), rT=rL.map(k=>riegoMap[k].area>0?riegoMap[k].tm/riegoMap[k].area:0)
+  if(window._chartRiego)window._chartRiego.destroy()
+  if(document.getElementById('chart-riego')){
+    window._chartRiego=new Chart(document.getElementById('chart-riego').getContext('2d'),{
+      type:'bar',
+      data:{labels:rL,datasets:[
+        {label:'Has Cos.',data:rA,backgroundColor:'#3d7abf',yAxisID:'y',order:2,borderRadius:3},
+        {label:'TCH',data:rT.map(v=>+v.toFixed(2)),type:'line',
+          borderColor:'#e8a020',backgroundColor:'#fff',
+          borderDash:[6,4],borderWidth:2.5,
+          yAxisID:'y1',tension:0.35,
+          pointRadius:6,pointBackgroundColor:'#fff',pointBorderColor:'#e8a020',pointBorderWidth:2.5,
+          order:1
+        }
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{
+          legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,usePointStyle:true}},
+          datalabels:{display:false}
+        },
+        scales:{
+          y:{beginAtZero:true,ticks:{font:{size:10}}},
+          y1:{position:'right',grid:{display:false},ticks:{font:{size:10}},beginAtZero:true},
+          x:{ticks:{font:{size:10}}}
+        }}
+    })
   }
-  const ciclos = [...new Set(data.map(r=>r.ciclo))].filter(Boolean).sort((a,b)=>a-b)
-  const vars = {}
-  data.forEach(r => {
-    if (!r.variedad) return
-    if (!vars[r.variedad]) vars[r.variedad] = {tmTot:0,areaTot:0,ciclos:{}}
-    vars[r.variedad].tmTot += r.tm_cosechadas||0
-    vars[r.variedad].areaTot += r.area_cosechada||0
-    const k = r.ciclo
-    if (k) {
-      if (!vars[r.variedad].ciclos[k]) vars[r.variedad].ciclos[k]={tm:0,area:0}
-      vars[r.variedad].ciclos[k].tm   += r.tm_cosechadas||0
-      vars[r.variedad].ciclos[k].area += r.area_cosechada||0
-    }
+
+  // ── CHART: Tipo Corte
+  if(window._chartCorte)window._chartCorte.destroy()
+  if(document.getElementById('chart-tipo-corte')){
+    const totCorte = Object.values(corteMap).reduce((s,v)=>s+v,0)
+    window._chartCorte=new Chart(document.getElementById('chart-tipo-corte').getContext('2d'),{
+      type:'doughnut',
+      data:{labels:Object.keys(corteMap),datasets:[{data:Object.values(corteMap),backgroundColor:['#1e3f7a','#2d6e3e'],borderWidth:2,borderColor:'#fff'}]},
+      options:{responsive:true,maintainAspectRatio:false,cutout:'55%',
+        layout:{padding:{top:18,bottom:18,left:18,right:18}},
+        plugins:{
+          legend:{position:'bottom',labels:{font:{size:11},boxWidth:10}},
+          tooltip:{callbacks:{label:c=>{
+            const pct = totCorte>0 ? (c.parsed/totCorte*100).toFixed(1) : 0
+            return `${c.label}: ${fmt(c.parsed,0)} TM (${pct}%)`
+          }}},
+          datalabels:{
+            anchor:'end',align:'end',offset:6,
+            color:ctx=>ctx.dataset.backgroundColor[ctx.dataIndex],
+            font:{size:11,weight:'700'},
+            formatter:(v)=>{ const pct = totCorte>0 ? (v/totCorte*100) : 0; return pct>=1 ? pct.toFixed(1)+'%' : '' }
+          }
+        }
+      },
+      plugins:[ChartDataLabels]
+    })
+  }
+
+  // ── CHART: Tipo Caña (sin SEMILLA)
+  if(window._chartCana)window._chartCana.destroy()
+  if(document.getElementById('chart-tipo-cana')){
+    const totCana = Object.values(canaMap).reduce((s,v)=>s+v,0)
+    // Colores específicos por tipo
+    const coloresCana = Object.keys(canaMap).map(k => {
+      const u = k.toUpperCase()
+      if(u.includes('QUEMADA')) return '#c0594d'
+      if(u.includes('CRUDA')) return '#e8a020'
+      return '#7d4ea8'
+    })
+    window._chartCana=new Chart(document.getElementById('chart-tipo-cana').getContext('2d'),{
+      type:'doughnut',
+      data:{labels:Object.keys(canaMap),datasets:[{data:Object.values(canaMap),backgroundColor:coloresCana,borderWidth:2,borderColor:'#fff'}]},
+      options:{responsive:true,maintainAspectRatio:false,cutout:'55%',
+        layout:{padding:{top:18,bottom:18,left:18,right:18}},
+        plugins:{
+          legend:{position:'bottom',labels:{font:{size:11},boxWidth:10}},
+          tooltip:{callbacks:{label:c=>{
+            const pct = totCana>0 ? (c.parsed/totCana*100).toFixed(1) : 0
+            return `${c.label}: ${fmt(c.parsed,0)} TM (${pct}%)`
+          }}},
+          datalabels:{
+            anchor:'end',align:'end',offset:6,
+            color:ctx=>ctx.dataset.backgroundColor[ctx.dataIndex],
+            font:{size:11,weight:'700'},
+            formatter:(v)=>{ const pct = totCana>0 ? (v/totCana*100) : 0; return pct>=1 ? pct.toFixed(1)+'%' : '' }
+          }
+        }
+      },
+      plugins:[ChartDataLabels]
+    })
+  }
+
+  // ── CHART: Semana (barras has + línea TCH dashed estilo)
+  const sems=Object.keys(semMap).map(Number).sort((a,b)=>a-b)
+  if(window._chartSem)window._chartSem.destroy()
+  if(document.getElementById('chart-semana')){
+    window._chartSem=new Chart(document.getElementById('chart-semana').getContext('2d'),{
+      type:'bar',
+      data:{labels:sems.map(s=>'S-'+s),datasets:[
+        {label:'Has Cos.',data:sems.map(s=>semMap[s].area),backgroundColor:'#3d7abf',yAxisID:'y',order:2,borderRadius:3},
+        {label:'TCH',data:sems.map(s=>+(semMap[s].area>0?semMap[s].tm/semMap[s].area:0).toFixed(2)),type:'line',
+          borderColor:'#e8a020',backgroundColor:'#fff',
+          borderDash:[6,4],borderWidth:2.5,
+          yAxisID:'y1',tension:0.35,
+          pointRadius:5,pointBackgroundColor:'#fff',pointBorderColor:'#e8a020',pointBorderWidth:2.5,
+          order:1
+        }
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{
+          legend:{position:'bottom',labels:{font:{size:10},boxWidth:10,usePointStyle:true}},
+          datalabels:{display:false}
+        },
+        scales:{
+          y:{beginAtZero:true,ticks:{font:{size:10}}},
+          y1:{position:'right',grid:{display:false},ticks:{font:{size:10}},beginAtZero:true},
+          x:{ticks:{font:{size:9}}}
+        }}
+    })
+  }
+
+  // ── CHART: TCH por Variedad (top 15)
+  const varTop=Object.entries(varMap).filter(([,g])=>g.area>0).map(([v,g])=>({v,tch:g.tm/g.area})).sort((a,b)=>b.tch-a.tch).slice(0,15)
+  if(window._chartVar)window._chartVar.destroy()
+  if(document.getElementById('chart-variedad')){
+    window._chartVar=new Chart(document.getElementById('chart-variedad').getContext('2d'),{
+      type:'bar',
+      data:{labels:varTop.map(x=>x.v),datasets:[{label:'TCH',data:varTop.map(x=>+x.tch.toFixed(2)),backgroundColor:'#2d6e3e',borderRadius:3}]},
+      options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},datalabels:{display:false}},
+        scales:{x:{beginAtZero:true,ticks:{font:{size:10}}},y:{ticks:{font:{size:10}}}}}
+    })
+  }
+
+  // ── CHART: Gauge avance (TM Estim de planificacion + TM Cos de zag225)
+  if(window._chartGauge)window._chartGauge.destroy()
+  if(document.getElementById('chart-gauge-avance')){
+    const tmEstGauge = totEstPlan         // suma tm_re_estimado de planificacion
+    const tmCosGauge = tmC                // suma tm_cosechadas de zag225_lotes
+    const pendGauge = Math.max(0, tmEstGauge - tmCosGauge)
+    const avanceGauge = tmEstGauge>0 ? tmCosGauge/tmEstGauge*100 : 0
+    window._chartGauge=new Chart(document.getElementById('chart-gauge-avance').getContext('2d'),{
+      type:'doughnut',
+      data:{datasets:[{data:[tmCosGauge, pendGauge], backgroundColor:['#2d6e3e','#eef0f4'], borderWidth:0}]},
+      options:{responsive:true,maintainAspectRatio:false,cutout:'72%',
+        plugins:{legend:{display:false},
+        datalabels:{display:false},
+        tooltip:{callbacks:{label:c=>`${c.dataIndex===0?'Cosechado':'Pendiente'}: ${fmt(c.parsed,0)} TM`}}}}
+    })
+    document.getElementById('gauge-avance-texto').innerHTML =
+      `<div style="font-size:20px;font-weight:700;color:var(--brand-2);">${fmt(tmCosGauge,0)} TM</div>
+       <div style="font-size:11px;color:var(--texto-soft);">de ${fmt(tmEstGauge,0)} · ${fmt(avanceGauge,1)}%</div>`
+  }
+
+  // ── CHART: TM por Distrito (Est = planificacion, Cos = zag225)
+  if(window._chartTmDist)window._chartTmDist.destroy()
+  if(document.getElementById('chart-tm-distrito')){
+    // Unir distritos NORMALIZADOS (ambas fuentes ya están en formato '1','2',...)
+    const labs = [...new Set([...Object.keys(distEstPlan), ...Object.keys(distMap)])]
+      .filter(k=>k!=='N/D')
+      .sort((a,b)=>String(a).localeCompare(String(b),'es',{numeric:true}))
+    window._chartTmDist=new Chart(document.getElementById('chart-tm-distrito').getContext('2d'),{
+      type:'bar',
+      data:{labels:labs.map(l=>'D-'+l), datasets:[
+        {label:'Estimado', data:labs.map(k=>distEstPlan[k]||0), backgroundColor:'#1e3f7a',borderRadius:3},
+        {label:'Cosechado', data:labs.map(k=>(distMap[k]||{}).tmC||0), backgroundColor:'#3d7abf',borderRadius:3}
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{
+          legend:{position:'bottom',labels:{font:{size:10},boxWidth:10}},
+          datalabels:{display:false}
+        },
+        scales:{y:{beginAtZero:true,ticks:{font:{size:10}}},x:{ticks:{font:{size:10}}}}}
+    })
+  }
+
+  // ── CHART: TM por Frente
+  if(window._chartTmFte)window._chartTmFte.destroy()
+  if(document.getElementById('chart-tm-frente')){
+    // Excluir Fte 8 (anomalía) y cualquier frente fuera del catálogo 1-6
+    const ftL = Object.keys(fteMap).map(Number).filter(k=>k>=1 && k<=6).sort((a,b)=>a-b)
+    window._chartTmFte=new Chart(document.getElementById('chart-tm-frente').getContext('2d'),{
+      type:'bar',
+      data:{labels:ftL.map(k=>FRENTES[k]||('Fte '+k)), datasets:[
+        {label:'TM Cosechadas', data:ftL.map(k=>fteMap[k]), backgroundColor:'#e8a020', borderRadius:3}
+      ]},
+      options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+        layout:{padding:{right:60}},
+        plugins:{
+          legend:{display:false},
+          datalabels:{
+            display:true, anchor:'end', align:'end', offset:4,
+            color:'#a85d2c', font:{size:10,weight:'700'},
+            formatter:v=>fmt(v,0)
+          }
+        },
+        scales:{x:{beginAtZero:true,ticks:{font:{size:10}}},y:{ticks:{font:{size:9}}}}},
+      plugins:[ChartDataLabels]
+    })
+  }
+
+  // ── MATRIZ Variedad × Ciclo (TCH = tm/area) con formato condicional
+  const ciclos = [...ciclosSet].filter(c=>c!=null).sort((a,b)=>a-b)
+  // Calcular min/max TCH de las celdas para escalar gradiente
+  const tchValues = []
+  Object.values(vars).forEach(g => {
+    Object.values(g.ciclos).forEach(cx => {
+      if(cx.area>0) tchValues.push(cx.tm/cx.area)
+    })
   })
+  const tchMin = tchValues.length ? Math.min(...tchValues) : 0
+  const tchMax = tchValues.length ? Math.max(...tchValues) : 1
+  const tchMid = (tchMin + tchMax) / 2
+
+  // Función para color condicional (rojo suave → blanco → verde suave)
+  function colorTCH(v){
+    if(v==null||isNaN(v)) return ''
+    // 0 = rojo, 0.5 = blanco, 1 = verde
+    const t = tchMax > tchMin ? (v - tchMin)/(tchMax - tchMin) : 0.5
+    if(t < 0.5){
+      // rojo suave a blanco
+      const k = t / 0.5  // 0..1
+      const r = 253, g = Math.round(232 + (255-232)*k), b = Math.round(232 + (255-232)*k)
+      return `background:rgb(${r},${g},${b})`
+    } else {
+      // blanco a verde suave
+      const k = (t - 0.5) / 0.5  // 0..1
+      const r = Math.round(255 - (255-230)*k), g = 255, b = Math.round(255 - (255-235)*k)
+      return `background:rgb(${r},${g},${b})`
+    }
+  }
+
   const th = document.getElementById('thead-variedades')
   th.innerHTML = `<th>Variedad</th>`
     + ciclos.map(c=>`<th>${String(c).padStart(2,'0')}</th>`).join('')
     + `<th>Total</th>`
 
-  // Acumuladores para fila TOTAL
   const totCiclos = {}
   ciclos.forEach(c => totCiclos[c] = {tm:0, area:0})
   let totTm=0, totArea=0
-
   let html = ''
   Object.entries(vars).sort((a,b)=>b[1].tmTot-a[1].tmTot).forEach(([v,g]) => {
     const total = g.areaTot>0?g.tmTot/g.areaTot:0
@@ -1354,11 +1684,11 @@ async function cargarVariedades() {
           if (!cx||cx.area===0) return `<td style="color:#ccc">—</td>`
           totCiclos[c].tm += cx.tm
           totCiclos[c].area += cx.area
-          return `<td>${fmt(cx.tm/cx.area)}</td>`
+          const tchCel = cx.tm/cx.area
+          return `<td style="${colorTCH(tchCel)}">${fmt(tchCel)}</td>`
         }).join('')
-      + `<td style="background:var(--brand-bg);font-weight:700;color:var(--brand)">${fmt(total)}</td></tr>`
+      + `<td class="total-col">${fmt(total)}</td></tr>`
   })
-  // Fila TOTAL
   html += `<tr class="total-row"><td>TOTAL</td>`
     + ciclos.map(c => {
         const t = totCiclos[c]
@@ -1366,101 +1696,6 @@ async function cargarVariedades() {
       }).join('')
     + `<td>${totArea>0?fmt(totTm/totArea):'—'}</td></tr>`
   document.getElementById('tbody-variedades').innerHTML = html
-
-  // ── CHART: Riego (barras has + línea TCH)
-  const rL=Object.keys(D.riegoMap||{}), rA=rL.map(k=>D.riegoMap[k].area), rT=rL.map(k=>D.riegoMap[k].area>0?D.riegoMap[k].tm/D.riegoMap[k].area:0)
-  if(window._chartRiego)window._chartRiego.destroy()
-  if(document.getElementById('chart-riego')){
-    window._chartRiego=new Chart(document.getElementById('chart-riego').getContext('2d'),{type:'bar',data:{labels:rL,datasets:[
-      {label:'Has Cosechadas',data:rA,backgroundColor:'#3d7abf',yAxisID:'y'},
-      {label:'TCH',data:rT.map(v=>v.toFixed(2)),type:'line',borderColor:'#e8a020',backgroundColor:'transparent',yAxisID:'y1',tension:0.3,pointRadius:4}
-    ]},options:{responsive:true,plugins:{legend:{position:'bottom',labels:{font:{size:10}}}},scales:{y:{beginAtZero:true},y1:{position:'right',grid:{display:false}}}}})
-  }
-
-  // ── CHART: Tipo Corte
-  if(window._chartCorte)window._chartCorte.destroy()
-  if(document.getElementById('chart-tipo-corte')){
-    window._chartCorte=new Chart(document.getElementById('chart-tipo-corte').getContext('2d'),{type:'doughnut',data:{labels:Object.keys(D.corteMap||{}),datasets:[{data:Object.values(D.corteMap||{}),backgroundColor:['#1e3f7a','#2d6e3e']}]},options:{responsive:true,plugins:{legend:{position:'bottom',labels:{font:{size:11}}}}}})
-  }
-
-  // ── CHART: Tipo Caña
-  if(window._chartCana)window._chartCana.destroy()
-  if(document.getElementById('chart-tipo-cana')){
-    window._chartCana=new Chart(document.getElementById('chart-tipo-cana').getContext('2d'),{type:'doughnut',data:{labels:Object.keys(D.canaMap||{}),datasets:[{data:Object.values(D.canaMap||{}),backgroundColor:['#c0594d','#e8a020','#3d7abf']}]},options:{responsive:true,plugins:{legend:{position:'bottom',labels:{font:{size:11}}}}}})
-  }
-
-  // ── CHART: Semana
-  const sems=Object.keys(D.semMap||{}).map(Number).sort((a,b)=>a-b)
-  if(window._chartSem)window._chartSem.destroy()
-  if(document.getElementById('chart-semana')){
-    window._chartSem=new Chart(document.getElementById('chart-semana').getContext('2d'),{type:'bar',data:{labels:sems.map(s=>'SEM-'+s),datasets:[
-      {label:'Has Cosechadas',data:sems.map(s=>D.semMap[s].area),backgroundColor:'#3d7abf',yAxisID:'y'},
-      {label:'TCH',data:sems.map(s=>(D.semMap[s].area>0?D.semMap[s].tm/D.semMap[s].area:0).toFixed(2)),type:'line',borderColor:'#e8a020',backgroundColor:'transparent',yAxisID:'y1',tension:0.3,pointRadius:3}
-    ]},options:{responsive:true,plugins:{legend:{position:'top',labels:{font:{size:10}}}},scales:{y:{beginAtZero:true},y1:{position:'right',grid:{display:false}}}}})
-  }
-
-  // ── CHART: TCH por Variedad (top 15)
-  const varTop=Object.entries(D.varMap||{}).filter(([,g])=>g.area>0).map(([v,g])=>({v,tch:g.tm/g.area})).sort((a,b)=>b.tch-a.tch).slice(0,15)
-  if(window._chartVar)window._chartVar.destroy()
-  if(document.getElementById('chart-variedad')){
-    window._chartVar=new Chart(document.getElementById('chart-variedad').getContext('2d'),{type:'bar',data:{labels:varTop.map(x=>x.v),datasets:[{label:'TCH',data:varTop.map(x=>x.tch.toFixed(2)),backgroundColor:'#2d6e3e',borderRadius:3}]},options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true}}}})
-  }
-
-  // ── CHART: Gauge avance (estilo imagen 4)
-  if(window._chartGauge)window._chartGauge.destroy()
-  if(document.getElementById('chart-gauge-avance')){
-    const tmC = D.tmC||0, tmE = D.tmE||0, pend = Math.max(0, tmE-tmC)
-    window._chartGauge=new Chart(document.getElementById('chart-gauge-avance').getContext('2d'),{
-      type:'doughnut',
-      data:{datasets:[{data:[tmC, pend], backgroundColor:['#2d6e3e','#eef0f4'], borderWidth:0}]},
-      options:{cutout:'72%',responsive:true,plugins:{legend:{display:false},
-        tooltip:{callbacks:{label:c=>`${c.dataIndex===0?'Cosechado':'Pendiente'}: ${fmt(c.parsed,0)} TM`}}}}
-    })
-    document.getElementById('gauge-avance-texto').innerHTML =
-      `<div style="font-size:24px;font-weight:700;color:var(--brand-2);">${fmt(tmC,0)} TM</div>
-       <div style="font-size:12px;color:var(--texto-soft);">de ${fmt(tmE,0)} estimadas · ${fmt(D.avance||0,1)}%</div>`
-  }
-
-  // ── CHART: TM por Distrito (zag225 cerrados)
-  if(window._chartTmDist)window._chartTmDist.destroy()
-  if(document.getElementById('chart-tm-distrito')){
-    const { data: dd } = await sb.from('zag225_lotes').select('distrito,tm_cosechadas,tm_estimadas').not('distrito','is',null)
-    const dist={}
-    ;(dd||[]).forEach(r=>{
-      const k=r.distrito; if(!dist[k])dist[k]={tmC:0,tmE:0}
-      dist[k].tmC += r.tm_cosechadas||0
-      dist[k].tmE += r.tm_estimadas||0
-    })
-    const labs = Object.keys(dist).sort((a,b)=>String(a).localeCompare(String(b),'es',{numeric:true}))
-    window._chartTmDist=new Chart(document.getElementById('chart-tm-distrito').getContext('2d'),{
-      type:'bar',
-      data:{labels:labs.map(l=>'Distrito '+l), datasets:[
-        {label:'Estimado', data:labs.map(k=>dist[k].tmE), backgroundColor:'#1e3f7a'},
-        {label:'Cosechado', data:labs.map(k=>dist[k].tmC), backgroundColor:'#3d7abf'}
-      ]},
-      options:{responsive:true,plugins:{legend:{position:'bottom',labels:{font:{size:10}}}},scales:{y:{beginAtZero:true}}}
-    })
-  }
-
-  // ── CHART: TM por Frente (desde v_cosecha_resumen)
-  if(window._chartTmFte)window._chartTmFte.destroy()
-  if(document.getElementById('chart-tm-frente')){
-    const { data: fts } = await sb.from('v_cosecha_resumen').select('fte_corte,tm_cosechado')
-    const FRENTES = {1:'1 - Interno Manual',2:'2 - Externo Manual',3:'3 - Camiones Alq.',4:'4 - Interno Mecanizado',5:'5 - Externo Mecanizado',6:'6 - Verde Manual'}
-    const fteMap={}
-    ;(fts||[]).forEach(r=>{
-      const k=r.fte_corte; if(!k)return
-      fteMap[k]=(fteMap[k]||0)+(parseFloat(r.tm_cosechado)||0)
-    })
-    const ftL = Object.keys(fteMap).map(Number).sort((a,b)=>a-b)
-    window._chartTmFte=new Chart(document.getElementById('chart-tm-frente').getContext('2d'),{
-      type:'bar',
-      data:{labels:ftL.map(k=>FRENTES[k]||('Fte '+k)), datasets:[
-        {label:'TM Cosechadas', data:ftL.map(k=>fteMap[k]), backgroundColor:'#e8a020', borderRadius:3}
-      ]},
-      options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true}}}
-    })
-  }
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1582,78 +1817,175 @@ async function cargarMadurantes() {
 }
 
 async function cargarAvance() {
-  // Datos de zag225_lotes (suma directa, paginado)
-  let allRows = [], from=0, page=1000
+  // ═══════════════════════════════════════════════════════
+  // LÓGICA replicando DAX de Power BI:
+  // - Base: planificacion (secuencia='PRODUCCIÓN'), una fila por codigo_plantio
+  // - Cosechado por lote: SUM peso_ton de zag212_boletas
+  //   WHERE cod_finca||cod_lote = codigo_plantio
+  //     AND origen_corte IN ('CAÑA QUEMADA','CAÑA CRUDA')
+  // - Status:
+  //     existe en zag225_lotes  → Cerrado
+  //     existe en zag212_boletas → Abierto
+  //     ninguno                  → Pendiente cosechar
+  // - Pendiente:
+  //     Pendiente → tm_re_estimado
+  //     Cerrado   → 0
+  //     Abierto   → max(0, tm_re_estimado - cosechado)
+  // ═══════════════════════════════════════════════════════
+
+  // Mostrar loading
+  document.getElementById('kpi-avance').innerHTML = '<div class="loading">Calculando avance...</div>'
+  document.querySelector('#tabla-avance tbody').innerHTML = '<tr><td colspan="6" class="loading">Procesando datos...</td></tr>'
+  document.querySelector('#tabla-avance-fincas tbody').innerHTML = '<tr><td colspan="8" class="loading">Procesando datos...</td></tr>'
+
+  // ── 1. Cargar PLANIFICACIÓN — paginado (filtramos PRODUCCIÓN en JS para evitar URL-encoding de la tilde)
+  // Normalizar distrito: 'DISTRITO 1' → '1' para consistencia con zag225
+  function normDistrito(d){
+    if(d==null) return 'N/D'
+    const s = String(d).trim()
+    const m = s.match(/(\d+)/)
+    return m ? m[1] : s
+  }
+  let plan = [], from=0, page=1000
   while(true){
-    const {data, error} = await sb.from('zag225_lotes')
-      .select('finca_id,finca,distrito,area_cosechada,area_total,tm_cosechadas,tm_estimadas,distancia')
+    const {data, error} = await sb.from('planificacion')
+      .select('codigo_plantio,nombre_plantio,distrito,tm_re_estimado,cod_finca,cod_lote,distancia,secuencia')
       .range(from, from+page-1)
     if(error||!data||!data.length) break
-    allRows = allRows.concat(data)
+    // Filtrar en JS los que sean PRODUCCIÓN (con o sin tilde)
+    const filtered = data.filter(r => {
+      const sec = (r.secuencia||'').toString().toUpperCase().trim()
+      return sec === 'PRODUCCIÓN' || sec === 'PRODUCCION'
+    })
+    plan = plan.concat(filtered)
     if(data.length<page) break
     from += page
   }
-  console.log('Avance: filas zag225_lotes', allRows.length)
+  console.log('Planificacion filas (PRODUCCIÓN):', plan.length)
 
-  // ── Por DISTRITO
+  // ── 2. Cargar zag212_boletas — agrupar TM cosechadas por (cod_finca||cod_lote)
+  //     SOLO cuando origen_corte ∈ {CAÑA QUEMADA, CAÑA CRUDA}
+  const cosechadoMap = {}     // codigo_plantio → TM
+  const enZag212Set = new Set() // codigo_plantio que aparece en zag212 (para Status=Abierto)
+  from = 0
+  while(true){
+    const {data, error} = await sb.from('zag212_boletas')
+      .select('cod_finca,cod_lote,peso_ton,origen_corte')
+      .in('origen_corte',['CAÑA QUEMADA','CAÑA CRUDA'])
+      .range(from, from+page-1)
+    if(error||!data||!data.length) break
+    data.forEach(r => {
+      const cf = (r.cod_finca||'').toString().trim()
+      const cl = (r.cod_lote||'').toString().trim()
+      if(!cf||!cl) return
+      const k = cf + cl  // ej: 'C05'+'1' = 'C051'
+      cosechadoMap[k] = (cosechadoMap[k]||0) + (parseFloat(r.peso_ton)||0)
+      enZag212Set.add(k)
+    })
+    if(data.length<page) break
+    from += page
+  }
+  console.log('Zag212 cod_plantio únicos:', enZag212Set.size)
+
+  // ── 3. Cargar zag225_lotes — set de codigo_plantio cerrados
+  const enZag225Set = new Set()
+  from = 0
+  while(true){
+    const {data, error} = await sb.from('zag225_lotes')
+      .select('finca_id,lote')
+      .range(from, from+page-1)
+    if(error||!data||!data.length) break
+    data.forEach(r => {
+      const cf = (r.finca_id||'').toString().trim()
+      const cl = (r.lote||'').toString().trim()
+      if(!cf||!cl) return
+      enZag225Set.add(cf + cl)
+    })
+    if(data.length<page) break
+    from += page
+  }
+  console.log('Zag225 cod_plantio cerrados:', enZag225Set.size)
+
+  // ── 4. Calcular Status, Cosechado y Pendiente por lote, y agrupar
   const dist = {}
-  // ── Por FINCA
   const fincas = {}
-  allRows.forEach(r => {
-    const d = r.distrito || 'N/D'
-    if(!dist[d]) dist[d] = {tmEst:0, tmCos:0, distSum:0, distCnt:0, area:0, areaT:0}
-    dist[d].tmEst += parseFloat(r.tm_estimadas)||0
-    dist[d].tmCos += parseFloat(r.tm_cosechadas)||0
-    dist[d].area  += parseFloat(r.area_cosechada)||0
-    dist[d].areaT += parseFloat(r.area_total)||0
-    if(r.distancia){ dist[d].distSum += parseFloat(r.distancia); dist[d].distCnt += 1 }
+  let totEst=0, totCos=0, totPend=0, totDistSum=0, totDistCnt=0
 
-    const id = r.finca_id || 'N/D'
-    if(!fincas[id]) fincas[id] = {nombre:r.finca||id, distrito:r.distrito, tmEst:0, tmCos:0, distSum:0, distCnt:0, area:0, areaT:0}
-    fincas[id].tmEst += parseFloat(r.tm_estimadas)||0
-    fincas[id].tmCos += parseFloat(r.tm_cosechadas)||0
-    fincas[id].area  += parseFloat(r.area_cosechada)||0
-    fincas[id].areaT += parseFloat(r.area_total)||0
-    if(r.distancia){ fincas[id].distSum += parseFloat(r.distancia); fincas[id].distCnt += 1 }
+  plan.forEach(r => {
+    const k = (r.codigo_plantio||'').toString().trim()
+    if(!k) return
+    const tmEst = parseFloat(r.tm_re_estimado)||0
+    const cosechado = cosechadoMap[k]||0
+
+    let status, pend
+    if(enZag225Set.has(k)){
+      status = 'Cerrado'
+      pend = 0
+    } else if(enZag212Set.has(k)){
+      status = 'Abierto'
+      pend = Math.max(0, tmEst - cosechado)
+    } else {
+      status = 'Pendiente cosechar'
+      pend = tmEst
+    }
+
+    const distrito = normDistrito(r.distrito)
+    const fincaCod = (r.cod_finca||'').toString().trim() || 'N/D'
+    const nombre = r.nombre_plantio || fincaCod
+    const distancia = parseFloat(r.distancia)||0
+
+    // ── DISTRITO
+    if(!dist[distrito]) dist[distrito] = {tmEst:0,tmCos:0,tmPend:0,distSum:0,distCnt:0,lotes:0}
+    dist[distrito].tmEst  += tmEst
+    dist[distrito].tmCos  += cosechado
+    dist[distrito].tmPend += pend
+    dist[distrito].lotes++
+    if(distancia>0){ dist[distrito].distSum += distancia; dist[distrito].distCnt++ }
+
+    // ── FINCA
+    if(!fincas[fincaCod]) fincas[fincaCod] = {distrito,nombre,tmEst:0,tmCos:0,tmPend:0,distSum:0,distCnt:0,lotes:0}
+    fincas[fincaCod].tmEst  += tmEst
+    fincas[fincaCod].tmCos  += cosechado
+    fincas[fincaCod].tmPend += pend
+    fincas[fincaCod].lotes++
+    if(distancia>0){ fincas[fincaCod].distSum += distancia; fincas[fincaCod].distCnt++ }
+
+    // ── TOTALES
+    totEst  += tmEst
+    totCos  += cosechado
+    totPend += pend
+    if(distancia>0){ totDistSum += distancia; totDistCnt++ }
   })
 
-  // ── Totales globales
-  const totEst = Object.values(dist).reduce((s,d)=>s+d.tmEst, 0)
-  const totCos = Object.values(dist).reduce((s,d)=>s+d.tmCos, 0)
-  const totArea = Object.values(dist).reduce((s,d)=>s+d.area, 0)
-  const totPend = Math.max(0, totEst - totCos)
   const avancePct = totEst>0 ? totCos/totEst*100 : 0
+  const totDistProm = totDistCnt>0 ? totDistSum/totDistCnt : 0
 
+  // ── KPIs
   document.getElementById('kpi-avance').innerHTML = `
     <div class="kpi-card verde"><div class="kpi-label">TM Cosechado</div><div class="kpi-valor">${fmt(totCos,0)}</div>
       <div class="progress-wrap"><div class="progress-bar" style="width:${Math.min(avancePct,100).toFixed(1)}%"></div></div>
       <div class="kpi-sub">${fmt(avancePct,1)}% del estimado</div></div>
-    <div class="kpi-card"><div class="kpi-label">TM Estimado</div><div class="kpi-valor">${fmt(totEst,0)}</div><div class="kpi-sub">Toneladas de caña</div></div>
-    <div class="kpi-card rojo"><div class="kpi-label">TM Pendiente</div><div class="kpi-valor">${fmt(totPend,0)}</div><div class="kpi-sub">Toneladas de caña</div></div>
-    <div class="kpi-card naranja"><div class="kpi-label">% Avance</div><div class="kpi-valor">${fmt(avancePct,1)}%</div><div class="kpi-sub">Del estimado total</div></div>
-    <div class="kpi-card"><div class="kpi-label">Área Cosechada</div><div class="kpi-valor">${fmt(totArea,0)}</div><div class="kpi-sub">Hectáreas</div></div>
+    <div class="kpi-card"><div class="kpi-label">TM Estimado</div><div class="kpi-valor">${fmt(totEst,0)}</div><div class="kpi-sub">Plan re-estimado</div></div>
+    <div class="kpi-card rojo"><div class="kpi-label">TM Pendiente</div><div class="kpi-valor">${fmt(totPend,0)}</div><div class="kpi-sub">Por cosechar</div></div>
+    <div class="kpi-card naranja"><div class="kpi-label">% Avance</div><div class="kpi-valor">${fmt(avancePct,1)}%</div><div class="kpi-sub">Cosechado / Estimado</div></div>
+    <div class="kpi-card"><div class="kpi-label">Lotes Total</div><div class="kpi-valor">${plan.length}</div><div class="kpi-sub">En planificación</div></div>
   `
 
   // ── TABLA POR DISTRITO
   let h1=''
   Object.keys(dist).sort((a,b)=>String(a).localeCompare(String(b),'es',{numeric:true})).forEach(k=>{
     const g = dist[k]
-    const pend = Math.max(0, g.tmEst - g.tmCos)
     const av = g.tmEst>0 ? g.tmCos/g.tmEst*100 : 0
     const distProm = g.distCnt>0 ? g.distSum/g.distCnt : 0
     h1 += `<tr>
-      <td style="font-weight:700">${k}</td>
+      <td style="font-weight:700">${k==='N/D'?'N/D':'Distrito '+k}</td>
       <td>${fmt(g.tmEst,0)}</td>
       <td>${fmt(g.tmCos,0)}</td>
-      <td>${fmt(pend,0)}</td>
+      <td>${fmt(g.tmPend,0)}</td>
       <td>${fmt(distProm,2)} km</td>
       <td><span class="${av>=90?'cel-positivo':av>=70?'cel-neutro':'cel-negativo'}">${fmt(av,1)}%</span></td>
     </tr>`
   })
-  // total promedio ponderado de distancia: sum(dist*area)/sum(area), pero usamos promedio simple
-  let totDistSum = 0, totDistCnt = 0
-  Object.values(dist).forEach(d => { totDistSum += d.distSum; totDistCnt += d.distCnt })
-  const totDistProm = totDistCnt>0 ? totDistSum/totDistCnt : 0
   h1 += `<tr class="total-row"><td>Total</td><td>${fmt(totEst,0)}</td><td>${fmt(totCos,0)}</td><td>${fmt(totPend,0)}</td><td>${fmt(totDistProm,2)} km</td><td>${fmt(avancePct,1)}%</td></tr>`
   document.querySelector('#tabla-avance tbody').innerHTML = h1 || '<tr><td colspan="6">Sin datos</td></tr>'
 
@@ -1661,22 +1993,20 @@ async function cargarAvance() {
   let h2=''
   Object.entries(fincas)
     .sort((a,b)=>(b[1].tmEst-a[1].tmEst))
-    .forEach(([id,g])=>{
-      const pend = Math.max(0, g.tmEst - g.tmCos)
+    .forEach(([cod,g])=>{
       const av = g.tmEst>0 ? g.tmCos/g.tmEst*100 : 0
       const distProm = g.distCnt>0 ? g.distSum/g.distCnt : 0
       h2 += `<tr>
-        <td style="font-weight:600">${g.distrito||'—'}</td>
-        <td style="font-weight:600">${id}</td>
+        <td style="font-weight:600">${g.distrito && g.distrito!=='N/D' ? 'Distrito '+g.distrito : '—'}</td>
+        <td style="font-weight:600">${cod}</td>
         <td>${g.nombre||'—'}</td>
         <td>${fmt(g.tmEst,0)}</td>
         <td>${fmt(g.tmCos,0)}</td>
-        <td>${fmt(pend,0)}</td>
+        <td>${fmt(g.tmPend,0)}</td>
         <td>${fmt(distProm,2)} km</td>
         <td><span class="${av>=90?'cel-positivo':av>=70?'cel-neutro':'cel-negativo'}">${fmt(av,1)}%</span></td>
       </tr>`
     })
-  // Fila total
   h2 += `<tr class="total-row"><td colspan="3">TOTAL</td><td>${fmt(totEst,0)}</td><td>${fmt(totCos,0)}</td><td>${fmt(totPend,0)}</td><td>${fmt(totDistProm,2)} km</td><td>${fmt(avancePct,1)}%</td></tr>`
   document.querySelector('#tabla-avance-fincas tbody').innerHTML = h2 || '<tr><td colspan="8">Sin datos</td></tr>'
 }
