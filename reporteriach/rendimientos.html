@@ -270,13 +270,15 @@
     white-space:nowrap;font-family:'Geist Mono',monospace;letter-spacing:0.2px;
   }
 
-  /* Pie de página */
+  /* Pie de página - estilo unificado con cosecha.html */
   .pie-pagina{
-    text-align:center;font-size:11px;color:var(--texto-muted);
+    text-align:center;font-size:12px;color:var(--texto-soft);
     padding:18px 0 10px;margin-top:22px;
     border-top:1px solid var(--gris-borde-soft);
-    font-family:'Geist Mono',monospace;letter-spacing:0.3px;
+    font-family:'Geist',sans-serif;letter-spacing:0;font-style:normal;
   }
+  .pie-pagina strong{color:var(--brand);font-weight:600}
+  .pie-pagina .sep{color:var(--texto-muted);margin:0 8px}
 
 .back-btn {
     display: inline-flex;
@@ -422,14 +424,6 @@
     padding: 40px;
     color: #888;
     font-size: 14px;
-  }
-
-  .pie-pagina {
-    text-align: right;
-    font-size: 12px;
-    color: #888;
-    font-style: italic;
-    margin-top: 16px;
   }
 
   /* ── LOGIN ── */
@@ -610,7 +604,7 @@
         <span class="menu-btn-arrow">Abrir módulo</span>
       </button>
     </div>
-    <p class="pie-pagina">by Departamento de Estadística Agrícola · Compañía Azucarera Chumbagua · Zafra 2025–2026</p>
+    <p class="pie-pagina"><strong>by Departamento de Estadística Agrícola</strong><span class="sep">|</span>Compañía Azucarera Chumbagua<span class="sep">|</span>Zafra 2025–2026</p>
   </div>
 </div>
 
@@ -1838,7 +1832,7 @@ async function cargarAvance() {
   document.querySelector('#tabla-avance tbody').innerHTML = '<tr><td colspan="6" class="loading">Procesando datos...</td></tr>'
   document.querySelector('#tabla-avance-fincas tbody').innerHTML = '<tr><td colspan="8" class="loading">Procesando datos...</td></tr>'
 
-  // ── 1. Cargar PLANIFICACIÓN — paginado (filtramos PRODUCCIÓN en JS para evitar URL-encoding de la tilde)
+  // ── 1. Cargar PLANIFICACIÓN — paginado (filtramos PRODUCCIÓN en JS)
   // Normalizar distrito: 'DISTRITO 1' → '1' para consistencia con zag225
   function normDistrito(d){
     if(d==null) return 'N/D'
@@ -1846,13 +1840,25 @@ async function cargarAvance() {
     const m = s.match(/(\d+)/)
     return m ? m[1] : s
   }
+  // Helper: tomar el primer campo no nulo entre varios candidatos
+  function getField(r, ...names){
+    for(const n of names){
+      if(r[n]!=null && r[n]!=='') return r[n]
+    }
+    return null
+  }
   let plan = [], from=0, page=1000
+  // Usamos '*' para no fallar si alguna columna se llama distinto.
+  // Filtramos PRODUCCIÓN en JS (la tilde rompe el filtro .eq de PostgREST en URL)
   while(true){
     const {data, error} = await sb.from('planificacion')
-      .select('codigo_plantio,nombre_plantio,distrito,tm_re_estimado,cod_finca,cod_lote,distancia,secuencia')
+      .select('*')
       .range(from, from+page-1)
-    if(error||!data||!data.length) break
-    // Filtrar en JS los que sean PRODUCCIÓN (con o sin tilde)
+    if(error){
+      console.error('Error cargando planificacion:', error)
+      break
+    }
+    if(!data||!data.length) break
     const filtered = data.filter(r => {
       const sec = (r.secuencia||'').toString().toUpperCase().trim()
       return sec === 'PRODUCCIÓN' || sec === 'PRODUCCION'
@@ -1862,6 +1868,17 @@ async function cargarAvance() {
     from += page
   }
   console.log('Planificacion filas (PRODUCCIÓN):', plan.length)
+  if(plan.length>0){
+    console.log('Columnas planificacion:', Object.keys(plan[0]))
+    console.log('Planificacion muestra:', JSON.stringify(plan.slice(0,3).map(r=>({
+      codigo_plantio: r.codigo_plantio,
+      cod_finca: r.cod_finca,
+      cod_lote: r.cod_lote,
+      nombre_plantio: r.nombre_plantio,
+      distrito: r.distrito,
+      tm_re_estimado: r.tm_re_estimado
+    }))))
+  }
 
   // ── 2. Cargar zag212_boletas — agrupar TM cosechadas por (cod_finca||cod_lote)
   //     SOLO cuando origen_corte ∈ {CAÑA QUEMADA, CAÑA CRUDA}
@@ -1872,11 +1889,35 @@ async function cargarAvance() {
     const {data, error} = await sb.from('zag212_boletas')
       .select('cod_finca,cod_lote,peso_ton,origen_corte')
       .in('origen_corte',['CAÑA QUEMADA','CAÑA CRUDA'])
+  // ── 2. Cargar zag212_boletas — agrupar TM cosechadas por (cod_finca||cod_lote)
+  //     SOLO cuando origen_corte ∈ {CAÑA QUEMADA, CAÑA CRUDA}
+  // Helper: convertir cualquier valor a string limpio (sin decimales si es número entero, sin espacios)
+  function cleanCode(v){
+    if(v==null) return ''
+    if(typeof v === 'number'){
+      // Si es entero úsalo tal cual; si tiene decimales (no debería) redondea
+      return Number.isInteger(v) ? String(v) : String(Math.round(v))
+    }
+    return String(v).trim()
+  }
+  const cosechadoMap = {}     // codigo_plantio → TM
+  const enZag212Set = new Set()
+  from = 0
+  let zag212Sample = null
+  while(true){
+    const {data, error} = await sb.from('zag212_boletas')
+      .select('cod_finca,cod_lote,peso_ton,origen_corte')
+      .in('origen_corte',['CAÑA QUEMADA','CAÑA CRUDA'])
       .range(from, from+page-1)
-    if(error||!data||!data.length) break
+    if(error){ console.error('Error zag212:', error); break }
+    if(!data||!data.length) break
+    if(!zag212Sample && data.length){
+      zag212Sample = data.slice(0,3).map(r=>({cf:r.cod_finca, cl:r.cod_lote, oc:r.origen_corte}))
+      console.log('Zag212 muestra cruda:', JSON.stringify(zag212Sample))
+    }
     data.forEach(r => {
-      const cf = (r.cod_finca||'').toString().trim()
-      const cl = (r.cod_lote||'').toString().trim()
+      const cf = cleanCode(r.cod_finca)
+      const cl = cleanCode(r.cod_lote)
       if(!cf||!cl) return
       const k = cf + cl  // ej: 'C05'+'1' = 'C051'
       cosechadoMap[k] = (cosechadoMap[k]||0) + (parseFloat(r.peso_ton)||0)
@@ -1886,6 +1927,7 @@ async function cargarAvance() {
     from += page
   }
   console.log('Zag212 cod_plantio únicos:', enZag212Set.size)
+  console.log('Zag212 ejemplos de keys:', [...enZag212Set].slice(0,5))
 
   // ── 3. Cargar zag225_lotes — set de codigo_plantio cerrados
   const enZag225Set = new Set()
@@ -1896,8 +1938,8 @@ async function cargarAvance() {
       .range(from, from+page-1)
     if(error||!data||!data.length) break
     data.forEach(r => {
-      const cf = (r.finca_id||'').toString().trim()
-      const cl = (r.lote||'').toString().trim()
+      const cf = cleanCode(r.finca_id)
+      const cl = cleanCode(r.lote)
       if(!cf||!cl) return
       enZag225Set.add(cf + cl)
     })
@@ -1905,17 +1947,33 @@ async function cargarAvance() {
     from += page
   }
   console.log('Zag225 cod_plantio cerrados:', enZag225Set.size)
+  console.log('Zag225 ejemplos de keys:', [...enZag225Set].slice(0,5))
 
   // ── 4. Calcular Status, Cosechado y Pendiente por lote, y agrupar
   const dist = {}
   const fincas = {}
   let totEst=0, totCos=0, totPend=0, totDistSum=0, totDistCnt=0
 
+  let matchCount = 0  // diagnóstico
+  let noMatchCount = 0
+  let noMatchSamples = []
+
   plan.forEach(r => {
-    const k = (r.codigo_plantio||'').toString().trim()
+    // codigo_plantio ya viene listo (ej: "C051", "C0510") — usar tal cual
+    const k = cleanCode(r.codigo_plantio)
     if(!k) return
-    const tmEst = parseFloat(r.tm_re_estimado)||0
+    const tmEst = parseFloat(getField(r,'tm_re_estimado','tm_reestimado','tm_re_estimadas','tm_reestimadas','tm_estimadas'))||0
     const cosechado = cosechadoMap[k]||0
+
+    // Diagnóstico: contar matches
+    if(cosechado > 0) matchCount++
+    else if(enZag212Set.has(k) || enZag225Set.has(k)) {
+      // está en alguna pero no en cosechadoMap (raro pero posible si solo aparece en zag225)
+      matchCount++
+    } else {
+      noMatchCount++
+      if(noMatchSamples.length < 5) noMatchSamples.push(k)
+    }
 
     let status, pend
     if(enZag225Set.has(k)){
@@ -1930,9 +1988,18 @@ async function cargarAvance() {
     }
 
     const distrito = normDistrito(r.distrito)
-    const fincaCod = (r.cod_finca||'').toString().trim() || 'N/D'
-    const nombre = r.nombre_plantio || fincaCod
-    const distancia = parseFloat(r.distancia)||0
+    // Usar cod_finca directo si existe, sino derivarlo de codigo_plantio
+    // codigo_plantio "C051" → cod_finca "C05" (3 chars), "C0510" → "C05" (3 chars)
+    let fincaCod = cleanCode(r.cod_finca)
+    if(!fincaCod){
+      // Derivar de codigo_plantio: tomar la parte alfa+los primeros dígitos hasta longitud-1
+      // Asumiendo formato "C05" + lote (1+ dígitos): extraer prefijo no-último-bloque
+      const m = k.match(/^([A-Za-z]+\d{2,3})(\d{1,3})$/)
+      fincaCod = m ? m[1] : k.substring(0, Math.max(3, k.length-1))
+    }
+    if(!fincaCod) fincaCod = 'N/D'
+    const nombre = getField(r,'nombre_plantio','nombre_finca','finca','nombre') || fincaCod
+    const distancia = parseFloat(getField(r,'distancia','distancia_km'))||0
 
     // ── DISTRITO
     if(!dist[distrito]) dist[distrito] = {tmEst:0,tmCos:0,tmPend:0,distSum:0,distCnt:0,lotes:0}
@@ -1959,6 +2026,10 @@ async function cargarAvance() {
 
   const avancePct = totEst>0 ? totCos/totEst*100 : 0
   const totDistProm = totDistCnt>0 ? totDistSum/totDistCnt : 0
+
+  console.log(`Match diagnóstico — Plan: ${plan.length} | Match: ${matchCount} | Sin match: ${noMatchCount}`)
+  console.log('Ejemplos plan SIN match en zag212/zag225:', noMatchSamples)
+  console.log(`TOTALES — Estimado: ${fmt(totEst,0)} | Cosechado: ${fmt(totCos,0)} | Pendiente: ${fmt(totPend,0)}`)
 
   // ── KPIs
   document.getElementById('kpi-avance').innerHTML = `
