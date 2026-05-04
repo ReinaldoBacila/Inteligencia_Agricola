@@ -347,6 +347,10 @@
   .portal-btn .btn-arrow::after{content:'→';transition:transform .15s}
   .portal-btn:hover .btn-arrow::after{transform:translateX(3px)}
 
+  /* Botones de descarga (tab Documentos) — flecha hacia abajo */
+  .portal-btn.doc-btn .btn-arrow::after{content:'⬇'}
+  .portal-btn.doc-btn:hover .btn-arrow::after{transform:translateY(2px)}
+
   /* Variantes de color para botones */
   .portal-btn.btn-verde::before{background:var(--brand-2);opacity:0.7}
   .portal-btn.btn-verde .btn-icon-wrap{background:var(--brand-2-soft);color:var(--brand-2)}
@@ -515,6 +519,7 @@
   <div class="nav-tabs">
     <div class="nav-tab activo" onclick="irTab('modulos')">Módulos</div>
     <div class="nav-tab" onclick="irTab('mapa')">Mapa</div>
+    <div class="nav-tab" onclick="irTab('documentos')">Documentos</div>
     <div class="nav-tab" onclick="irTab('contacto')">Contacto</div>
     <div class="nav-deptos">Departamento de Estadística Agrícola</div>
   </div>
@@ -584,10 +589,12 @@
       <div class="seccion">
         <div class="seccion-titulo">Planificación & Labores</div>
         <div class="grid grid-3">
-          <a href="#" class="portal-btn btn-gris">
+          <a href="planificacion.html" class="portal-btn btn-azul">
+            <span class="badge-nuevo">NUEVO</span>
             <div class="btn-icon-wrap">📋</div>
             <span class="btn-label">Planificación de Labores</span>
-            <span class="btn-sub">Programación agrícola</span>
+            <span class="btn-sub">Mantenimiento, programa, cumplimiento, siembra</span>
+            <span class="btn-arrow">Abrir módulo</span>
           </a>
           <a href="plantios.html" class="portal-btn btn-cyan">
             <span class="badge-nuevo">NUEVO</span>
@@ -649,10 +656,12 @@
             <span class="btn-sub">Acceso a la plataforma NAX</span>
             <span class="btn-arrow">Abrir externo</span>
           </a>
-          <a href="#" class="portal-btn btn-gris">
+          <a href="nax_tareas.html" class="portal-btn btn-naranja">
+            <span class="badge-nuevo">NUEVO</span>
             <div class="btn-icon-wrap">⚠️</div>
             <span class="btn-label">Anomalías · Tareas</span>
             <span class="btn-sub">Gestión de anomalías y tareas</span>
+            <span class="btn-arrow">Abrir módulo</span>
           </a>
           <a href="#" class="portal-btn btn-gris">
             <div class="btn-icon-wrap">🌱</div>
@@ -672,8 +681,11 @@
 
   <!-- TAB: MAPA -->
   <div id="tab-mapa" class="tab-page">
+    <div class="portal-hero">
+      <h1>Mapa-<span class="grad">Fincas</span></h1>
+      <p>Mapa detallado del cultivo actual con información lote a lote.</p>
+    </div>
     <div class="mapa-wrap">
-      <div class="mapa-titulo">Mapa de Fincas — Compañía Azucarera Chumbagua</div>
       <iframe
         class="mapa-iframe"
         src="https://www.google.com/maps/d/u/0/embed?mid=15d723R-0hMWzKFw9g_ZB4pq1LV987tY&femb=1&ll=15.24200727603822,-88.53571945446465&z=13"
@@ -685,12 +697,126 @@
     </div>
   </div>
 
+  <!-- TAB: DOCUMENTOS -->
+  <div id="tab-documentos" class="tab-page">
+    <div class="portal-hero">
+      <h1>Documentos & <span class="grad">Recursos</span></h1>
+      <p>Centro de descarga de los archivos de mayor importancia para el equipo agrícola.</p>
+    </div>
+
+    <div class="portal-body">
+
+      <!-- ─── MAESTROS ─── -->
+      <div class="seccion">
+        <div class="seccion-titulo">Maestros</div>
+        <div class="grid grid-3">
+          <a href="documentos/maestro_plantios.xlsx" download class="portal-btn btn-cyan doc-btn">
+            <div class="btn-icon-wrap">📋</div>
+            <span class="btn-label">Maestro de Plantíos</span>
+            <span class="btn-sub">Maestro consolidado de fincas y plantíos · XLSX</span>
+            <span class="btn-arrow">Descargar</span>
+          </a>
+          <a href="documentos/maestro_actividades.xlsx" download class="portal-btn btn-azul doc-btn">
+            <div class="btn-icon-wrap">📑</div>
+            <span class="btn-label">Maestro de Actividades</span>
+            <span class="btn-sub">Maestro de código de actividades agrícolas · XLSX</span>
+            <span class="btn-arrow">Descargar</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- ─── MAPAS & SHAPES ─── -->
+      <div class="seccion">
+        <div class="seccion-titulo">Mapas & Shapes</div>
+        <div class="grid grid-3">
+          <a href="documentos/shape_fincas.kmz" download class="portal-btn btn-verde doc-btn">
+            <div class="btn-icon-wrap">🗺️</div>
+            <span class="btn-label">Shape Fincas</span>
+            <span class="btn-sub">Mapa oficial con información de fincas · KMZ</span>
+            <span class="btn-arrow">Descargar</span>
+          </a>
+          <a href="documentos/shape_distrito.kmz" download class="portal-btn btn-verde doc-btn">
+            <div class="btn-icon-wrap">📍</div>
+            <span class="btn-label">Shape por Distrito</span>
+            <span class="btn-sub">Delimitación de distritos administrativos · KMZ</span>
+            <span class="btn-arrow">Descargar</span>
+          </a>
+          <a href="documentos/shape_rendimientos.kmz" download class="portal-btn btn-verde doc-btn">
+            <div class="btn-icon-wrap">📊</div>
+            <span class="btn-label">Shape de Rendimientos</span>
+            <span class="btn-sub">Mapa de rendimientos TCH por lote · KMZ</span>
+            <span class="btn-arrow">Descargar</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- ─── PLANIFICACIÓN DE LABORES ─── -->
+      <div class="seccion">
+        <div class="seccion-titulo">Planificación de Labores</div>
+        <div class="grid grid-3">
+          <a href="documentos/plan_fertilizacion.xlsx" download class="portal-btn btn-naranja doc-btn">
+            <div class="btn-icon-wrap">🌱</div>
+            <span class="btn-label">Plan de Fertilización</span>
+            <span class="btn-sub">Programa del periodo 2025-2026 · XLSX</span>
+            <span class="btn-arrow">Descargar</span>
+          </a>
+          <a href="documentos/plan_aplicaciones_quimicas.xlsx" download class="portal-btn btn-rojo doc-btn">
+            <div class="btn-icon-wrap">🧪</div>
+            <span class="btn-label">Plan de Aplicaciones Químicas</span>
+            <span class="btn-sub">Herbicidas, foliares, madurantes · XLSX</span>
+            <span class="btn-arrow">Descargar</span>
+          </a>
+          <a href="documentos/plan_descompactado.xlsx" download class="portal-btn btn-azul doc-btn">
+            <div class="btn-icon-wrap">🚜</div>
+            <span class="btn-label">Plan de Descompactado</span>
+            <span class="btn-sub">Programa del periodo 2025-2026 · XLSX</span>
+            <span class="btn-arrow">Descargar</span>
+          </a>
+          <a href="documentos/plan_riegos.xlsx" download class="portal-btn btn-cyan doc-btn">
+            <div class="btn-icon-wrap">💧</div>
+            <span class="btn-label">Plan de Riegos</span>
+            <span class="btn-sub">Programa del periodo 2025-2026 · XLSX</span>
+            <span class="btn-arrow">Descargar</span>
+          </a>
+          <a href="documentos/plan_distribucion_personal.xlsx" download class="portal-btn btn-morado doc-btn">
+            <div class="btn-icon-wrap">👥</div>
+            <span class="btn-label">Plan de Distribución de Personal</span>
+            <span class="btn-sub">Presupuesto del periodo 2025-2026 · XLSX</span>
+            <span class="btn-arrow">Descargar</span>
+          </a>
+          <a href="documentos/plan_cosecha.xlsx" download class="portal-btn btn-verde doc-btn">
+            <div class="btn-icon-wrap">🌾</div>
+            <span class="btn-label">Plan de Cosecha</span>
+            <span class="btn-sub">Programa del periodo 2025-2026 · XLSX</span>
+            <span class="btn-arrow">Descargar</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Tip al final -->
+      <div style="background:white;border:1px dashed var(--gris-borde);border-radius:10px;padding:14px 18px;margin-top:8px;display:flex;align-items:center;gap:14px;">
+        <div style="font-size:24px;flex-shrink:0;">📁</div>
+        <div style="flex:1;">
+          <div style="font-size:13px;font-weight:600;color:var(--texto);margin-bottom:2px;">¿Falta un documento?</div>
+          <div style="font-size:12px;color:var(--texto-soft);line-height:1.5;">Si necesitás un archivo que no aparece aquí, escribí al Depto. de Estadística Agrícola a través del formulario de <a href="#" onclick="irTab('contacto');return false;" style="color:var(--brand);font-weight:600;text-decoration:none;">Contacto</a>.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="portal-footer">
+      by <strong>Departamento de Estadística Agrícola</strong> &nbsp;|&nbsp; Compañía Azucarera Chumbagua &nbsp;|&nbsp; Zafra 2025–2026
+    </div>
+  </div>
+
   <!-- TAB: CONTACTO -->
   <div id="tab-contacto" class="tab-page">
-    <div class="contacto-wrap">
-      <div class="contacto-titulo">Ponte en <span class="grad">contacto</span>.</div>
-      <div class="contacto-sub">Departamento de Estadística Agrícola · Compañía Azucarera Chumbagua</div>
+    <div class="portal-hero">
+      <h1>Ponte en <span class="grad">contacto</span></h1>
+      <p>Departamento de Estadística Agrícola · Compañía Azucarera Chumbagua.</p>
+    </div>
 
+    <div class="contacto-wrap">
       <div class="form-grid">
         <div>
           <label class="form-label">Nombre</label>
@@ -726,6 +852,10 @@
           Zafra 2025–2026
         </div>
       </div>
+    </div>
+
+    <div class="portal-footer">
+      by <strong>Departamento de Estadística Agrícola</strong> &nbsp;|&nbsp; Compañía Azucarera Chumbagua &nbsp;|&nbsp; Zafra 2025–2026
     </div>
   </div>
 
@@ -824,7 +954,7 @@ const MODULOS_INDICE = [
   { titulo:'Avance de Cosecha', sub:'Resumen, frescura y escenarios de molienda', icon:'🌾',
     keywords:['cosecha','avance','frescura','escenario','molienda','tm cosechado','tm estimado','manual','mecanizado','frente','distancia','pendiente','tipo de corte','origen caña'],
     url:'cosecha.html', activo:true },
-  { titulo:'Frescura', sub:'Análisis de frescura por frente, día y semana', icon:'🌡️',
+  { titulo:'Frescura', sub:'Análisis de frescura por frente, día y semana', icon:'⏱️',
     keywords:['frescura','horas','rangos','calidad caña','demora','tiempo'],
     url:'cosecha.html#frescura', activo:true },
   { titulo:'Quemas Criminales', sub:'Histórico de incidentes y mapa heatmap', icon:'🔥',
@@ -851,9 +981,9 @@ const MODULOS_INDICE = [
   { titulo:'Maestro de Plantíos', sub:'Catálogo, variedades y mapa interactivo', icon:'🗺️',
     keywords:['plantio','plantíos','maestro','catálogo','mapa','finca lote'],
     url:'plantios.html', activo:true },
-  { titulo:'Planificación de Labores', sub:'Programación agrícola', icon:'📋',
-    keywords:['planificación','labores','agrícola','programación'],
-    url:'#', activo:false, label:'Próximamente' },
+  { titulo:'Planificación de Labores', sub:'Mantenimiento, programa, cumplimiento, siembra', icon:'📋',
+    keywords:['planificación','labores','agrícola','programación','mantenimiento','siembra','cumplimiento','fertilización','despedrado','planta','mezcla'],
+    url:'planificacion.html', activo:true },
   { titulo:'Costos por Distrito', sub:'Análisis de costos distritales', icon:'💰',
     keywords:['costo','costos','distrito','presupuesto','gasto'],
     url:'#', activo:false, label:'Próximamente' },
@@ -871,7 +1001,7 @@ const MODULOS_INDICE = [
     url:'https://beta.naxsolutions.com/', activo:true, externo:true },
   { titulo:'NAX · Anomalías y Tareas', sub:'Gestión de anomalías y tareas en NAX', icon:'⚠️',
     keywords:['anomalía','anomalia','tarea','tareas','nax','gestión','incidencia','reportar'],
-    url:'#', activo:false, label:'Próximamente' },
+    url:'nax_tareas.html', activo:true },
   { titulo:'NAX · Seguimiento de Biomasa', sub:'Monitoreo de biomasa por lote', icon:'🌱',
     keywords:['biomasa','seguimiento','monitoreo','vegetación','ndvi','satélite','satelital','lote','crecimiento'],
     url:'#', activo:false, label:'Próximamente' },

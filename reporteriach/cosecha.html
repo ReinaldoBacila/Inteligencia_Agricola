@@ -6,6 +6,7 @@
 <title>Avance de Cosecha | Chumbagua</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
@@ -431,6 +432,10 @@
   .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
   .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px}
 
+  /* Tabla compacta: ~80% del tamaño original (padding y font reducidos) */
+  .tabla-compact table{font-size:11px}
+  .tabla-compact th,.tabla-compact td{padding:5px 8px}
+
   /* ────────────────────── CHARTS ────────────────────── */
   .chart-box{background:white;border-radius:10px;border:1px solid var(--gris-borde);padding:14px 16px}
   .chart-title{
@@ -475,11 +480,15 @@
   .fecha-label{font-size:13px;font-weight:500;margin-top:4px;opacity:0.9}
 
   .loading{text-align:center;padding:28px;color:var(--texto-muted);font-size:13px}
+  /* Pie de página - estilo unificado con index.html */
   .pie-pagina{
-    text-align:right;font-size:12px;color:var(--texto-soft);
-    margin-top:18px;padding-top:14px;border-top:1px solid var(--gris-borde);font-weight:500;
+    text-align:center;font-size:12px;color:var(--texto-soft);
+    padding:18px 0 10px;margin-top:22px;
+    border-top:1px solid var(--gris-borde-soft);
+    font-family:'Geist',sans-serif;letter-spacing:0;font-style:normal;
   }
   .pie-pagina strong{color:var(--brand);font-weight:600}
+  .pie-pagina .sep{color:var(--texto-muted);margin:0 8px}
 
   /* Chips zafras (para quemas) */
   .chip-zafra{
@@ -510,7 +519,7 @@
 <!-- HEADER -->
 <div class="header" id="hdr">
   <div class="brand-blk">
-    <div class="brand-logo">C</div>
+    <div class="brand-logo">CH</div>
     <div class="brand-name">Chumbagua <span>· Inteligencia Agrícola</span></div>
   </div>
   <div class="header-pagina">
@@ -554,7 +563,7 @@
         <span class="menu-btn-arrow">Abrir módulo</span>
       </button>
       <button class="menu-btn verde" onclick="irA('pag-frescura')">
-        <div class="menu-btn-icon">🌡️</div>
+        <div class="menu-btn-icon">⏱️</div>
         <div class="menu-btn-titulo">Frescura</div>
         <span class="sub">Horas de quemado a molienda por frente y día</span>
         <span class="menu-btn-arrow">Abrir módulo</span>
@@ -585,7 +594,7 @@
         <span class="menu-btn-arrow">Abrir módulo</span>
       </button>
     </div>
-    <p class="pie-pagina">by <strong>Departamento de Estadística Agrícola</strong> &nbsp;|&nbsp; Compañía Azucarera Chumbagua &nbsp;|&nbsp; Zafra 2025–2026</p>
+    <p class="pie-pagina">by <strong>Departamento de Estadística Agrícola</strong><span class="sep">|</span>Compañía Azucarera Chumbagua<span class="sep">|</span>Zafra 2025–2026</p>
   </div>
 </div>
 
@@ -635,56 +644,7 @@
     </div>
   </div>
 
-  <div class="grid-3">
-    <div>
-      <div class="seccion-titulo">POR TIPO DE CORTE</div>
-      <div class="tabla-wrap"><table id="tbl-tipo-corte">
-        <thead><tr><th>Tipo Corte</th><th>TM</th><th>%</th></tr></thead>
-        <tbody><tr><td colspan="3" class="loading">Cargando...</td></tr></tbody>
-      </table></div>
-    </div>
-    <div>
-      <div class="seccion-titulo">POR TIPO DE CAÑA</div>
-      <div class="tabla-wrap"><table id="tbl-tipo-cana">
-        <thead><tr><th>Origen Corte</th><th>TM</th><th>%</th></tr></thead>
-        <tbody><tr><td colspan="3" class="loading">Cargando...</td></tr></tbody>
-      </table></div>
-    </div>
-    <div>
-      <div class="seccion-titulo">POR TIPO DE RIEGO</div>
-      <div class="tabla-wrap"><table id="tbl-tipo-riego">
-        <thead><tr><th>Frente</th><th>TM</th><th>%</th></tr></thead>
-        <tbody><tr><td colspan="3" class="loading">Cargando...</td></tr></tbody>
-      </table></div>
-    </div>
-  </div>
-
-  <!-- Fila: Frentes + Quema + Riego real -->
-  <div class="grid-3">
-    <div>
-      <div class="seccion-titulo">COSECHADO POR FRENTE</div>
-      <div class="tabla-wrap"><table id="tbl-frentes-resumen">
-        <thead><tr><th>Frente</th><th>TM Cosechado</th><th>%</th></tr></thead>
-        <tbody><tr><td colspan="3" class="loading">Cargando...</td></tr></tbody>
-      </table></div>
-    </div>
-    <div>
-      <div class="seccion-titulo">POR TIPO DE RIEGO</div>
-      <div class="tabla-wrap"><table id="tbl-tipo-riego-real">
-        <thead><tr><th>Tipo Riego</th><th>TM</th><th>%</th></tr></thead>
-        <tbody><tr><td colspan="3" class="loading">Cargando...</td></tr></tbody>
-      </table></div>
-    </div>
-    <div>
-      <div class="seccion-titulo">QUEMA PROGRAMADA VS CRIMINAL</div>
-      <div class="tabla-wrap"><table id="tbl-quema-tipo">
-        <thead><tr><th>Tipo Quema</th><th>TM</th><th>%</th></tr></thead>
-        <tbody><tr><td colspan="3" class="loading">Cargando...</td></tr></tbody>
-      </table></div>
-    </div>
-  </div>
-
-  <!-- Fila: Pendiente corte + Dist/Fresc unificada + Frescura rangos -->
+  <!-- Fila 1: Pendiente + Distancia/Frescura + Quema (3 cols) -->
   <div class="grid-3">
     <div>
       <div class="seccion-titulo">PENDIENTE POR TIPO DE CORTE</div>
@@ -701,35 +661,75 @@
       </table></div>
     </div>
     <div>
-      <div class="seccion-titulo">FRESCURA ACUMULADA POR RANGOS</div>
-      <div class="tabla-wrap"><table id="tbl-frescura-rangos-res">
-        <thead><tr><th>Fte. Corte</th><th>Peso Ton</th><th>0-36 hrs</th><th>37-48 hrs</th><th>49+ hrs</th></tr></thead>
-        <tbody><tr><td colspan="5" class="loading">Cargando...</td></tr></tbody>
+      <div class="seccion-titulo">QUEMA PROGRAMADA VS CRIMINAL</div>
+      <div class="tabla-wrap"><table id="tbl-quema-tipo">
+        <thead><tr><th>Tipo Quema</th><th>TM</th><th>%</th></tr></thead>
+        <tbody><tr><td colspan="3" class="loading">Cargando...</td></tr></tbody>
       </table></div>
     </div>
   </div>
 
-  <p class="pie-pagina">by <strong>Departamento de Estadística Agrícola</strong> &nbsp;|&nbsp; Compañía Azucarera Chumbagua</p>
+  <!-- Fila 2: Frescura Rangos (consolida Cosechado por Frente: TM y %) + Tipo Riego -->
+  <div style="display:grid;grid-template-columns:1.7fr 1fr;gap:14px;margin-bottom:14px;">
+    <div>
+      <div class="seccion-titulo">FRESCURA ACUMULADA POR RANGOS</div>
+      <div class="tabla-wrap"><table id="tbl-frescura-rangos-res">
+        <thead><tr><th>Fte. Corte</th><th>Peso Ton</th><th>%</th><th>0-36 hrs</th><th>37-48 hrs</th><th>49+ hrs</th></tr></thead>
+        <tbody><tr><td colspan="6" class="loading">Cargando...</td></tr></tbody>
+      </table></div>
+    </div>
+    <div>
+      <div class="seccion-titulo">POR TIPO DE RIEGO</div>
+      <div class="tabla-wrap"><table id="tbl-tipo-riego-real">
+        <thead><tr><th>Tipo Riego</th><th>TM</th><th>%</th></tr></thead>
+        <tbody><tr><td colspan="3" class="loading">Cargando...</td></tr></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <p class="pie-pagina">by <strong>Departamento de Estadística Agrícola</strong><span class="sep">|</span>Compañía Azucarera Chumbagua<span class="sep">|</span>Zafra 2025–2026</p>
 </div>
 
 <!-- FRESCURA -->
 <div id="pag-frescura" class="page">
   <!-- [EDITABLE] Título página Frescura -->
-  <!-- FILTRO DÍA ZAFRA -->
+  <!-- FILTROS FRESCURA -->
   <div class="filtros" style="margin-bottom:16px;">
-    <div class="filtro-grupo">
-      <label>Filtrar por Día Zafra</label>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
-        <select id="f-dia-desde" style="border:1px solid #ccc;border-radius:4px;padding:5px 8px;font-size:12px;" onchange="cargarFrescura()">
-          <option value="">Desde (todos)</option>
-        </select>
-        <span style="font-size:12px;color:#666;">al</span>
-        <select id="f-dia-hasta" style="border:1px solid #ccc;border-radius:4px;padding:5px 8px;font-size:12px;" onchange="cargarFrescura()">
-          <option value="">Hasta (todos)</option>
-        </select>
-        <button onclick="document.getElementById('f-dia-desde').value='';document.getElementById('f-dia-hasta').value='';cargarFrescura()" 
-          style="background:var(--azul-claro);color:white;border:none;border-radius:4px;padding:5px 10px;font-size:11px;cursor:pointer;">Ver todos</button>
+    <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-end;">
+      <div class="filtro-grupo">
+        <label>Filtrar por Día Zafra</label>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+          <select id="f-dia-desde" style="border:1px solid #ccc;border-radius:4px;padding:5px 8px;font-size:12px;" onchange="cargarFrescura()">
+            <option value="">Desde (todos)</option>
+          </select>
+          <span style="font-size:12px;color:#666;">al</span>
+          <select id="f-dia-hasta" style="border:1px solid #ccc;border-radius:4px;padding:5px 8px;font-size:12px;" onchange="cargarFrescura()">
+            <option value="">Hasta (todos)</option>
+          </select>
+        </div>
       </div>
+      <div class="filtro-grupo">
+        <label>Semana Zafra</label>
+        <select id="f-semana" style="border:1px solid #ccc;border-radius:4px;padding:5px 8px;font-size:12px;min-width:140px;" onchange="cargarFrescura()">
+          <option value="">Todas</option>
+        </select>
+      </div>
+      <div class="filtro-grupo">
+        <label>Origen Corte</label>
+        <select id="f-origen" style="border:1px solid #ccc;border-radius:4px;padding:5px 8px;font-size:12px;min-width:160px;" onchange="cargarFrescura()">
+          <option value="">Todos</option>
+          <option value="CAÑA CRUDA">Caña Cruda</option>
+          <option value="CAÑA QUEMADA">Caña Quemada</option>
+        </select>
+      </div>
+      <div class="filtro-grupo">
+        <label>Finca</label>
+        <select id="f-finca" style="border:1px solid #ccc;border-radius:4px;padding:5px 8px;font-size:12px;min-width:180px;" onchange="cargarFrescura()">
+          <option value="">Todas</option>
+        </select>
+      </div>
+      <button onclick="document.getElementById('f-dia-desde').value='';document.getElementById('f-dia-hasta').value='';document.getElementById('f-semana').value='';document.getElementById('f-origen').value='';document.getElementById('f-finca').value='';cargarFrescura()"
+        style="background:var(--azul-claro);color:white;border:none;border-radius:4px;padding:7px 14px;font-size:12px;cursor:pointer;height:31px;">Ver todos</button>
     </div>
   </div>
 
@@ -810,7 +810,7 @@
     </div>
   </div>
 
-  <p class="pie-pagina">by <strong>Departamento de Estadística Agrícola</strong> &nbsp;|&nbsp; Compañía Azucarera Chumbagua</p>
+  <p class="pie-pagina">by <strong>Departamento de Estadística Agrícola</strong><span class="sep">|</span>Compañía Azucarera Chumbagua<span class="sep">|</span>Zafra 2025–2026</p>
 </div>
 
 <!-- ESCENARIOS -->
@@ -857,18 +857,17 @@
     </div>
   </div>
 
-  <!-- FILA: Tabla frentes + cajas días/fecha (compactas, alineadas) -->
-  <div style="display:grid;grid-template-columns:1fr 240px;gap:14px;margin-bottom:14px;align-items:stretch;">
-    <div>
-      <div class="seccion-titulo">AVANCE POR FRENTE</div>
-      <div class="tabla-wrap" style="margin-bottom:0">
-        <table id="tbl-escenario-frentes">
-          <thead><tr><th>Nombre Frente</th><th>KM</th><th>Tm. Estimado</th><th>Tm. Cosechado</th><th>Tm. Pendiente</th><th>Cuota</th><th>%</th></tr></thead>
-          <tbody><tr><td colspan="7" class="loading">Cargando...</td></tr></tbody>
-        </table>
-      </div>
+  <!-- Título arriba (fuera del grid) para que la columna derecha se alinee con el inicio del cuadro, no con el título -->
+  <div class="seccion-titulo">AVANCE POR FRENTE</div>
+  <!-- FILA: Tabla frentes (compacta ~80% tamaño) + cajas días/fecha — altura nivelada -->
+  <div style="display:grid;grid-template-columns:1fr 240px;gap:14px;margin-bottom:14px;align-items:start;">
+    <div class="tabla-wrap tabla-compact" style="margin-bottom:0">
+      <table id="tbl-escenario-frentes" style="font-size:11px;">
+        <thead><tr><th>Nombre Frente</th><th>KM</th><th>Tm. Estimado</th><th>Tm. Cosechado</th><th>Tm. Pendiente</th><th>Cuota</th><th>%</th></tr></thead>
+        <tbody><tr><td colspan="7" class="loading">Cargando...</td></tr></tbody>
+      </table>
     </div>
-    <div style="display:flex;flex-direction:column;gap:10px;justify-content:flex-start;">
+    <div style="display:flex;flex-direction:column;gap:10px;">
       <div class="dias-box-c" style="background:linear-gradient(135deg,var(--brand-2),#4a8e5d);color:white;border-radius:10px;padding:14px 16px;text-align:center;box-shadow:0 4px 12px rgba(45,110,62,0.18);">
         <div style="font-size:10.5px;font-weight:600;opacity:0.92;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:4px;">Días para finalización</div>
         <div style="font-size:38px;font-weight:700;line-height:1;letter-spacing:-1.5px;font-variant-numeric:tabular-nums;" id="dias-finalizacion">—</div>
@@ -881,12 +880,12 @@
   </div>
 
   <!-- FILA: Zonas + Gauge donut + Barras apiladas % -->
-  <div style="display:grid;grid-template-columns:1.4fr 0.7fr 0.9fr;gap:14px;margin-bottom:14px;align-items:start;">
-    <div>
-      <div class="seccion-titulo">AVANCE POR ZONA GEOGRÁFICA</div>
-      <div class="tabla-wrap" style="margin-bottom:0;max-height:380px;overflow:auto">
-        <table id="tbl-esc-zonas">
-          <thead><tr><th>Zona Geo</th><th>KM</th><th>Tm. Estimado</th><th>Tm. Cosechado</th><th>Tm. Pendiente</th><th>%</th></tr></thead>
+  <div style="display:grid;grid-template-columns:1.4fr 0.7fr 0.9fr;gap:14px;margin-bottom:14px;align-items:stretch;">
+    <div style="display:flex;flex-direction:column;min-height:0;">
+      <div class="seccion-titulo" style="flex-shrink:0;">AVANCE POR ZONA GEOGRÁFICA</div>
+      <div class="tabla-wrap tabla-compact" style="margin-bottom:0;flex:1;overflow:auto;min-height:0;">
+        <table id="tbl-esc-zonas" style="font-size:11px;">
+          <thead><tr><th>Zona Geo</th><th>KM</th><th>Tm. Estimado</th><th>Tm. Cosechado</th><th>Tm. Pendiente</th><th>% Pendiente</th></tr></thead>
           <tbody><tr><td colspan="6" class="loading">Cargando...</td></tr></tbody>
         </table>
       </div>
@@ -897,25 +896,38 @@
         <canvas id="chart-gauge" height="180"></canvas>
         <div style="font-size:18px;font-weight:700;color:var(--brand);margin-top:6px;font-variant-numeric:tabular-nums;letter-spacing:-0.5px" id="gauge-valor">—</div>
         <div style="font-size:11px;color:var(--texto-soft);margin-top:2px" id="gauge-sub">— %</div>
+        <!-- TM Pendiente: aprovecha espacio bajo el donut -->
+        <div style="margin-top:14px;padding-top:10px;border-top:1px dashed #e0e4ec;">
+          <div style="font-size:9.5px;color:var(--texto-soft);text-transform:uppercase;letter-spacing:0.6px;font-weight:600;margin-bottom:2px;">TM Pendiente</div>
+          <div style="font-size:14px;font-weight:700;color:var(--rojo);font-variant-numeric:tabular-nums;letter-spacing:-0.4px;" id="gauge-pend">—</div>
+        </div>
       </div>
     </div>
-    <div>
-      <div class="seccion-titulo">% AVANCE Y CUOTA POR FRENTE</div>
-      <div class="chart-box" style="padding:12px">
-        <canvas id="chart-esc-barras" height="220"></canvas>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div>
+        <div class="seccion-titulo">CUOTA DIARIA POR TIPO CORTE</div>
+        <div class="chart-box" style="padding:10px 12px;">
+          <canvas id="chart-cuota-corte" height="80"></canvas>
+        </div>
+      </div>
+      <div>
+        <div class="seccion-titulo">% DE AVANCE POR FRENTE</div>
+        <div class="chart-box" style="padding:12px">
+          <canvas id="chart-esc-barras" height="220"></canvas>
+        </div>
       </div>
     </div>
   </div>
 
-  <p class="pie-pagina">by <strong>Departamento de Estadística Agrícola</strong> &nbsp;|&nbsp; Compañía Azucarera Chumbagua</p>
+  <p class="pie-pagina">by <strong>Departamento de Estadística Agrícola</strong><span class="sep">|</span>Compañía Azucarera Chumbagua<span class="sep">|</span>Zafra 2025–2026</p>
 </div>
 
 <!-- FRENTES -->
 <div id="pag-frentes" class="page">
   <!-- [EDITABLE] Título página Cosechado por Frente -->
   <div class="tabla-wrap"><table id="tbl-frentes-detalle">
-    <thead><tr><th>Frente</th><th>TM Estimado</th><th>TM Cosechado</th><th>TM Pendiente</th><th>% Avance</th><th>Dist. KM</th></tr></thead>
-    <tbody><tr><td colspan="6" class="loading">Cargando...</td></tr></tbody>
+    <thead><tr><th>Frente</th><th>TM Estimado</th><th>TM Cosechado</th><th>TM Pendiente</th><th>% Avance</th><th>Dist. KM</th><th>Frescura Pond. (hrs)</th></tr></thead>
+    <tbody><tr><td colspan="7" class="loading">Cargando...</td></tr></tbody>
   </table></div>
 
   <div class="chart-box">
@@ -930,7 +942,7 @@
     <tbody><tr><td colspan="6" class="loading">Cargando...</td></tr></tbody>
   </table></div>
 
-  <p class="pie-pagina">by <strong>Departamento de Estadística Agrícola</strong> &nbsp;|&nbsp; Compañía Azucarera Chumbagua</p>
+  <p class="pie-pagina">by <strong>Departamento de Estadística Agrícola</strong><span class="sep">|</span>Compañía Azucarera Chumbagua<span class="sep">|</span>Zafra 2025–2026</p>
 </div>
 
 <!-- ZONAS (página oculta - tabla integrada en Cosechado por Frente) -->
@@ -941,31 +953,31 @@
 <!-- QUEMAS -->
 <div id="pag-quemas" class="page">
   <!-- [EDITABLE] Título página Quemas Criminales -->
-  <!-- FILTRO ZAFRA (chips grandes, no se filtra en gráfica histórica) -->
-  <div style="background:#fff;border:1px solid #e0e4ec;border-radius:8px;padding:10px 14px;margin-bottom:10px;">
-    <div style="font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">Zafra</div>
-    <div id="filtro-zafras" style="display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px;"></div>
-  </div>
-
-  <!-- FILTROS SECUNDARIOS -->
-  <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;">
-    <div class="filtro-grupo">
-      <label>Mes</label>
-      <select id="f-q-mes" onchange="cargarQuemas()">
-        <option value="">Todos</option>
-        <option value="0">Enero</option><option value="1">Febrero</option><option value="2">Marzo</option>
-        <option value="3">Abril</option><option value="4">Mayo</option><option value="5">Junio</option>
-        <option value="6">Julio</option><option value="7">Agosto</option><option value="8">Septiembre</option>
-        <option value="9">Octubre</option><option value="10">Noviembre</option><option value="11">Diciembre</option>
-      </select>
-    </div>
-    <div class="filtro-grupo">
-      <label>Distrito</label>
-      <select id="f-q-distrito" onchange="cargarQuemas()"><option value="">Todos</option></select>
-    </div>
-    <div class="filtro-grupo">
-      <label>Zona Geo</label>
-      <select id="f-q-zona" onchange="cargarQuemas()"><option value="">Todas</option></select>
+  <!-- FILTROS UNIFICADOS — todo en una sola línea: chips Zafra + 3 dropdowns -->
+  <div style="background:#fff;border:1px solid #e0e4ec;border-radius:8px;padding:10px 14px;margin-bottom:12px;">
+    <div style="display:flex;gap:18px;flex-wrap:nowrap;align-items:flex-end;">
+      <div style="flex:1 1 0%;min-width:0;">
+        <div style="font-size:10px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">Zafra</div>
+        <div id="filtro-zafras" style="display:flex;gap:4px;flex-wrap:wrap;align-items:center;"></div>
+      </div>
+      <div class="filtro-grupo" style="margin-bottom:0;flex-shrink:0;">
+        <label>Mes</label>
+        <select id="f-q-mes" onchange="cargarQuemas()">
+          <option value="">Todos</option>
+          <option value="0">Enero</option><option value="1">Febrero</option><option value="2">Marzo</option>
+          <option value="3">Abril</option><option value="4">Mayo</option><option value="5">Junio</option>
+          <option value="6">Julio</option><option value="7">Agosto</option><option value="8">Septiembre</option>
+          <option value="9">Octubre</option><option value="10">Noviembre</option><option value="11">Diciembre</option>
+        </select>
+      </div>
+      <div class="filtro-grupo" style="margin-bottom:0;flex-shrink:0;">
+        <label>Distrito</label>
+        <select id="f-q-distrito" onchange="cargarQuemas()"><option value="">Todos</option></select>
+      </div>
+      <div class="filtro-grupo" style="margin-bottom:0;flex-shrink:0;">
+        <label>Zona Geo</label>
+        <select id="f-q-zona" onchange="cargarQuemas()"><option value="">Todas</option></select>
+      </div>
     </div>
   </div>
 
@@ -974,40 +986,48 @@
     <div class="loading">Cargando...</div>
   </div>
 
-  <!-- FILA 1: Tabla resumen zafra (300px) + 2 charts apilados (1fr) + Tabla mes×semana (1fr) -->
-  <div style="display:grid;grid-template-columns:300px 1fr 1.1fr;gap:14px;margin-bottom:14px;align-items:start;">
-    <div>
-      <div class="seccion-titulo">RESUMEN POR ZAFRA</div>
-      <div class="tabla-wrap" style="margin-bottom:0"><table id="tbl-quemas-resumen">
-        <thead><tr><th>Zafra</th><th>TM Quema</th><th>%</th></tr></thead>
-        <tbody><tr><td colspan="3" class="loading">Cargando...</td></tr></tbody>
+  <!-- FILA 1: grid 3×2 — Resumen Zafra spans las 2 filas; charts y tablas alineados -->
+  <div style="display:grid;grid-template-columns:340px 1fr 1fr;grid-template-rows:240px 200px;gap:14px;margin-bottom:14px;">
+    <!-- Col 1 (full height): Resumen Zafra -->
+    <div style="grid-column:1;grid-row:1 / span 2;display:flex;flex-direction:column;min-height:0;">
+      <div class="seccion-titulo" style="flex-shrink:0;">RESUMEN POR ZAFRA</div>
+      <div class="tabla-wrap" style="margin-bottom:0;flex:1;overflow:auto;"><table id="tbl-quemas-resumen">
+        <thead><tr><th>Zafra</th><th>TM Cosech.</th><th>TM Quema</th><th>%</th></tr></thead>
+        <tbody><tr><td colspan="4" class="loading">Cargando...</td></tr></tbody>
       </table></div>
     </div>
-    <div>
-      <div class="seccion-titulo">% QUEMA POR ZAFRA <span style="font-size:9px;color:var(--texto-muted);font-weight:400;font-family:'Geist Mono',monospace">(histórico fijo)</span></div>
-      <div class="chart-box" style="padding:10px"><canvas id="chart-quemas-pct" height="140"></canvas></div>
-      <div style="height:12px"></div>
-      <div class="seccion-titulo">TM QUEMA POR ZAFRA</div>
-      <div class="chart-box" style="padding:10px"><canvas id="chart-quemas-tm" height="140"></canvas></div>
+    <!-- Col 2 row 1: % Quema chart -->
+    <div style="grid-column:2;grid-row:1;display:flex;flex-direction:column;min-height:0;">
+      <div class="seccion-titulo" style="flex-shrink:0;">% QUEMA POR ZAFRA <span style="font-size:9px;color:var(--texto-muted);font-weight:400;font-family:'Geist Mono',monospace">(histórico fijo)</span></div>
+      <div class="chart-box" style="padding:10px;flex:1;min-height:0;position:relative;"><canvas id="chart-quemas-pct"></canvas></div>
     </div>
-    <div>
-      <div class="seccion-titulo">HA APROX. MES × SEMANA</div>
-      <div class="tabla-wrap" style="margin-bottom:0"><table id="tbl-quemas-mes-sem">
+    <!-- Col 3 row 1: TM Quema chart -->
+    <div style="grid-column:3;grid-row:1;display:flex;flex-direction:column;min-height:0;">
+      <div class="seccion-titulo" style="flex-shrink:0;">TM QUEMA POR ZAFRA</div>
+      <div class="chart-box" style="padding:10px;flex:1;min-height:0;position:relative;"><canvas id="chart-quemas-tm"></canvas></div>
+    </div>
+    <!-- Col 2 row 2: Mes × Semana -->
+    <div style="grid-column:2;grid-row:2;display:flex;flex-direction:column;min-height:0;">
+      <div class="seccion-titulo" style="flex-shrink:0;">HA APROX. MES × SEMANA</div>
+      <div class="tabla-wrap" style="margin-bottom:0;flex:1;overflow:auto;"><table id="tbl-quemas-mes-sem">
         <thead><tr id="thead-mes-sem"><th>Mes</th></tr></thead>
         <tbody><tr><td colspan="6" class="loading">Cargando...</td></tr></tbody>
       </table></div>
-      <!-- Mini chart: HA por mes (visualiza tendencia debajo de la tabla) -->
-      <div style="height:12px"></div>
-      <div class="seccion-titulo">HA APROX. POR MES</div>
-      <div class="chart-box" style="padding:8px"><canvas id="chart-quemas-mes" height="220"></canvas></div>
+    </div>
+    <!-- Col 3 row 2: HA por Mes -->
+    <div style="grid-column:3;grid-row:2;display:flex;flex-direction:column;min-height:0;">
+      <div class="seccion-titulo" style="flex-shrink:0;">HA APROX. POR MES</div>
+      <div class="chart-box" style="padding:8px;flex:1;min-height:0;position:relative;"><canvas id="chart-quemas-mes"></canvas></div>
     </div>
   </div>
 
   <!-- FILA 2: Zonas geográficas afectadas + Mapa heatmap (full ancho) -->
   <div style="display:grid;grid-template-columns:1fr 1.6fr;gap:14px;margin-bottom:14px;align-items:start;">
-    <div>
+    <div style="display:flex;flex-direction:column;">
       <div class="seccion-titulo">ZONAS GEOGRÁFICAS AFECTADAS (TM)</div>
-      <div class="chart-box" style="padding:10px"><canvas id="chart-quemas-zonas" height="280"></canvas></div>
+      <div class="chart-box" style="padding:10px;height:430px;position:relative;">
+        <canvas id="chart-quemas-zonas"></canvas>
+      </div>
     </div>
     <div>
       <div class="seccion-titulo">MAPA DE QUEMAS CRIMINALES — FILTRO ACTIVO</div>
@@ -1025,7 +1045,7 @@
     </div>
   </div>
 
-  <p class="pie-pagina">by <strong>Departamento de Estadística Agrícola</strong> &nbsp;|&nbsp; Compañía Azucarera Chumbagua</p>
+  <p class="pie-pagina">by <strong>Departamento de Estadística Agrícola</strong><span class="sep">|</span>Compañía Azucarera Chumbagua<span class="sep">|</span>Zafra 2025–2026</p>
 </div>
 
 <script>
@@ -1046,6 +1066,7 @@ const nomFte = k => NOMBRE_FRENTE[k] || 'Sin Frente'
 const esMecanizado = k => (k===4 || k===5)
 
 let PLAN        = []   // planificacion filtrada solo PRODUCCIÓN sin semilleros
+let PLAN_SEMI   = []   // planificacion sólo semilleros (para sumar su cosechado al tm_estimadas)
 let TOTALES     = {}
 let RESUMEN_FRENTES = []
 let FRESCURA_DIAS   = []
@@ -1058,11 +1079,27 @@ let V_FRESC_GLOB   = {}  // v_fresc_global
 let V_DIST_FRESC = []  // v_cosecha_dist_fresc
 let V_QUEMAS     = []  // v_cosecha_quemas
 let BOLETAS      = []  // zag212_boletas (para escenarios/frentes)
+let ZAG061_OBS   = {}  // map: orden_pegue → observacion (uppercase, trimmed). Para clasificar quema criminal/programada.
+let FINCA_DESC   = {}  // map: cod_finca → descripcion (ej C01 → "CHUMBAGUA 01")
 let V_QUEMAS_RES = []  // v_quemas_resumen (histórico + 2025-2026 vivo)
 let V_QUEMAS_DET = []  // v_quemas_detalle
 let MAESTRO_MAP  = {}  // finca_lote → tipo_riego
 let ZAG225_SET   = new Set()
-let chartFrescura = null, chartFrente = null, chartGauge = null, chartEscBarras = null
+let chartFrescura = null, chartFrente = null, chartGauge = null, chartEscBarras = null, chartCuotaCorte = null
+// chartjs-plugin-datalabels se auto-registra al cargar — desactivamos por default,
+// opt-in en gráficos específicos vía plugins:[ChartDataLabels] + plugins.datalabels.display
+// También endurecer color de ejes y mejorar nitidez (DPR + font weight)
+if(typeof Chart !== 'undefined' && Chart.defaults) {
+  Chart.defaults.set('plugins.datalabels', { display: false })
+  // Render canvas a la resolución real del dispositivo → texto nítido en pantallas HiDPI/zoom
+  Chart.defaults.devicePixelRatio = Math.max(2, window.devicePixelRatio || 1)
+  Chart.defaults.color = '#1f2937'                                      // texto general (legend, tooltip)
+  Chart.defaults.font  = { ...(Chart.defaults.font||{}), family:"'Geist',system-ui,sans-serif", size:11, weight:'600' }
+  Chart.defaults.scale.ticks.color = '#1f2937'
+  Chart.defaults.scale.ticks.font  = { ...(Chart.defaults.scale.ticks.font||{}), size:11, weight:'600' }
+  Chart.defaults.scale.title       = { ...(Chart.defaults.scale.title||{}), color:'#1f2937' }
+  Chart.defaults.scale.grid        = { ...(Chart.defaults.scale.grid||{}), color:'#e5e7eb' }
+}
 let chartDonutCorte = null, chartDonutOrigen = null
 let datosListos = false
 
@@ -1105,42 +1142,121 @@ async function cargarDatos() {
   V_FRESC_DIST   = fdist.data || []
   V_FRESC_GLOB   = fglob.data?.[0] || {}
 
-  // ── CARGAR BOLETAS desde zag212_boletas (paginado, max 50K filas)
-  // EXCLUIR origen_corte = SEMILLA/SEMILLERO y fte_corte vacío/null/0
+  // ── CARGAR BOLETAS desde zag212_boletas
+  // FILTRO SERVER-SIDE: solo origen CAÑA CRUDA o CAÑA QUEMADA (match exacto, igual que tu Excel).
+  // Sin frente (fte_corte vacío/0) se mantiene — se agrupa como "Sin Frente" en tabla por frente.
+  // Verificamos count exacto contra cantidad cargada para detectar huecos de paginación.
+  const cntResp = await sb.from('zag212_boletas')
+    .select('*', { count: 'exact', head: true })
+    .in('origen_corte', ['CAÑA CRUDA', 'CAÑA QUEMADA'])
+  const expectedCount = cntResp.count || 0
+
   let allBoletas = [], from = 0, pageSize = 1000
   while(true){
     const {data:bRows, error:bErr} = await sb.from('zag212_boletas')
-      .select('finca_lote,fte_corte,peso_ton,origen_corte,frescura,dia_z,fec_zafra')
+      .select('cod_finca,cod_lote,fte_corte,peso_ton,origen_corte,frescura,dia_z,fec_zafra,o_pegue')
+      .in('origen_corte', ['CAÑA CRUDA', 'CAÑA QUEMADA'])
+      .order('cod_finca').order('cod_lote').order('o_pegue').order('fec_zafra').order('peso_ton').order('frescura')
       .range(from, from+pageSize-1)
     if(bErr){ console.error('zag212_boletas:', bErr.message); break }
     if(!bRows || bRows.length===0) break
     allBoletas = allBoletas.concat(bRows)
     if(bRows.length < pageSize) break
     from += pageSize
-    if(from > 50000) break
+    if(from > 200000) break
   }
-  // Filtrar: excluir semilla/semillero Y fte_corte inválido
-  BOLETAS = allBoletas.filter(b=>{
-    const oc = (b.origen_corte||'').toUpperCase()
-    if(oc.includes('SEMILLA') || oc.includes('SEMILLERO')) return false
+  if(allBoletas.length !== expectedCount){
+    console.warn(`⚠️ Paginación inestable: esperaba ${expectedCount} filas, cargué ${allBoletas.length} (delta ${expectedCount-allBoletas.length})`)
+  }
+
+  // ── CARGAR ZAG061_ORDENES (observaciones + descripciones de finca) ──
+  // ZAG061_OBS:  map orden_pegue → observaciones (para clasificar quema criminal/programada).
+  // FINCA_DESC:  map cod_finca → descripcion (ej C01 → "CHUMBAGUA 01") — para selector de Finca.
+  ZAG061_OBS = {}
+  FINCA_DESC = {}
+  let from61 = 0
+  while(true){
+    const {data:r61, error:e61} = await sb.from('zag061_ordenes')
+      .select('orden_pegue,observaciones,cod_finca,descripcion')
+      .order('orden_pegue')
+      .range(from61, from61+999)
+    if(e61){ console.error('zag061_ordenes:', e61.message); break }
+    if(!r61 || r61.length===0) break
+    r61.forEach(r => {
+      ZAG061_OBS[r.orden_pegue] = (r.observaciones||'').toString().toUpperCase().trim()
+      if(r.cod_finca && r.descripcion && !FINCA_DESC[r.cod_finca]){
+        FINCA_DESC[r.cod_finca] = r.descripcion
+      }
+    })
+    if(r61.length < 1000) break
+    from61 += 1000
+    if(from61 > 500000) break
+  }
+  console.log(`zag061_ordenes: ${Object.keys(ZAG061_OBS).length} observaciones, ${Object.keys(FINCA_DESC).length} fincas`)
+
+  // ── CARGAR ZAG225_LOTES (lotes cerrados) → ZAG225_SET de finca_lote
+  // Columnas reales: finca_id (texto, ej 'C33') + lote (numérico). Construimos key igual que zag212: finca_id + int(lote).
+  // Usado por statusLote() para clasificar lote como CERRADO
+  ZAG225_SET = new Set()
+  let from225 = 0
+  while(true){
+    const {data:r225, error:e225} = await sb.from('zag225_lotes')
+      .select('finca_id,lote')
+      .range(from225, from225+999)
+    if(e225){ console.error('zag225_lotes:', e225.message); break }
+    if(!r225 || r225.length===0) break
+    r225.forEach(r => {
+      const fl = (r.finca_id||'').toString().trim() + Math.round(parseFloat(r.lote)||0)
+      if(fl) ZAG225_SET.add(fl)
+    })
+    if(r225.length < 1000) break
+    from225 += 1000
+    if(from225 > 100000) break
+  }
+  console.log(`zag225_lotes (cerrados): ${ZAG225_SET.size}`)
+
+  // ── CARGAR MAESTRO_PLANTIOS — map finca_lote → tipo_riego
+  // Columna real: finca_lote (ya concatenado, ej "C019"). Distancia viene de PLAN, no de aquí.
+  MAESTRO_MAP = {}
+  let fromMP = 0
+  while(true){
+    const {data:rMP, error:eMP} = await sb.from('maestro_plantios')
+      .select('finca_lote,tipo_riego')
+      .range(fromMP, fromMP+999)
+    if(eMP){ console.error('maestro_plantios:', eMP.message); break }
+    if(!rMP || rMP.length===0) break
+    rMP.forEach(r => {
+      const fl = (r.finca_lote||'').toString().trim()
+      if(!fl) return
+      MAESTRO_MAP[fl] = { tipo_riego: (r.tipo_riego||'').toString().trim() || 'N/D' }
+    })
+    if(rMP.length < 1000) break
+    fromMP += 1000
+    if(fromMP > 200000) break
+  }
+  console.log(`maestro_plantios: ${Object.keys(MAESTRO_MAP).length} lotes`)
+
+  // Transformación: peso_ton numérico, fte_corte normalizado (0 = sin frente), construir finca_lote
+  // finca_lote = cod_finca + cod_lote (entero, sin separador) — clave de unión con planificacion.codigo_plantio
+  BOLETAS = allBoletas.map(b=>{
     const f = parseFloat(b.fte_corte)
-    if(!f || f<=0) return false  // Sin frente excluido
     b.peso_ton = parseFloat(b.peso_ton)||0
-    b.fte_corte = f
-    return true
+    b.fte_corte = (f && f>0) ? f : 0
+    b.finca_lote = (b.cod_finca||'').toString().trim() + Math.round(parseFloat(b.cod_lote)||0)
+    return b
   })
-  console.log(`BOLETAS cargadas: ${allBoletas.length} totales, ${BOLETAS.length} válidas (sin semilla, sin sin-frente)`)
+  const sumTM = BOLETAS.reduce((s,b)=>s+b.peso_ton,0)
+  console.log(`BOLETAS cargadas: ${BOLETAS.length} de ${expectedCount} esperadas | TM total: ${sumTM.toFixed(2)}`)
 }
 
 async function cargarPlanificacion() {
-  const { data } = await sb.from('planificacion')
-    .select('codigo_plantio,zona_geo,ton_estimadas,frente_cosecha,distancia,tipo_de_corte,secuencia')
-    .ilike('secuencia','PRODUCCI%')  // PRODUCCIÓN / PRODUCCION
-  // Excluir semilleros por nombre o tipo
-  PLAN = (data||[]).filter(r => {
-    const nom = (r.nombre_plantio||r.codigo_plantio||'').toUpperCase()
-    return !nom.includes('SEMILLER') && !nom.includes('SEMILLA')
-  })
+  // Carga TODA la planificación (todos los campos: tm_reestimado, nombre_plantio, etc.)
+  // Separamos PROD de SEMI sólo por columna secuencia (igual que en Power BI).
+  const { data } = await sb.from('planificacion').select('*')
+  const all = data || []
+  PLAN      = all.filter(r => (r.secuencia||'').toUpperCase().includes('PRODUCCI'))
+  PLAN_SEMI = all.filter(r => (r.secuencia||'').toUpperCase().includes('SEMILLER'))
+  console.log(`Planificación: ${PLAN.length} producción + ${PLAN_SEMI.length} semilleros (total filas BD: ${all.length})`)
 }
 
 function irA(id) {
@@ -1222,10 +1338,30 @@ async function cargarResumen() {
 
   // TM estimado: solo producción (PLAN ya excluye semilleros)
   const tmEst  = PLAN.reduce((s,r)=>s+(parseFloat(r.ton_estimadas)||0),0)
-  const tmPend = Math.max(0, tmEst - tmTotal)
+  // TM Pendiente: per-lote según status (CERRADO=0, ABIERTO=max(0,est-cos)), igual que Escenarios
+  const cosPorLote = {}
+  bolFilt.forEach(b => { cosPorLote[b.finca_lote] = (cosPorLote[b.finca_lote]||0) + b.peso_ton })
+  let tmPend = 0
+  PLAN.forEach(r=>{
+    if(ZAG225_SET.has(r.codigo_plantio)) return
+    const est = parseFloat(r.ton_estimadas)||0
+    const cos = cosPorLote[r.codigo_plantio]||0
+    tmPend += Math.max(0, est - cos)
+  })
   const avance = tmEst>0 ? tmTotal/tmEst*100 : 0
-  const frescProm = parseFloat(TOTALES.frescura_promedio)||0
-  const distProm  = parseFloat(TOTALES.distancia_promedio)||0
+  // Mapa distancia por lote desde PLAN (planificacion.distancia)
+  const distByLote = {}
+  PLAN.forEach(r => { distByLote[r.codigo_plantio] = parseFloat(r.distancia)||0 })
+  // Frescura ponderada desde bolFilt (matches módulo Frescura). Distancia ponderada usa distByLote.
+  let sFP=0, sP=0, sDP=0, sPdist=0
+  bolFilt.forEach(b=>{
+    const f=parseFloat(b.frescura)||0, p=b.peso_ton||0
+    sFP += f*p; sP += p
+    const dist = distByLote[b.finca_lote]||0
+    if(dist > 0){ sDP += dist*p; sPdist += p }
+  })
+  const frescProm = sP>0 ? sFP/sP : 0
+  const distProm  = sPdist>0 ? sDP/sPdist : 0
 
   document.getElementById('kpis-resumen').innerHTML = `
     <div class="kpi-card verde"><div class="kpi-label">TM Cosechado</div><div class="kpi-valor">${fmt(tmTotal,0)}</div>
@@ -1236,49 +1372,31 @@ async function cargarResumen() {
     <div class="kpi-card naranja"><div class="kpi-label">Frescura Calculada</div><div class="kpi-valor">${fmt(frescProm,2)}</div><div class="kpi-sub">Horas promedio</div></div>
     <div class="kpi-card"><div class="kpi-label">Distancia Calculada</div><div class="kpi-valor">${fmt(distProm,2)}</div><div class="kpi-sub">KM promedio</div></div>`
 
-  // ── POR TIPO DE CORTE (Manual vs Mecanizado — desde v_cosecha_resumen)
+  // ── POR TIPO DE CORTE (Manual vs Mecanizado — sólo se usa para donut + Pendiente Corte, ya no hay tabla)
   const porCorte = {}
   data.forEach(r=>{
     const k = esMecanizado(parseFloat(r.fte_corte))?'MECANIZADO':'MANUAL'
     porCorte[k] = (porCorte[k]||0) + (parseFloat(r.tm_cosechado)||0)
   })
-  let h1=''
-  ;['MANUAL','MECANIZADO'].forEach(k=>{
-    const v=porCorte[k]||0
-    h1+=`<tr><td style="text-align:left;font-weight:600">${k}</td><td>${fmt(v,2)}</td><td>${fmt(tmTotal>0?v/tmTotal*100:0,2)}%</td></tr>`
-  })
-  h1+=`<tr class="total-row"><td>TOTAL</td><td>${fmt(tmTotal,2)}</td><td>100.00%</td></tr>`
-  document.querySelector('#tbl-tipo-corte tbody').innerHTML=h1
 
-  // ── POR ORIGEN CORTE (Caña Cruda vs Caña Quemada — desde v_cosecha_resumen, semilla ya excluida)
+  // ── POR ORIGEN CORTE (Caña Cruda vs Caña Quemada — sólo para donut, ya no hay tabla)
   const porOrigen={}
   data.forEach(r=>{ const k=r.origen_corte||'N/D'; porOrigen[k]=(porOrigen[k]||0)+(parseFloat(r.tm_cosechado)||0) })
-  let h2=''
-  Object.entries(porOrigen).sort((a,b)=>b[1]-a[1]).forEach(([k,v])=>{
-    h2+=`<tr><td style="text-align:left;font-weight:600">${k}</td><td>${fmt(v,2)}</td><td>${fmt(tmTotal>0?v/tmTotal*100:0,2)}%</td></tr>`
-  })
-  h2+=`<tr class="total-row"><td>TOTAL</td><td>${fmt(tmTotal,2)}</td><td>100.00%</td></tr>`
-  document.querySelector('#tbl-tipo-cana tbody').innerHTML=h2
 
-  // ── POR FRENTE (desde v_cosecha_resumen)
+  // ── POR FRENTE (desde v_cosecha_resumen) — sólo se usa para el donut, ya no hay tabla independiente
   const porFrente={}
   data.forEach(r=>{ const k=r.fte_corte; if(!k)return; porFrente[k]=(porFrente[k]||0)+(parseFloat(r.tm_cosechado)||0) })
-  let h3='', h4=''
-  Object.keys(porFrente).map(Number).sort((a,b)=>a-b).forEach(k=>{
-    const v=porFrente[k]
-    const row=`<tr><td style="text-align:left;font-weight:600">${nomFte(k)}</td><td>${fmt(v,2)}</td><td>${fmt(tmTotal>0?v/tmTotal*100:0,2)}%</td></tr>`
-    h3+=row; h4+=row
-  })
-  const totRow=`<tr class="total-row"><td>TOTAL</td><td>${fmt(tmTotal,2)}</td><td>100.00%</td></tr>`
-  document.querySelector('#tbl-tipo-riego tbody').innerHTML=h3+totRow
-  document.querySelector('#tbl-frentes-resumen tbody').innerHTML=h4+totRow
 
-  // ── TIPO DE RIEGO (desde v_cosecha_riego)
-  const tmRiego = V_RIEGO.reduce((s,r)=>s+(parseFloat(r.tm_cosechado)||0),0)
+  // ── TIPO DE RIEGO (BOLETAS × MAESTRO_PLANTIOS por finca_lote → tipo_riego)
+  const porRiego = {}
+  bolFilt.forEach(b=>{
+    const tr = MAESTRO_MAP[b.finca_lote]?.tipo_riego || 'N/D'
+    porRiego[tr] = (porRiego[tr]||0) + b.peso_ton
+  })
+  const tmRiego = Object.values(porRiego).reduce((s,v)=>s+v, 0)
   let hR=''
-  V_RIEGO.forEach(r=>{
-    const v=parseFloat(r.tm_cosechado)||0
-    hR+=`<tr><td style="text-align:left;font-weight:600">${r.tipo_riego}</td><td>${fmt(v,2)}</td><td>${fmt(tmRiego>0?v/tmRiego*100:0,2)}%</td></tr>`
+  Object.entries(porRiego).sort((a,b)=>b[1]-a[1]).forEach(([k,v])=>{
+    hR+=`<tr><td style="text-align:left;font-weight:600">${k}</td><td>${fmt(v,2)}</td><td>${fmt(tmRiego>0?v/tmRiego*100:0,2)}%</td></tr>`
   })
   hR+=`<tr class="total-row"><td>TOTAL</td><td>${fmt(tmRiego,2)}</td><td>100.00%</td></tr>`
   document.querySelector('#tbl-tipo-riego-real tbody').innerHTML = hR||'<tr><td colspan="3">Sin datos</td></tr>'
@@ -1328,30 +1446,44 @@ async function cargarResumen() {
   hP+=`<tr class="total-row"><td>TOTAL</td><td>${fmt(tE,2)}</td><td>${fmt(tC,2)}</td><td>${fmt(Math.max(0,tE-tC),2)}</td></tr>`
   document.querySelector('#tbl-pend-corte tbody').innerHTML=hP
 
-  // ── FRESCURA ACUMULADA POR RANGOS (en resumen, sin Sin Frente ni semilla)
+  // ── FRESCURA ACUMULADA POR RANGOS — se calcula desde BOLETAS (igual que módulo Frescura)
+  // Consolida lo que antes era "Cosechado por Frente": columnas Peso TM y % se agregaron aquí
+  // Boundaries: 0-36 (<37), 37-48 (<49), 49+ (≥49). Boletas con f=0 no se categorizan.
   const frentesR={}
-  FRESCURA_DIAS.forEach(r=>{
-    const k=parseFloat(r.fte_corte); if(!k || k<=0)return
-    const oc=(r.origen_corte||'').toUpperCase()
-    if(oc.includes('SEMILLA') || oc.includes('SEMILLERO'))return
+  bolFilt.forEach(b=>{
+    const k = parseFloat(b.fte_corte)
+    if(!k || k<=0) return  // ignora "Sin Frente" en este cuadro
     if(!frentesR[k]) frentesR[k]={tm:0,r0:0,r37:0,r49:0}
-    frentesR[k].tm +=parseFloat(r.peso_ton)||0
-    frentesR[k].r0 +=parseFloat(r.tm_0_36)||0
-    frentesR[k].r37+=parseFloat(r.tm_37_48)||0
-    frentesR[k].r49+=parseFloat(r.tm_49_mas)||0
+    const f=parseFloat(b.frescura)||0, p=b.peso_ton||0
+    frentesR[k].tm += p
+    if(f>0) {
+      if(f<37)        frentesR[k].r0  += p
+      else if(f<49)   frentesR[k].r37 += p
+      else            frentesR[k].r49 += p
+    }
   })
-  let hFR='',tTm=0,tR0=0,tR37=0,tR49=0
+  // Total con fte (excluyendo Sin Frente) para % de peso
+  const totTmConFte = Object.values(frentesR).reduce((s,g)=>s+g.tm, 0)
+  let hFR='', tTm=0, tR0=0, tR37=0, tR49=0
   Object.keys(frentesR).map(Number).sort((a,b)=>a-b).forEach(k=>{
-    const g=frentesR[k]; tTm+=g.tm;tR0+=g.r0;tR37+=g.r37;tR49+=g.r49
-    const p0=g.tm>0?g.r0/g.tm*100:0,p37=g.tm>0?g.r37/g.tm*100:0,p49=g.tm>0?g.r49/g.tm*100:0
-    hFR+=`<tr><td style="text-align:left;font-weight:600">${nomFte(k)}</td><td>${fmt(g.tm,2)}</td>
+    const g=frentesR[k]
+    tTm+=g.tm; tR0+=g.r0; tR37+=g.r37; tR49+=g.r49
+    const pctPeso = totTmConFte>0 ? g.tm/totTmConFte*100 : 0
+    const p0  = g.tm>0 ? g.r0/g.tm*100  : 0
+    const p37 = g.tm>0 ? g.r37/g.tm*100 : 0
+    const p49 = g.tm>0 ? g.r49/g.tm*100 : 0
+    hFR+=`<tr><td style="text-align:left;font-weight:600">${nomFte(k)}</td>
+      <td>${fmt(g.tm,2)}</td>
+      <td style="font-weight:700;color:var(--brand)">${fmt(pctPeso,2)}%</td>
       <td><span class="badge badge-verde">${fmt(p0,2)}%</span></td>
       <td><span class="badge badge-amarillo">${fmt(p37,2)}%</span></td>
       <td><span class="badge badge-rojo">${fmt(p49,2)}%</span></td></tr>`
   })
-  const tp0=tTm>0?tR0/tTm*100:0,tp37=tTm>0?tR37/tTm*100:0,tp49=tTm>0?tR49/tTm*100:0
-  hFR+=`<tr class="total-row"><td>TOTAL</td><td>${fmt(tTm,2)}</td><td>${fmt(tp0,2)}%</td><td>${fmt(tp37,2)}%</td><td>${fmt(tp49,2)}%</td></tr>`
-  document.querySelector('#tbl-frescura-rangos-res tbody').innerHTML=hFR||'<tr><td colspan="5">Sin datos</td></tr>'
+  const tp0 = tTm>0 ? tR0/tTm*100 : 0
+  const tp37= tTm>0 ? tR37/tTm*100: 0
+  const tp49= tTm>0 ? tR49/tTm*100: 0
+  hFR+=`<tr class="total-row"><td>TOTAL</td><td>${fmt(tTm,2)}</td><td>100.00%</td><td>${fmt(tp0,2)}%</td><td>${fmt(tp37,2)}%</td><td>${fmt(tp49,2)}%</td></tr>`
+  document.querySelector('#tbl-frescura-rangos-res tbody').innerHTML=hFR||'<tr><td colspan="6">Sin datos</td></tr>'
 
   // ── DONUTS visuales (Manual vs Mecanizado · Caña Quemada vs Cruda) ───
   const colCorte = ['#1e3f7a','#2d6e3e']
@@ -1388,37 +1520,58 @@ async function cargarResumen() {
 }
 
 // ── FRESCURA ───────────────────────────────────────────────
-// Semana zafra: inicia 26-12-2025 (domingo), semana 1 = día 1-2 (26-27 dic)
-// Domingo=inicio semana, pero zafra arrancó jueves 26-dic
-// Simplificamos: semana N = días (N-1)*7+1 a N*7
-function diaALSemana(dia) { return Math.ceil(dia/7) }
+// Semana zafra (calendario real, semana inicio domingo):
+//   Sem 1 = días 1-2  (zafra arrancó jueves 26-dic, sábado 27 cierra primera semana parcial)
+//   Sem 2 = días 3-9
+//   Sem 3 = días 10-16
+//   Sem N = días (N-2)*7+3 .. (N-1)*7+2   ⇔  N = ceil((dia+5)/7)
+function diaALSemana(dia) { return Math.ceil((dia+5)/7) }
 
 let chartFrescSemana = null
 
 async function cargarFrescura() {
   // Calcular TODO desde BOLETAS (zag212) para coincidir con DAX de Power BI:
   //   Frescura_pond = SUM(frescura * peso_ton) / SUM(peso_ton)
-  // EXCLUIR Sin Frente (fte_corte vacío/0) y origen semilla (ya viene filtrado en BOLETAS)
-  const bolValidas = BOLETAS.filter(b=>{
-    const f = parseFloat(b.frescura)||0
-    const p = parseFloat(b.peso_ton)||0
-    return f>0 && p>0
-  })
+  // BOLETAS ya viene filtrado al cargar: excluye semilla/semillero y sin frente.
+  // No aplicamos filtros adicionales (peso_ton ni frescura) — se incluyen TODAS para
+  // que TM cuadre con el resto de módulos.
+  const bolValidas = BOLETAS
 
-  // Poblar selectores de día
-  const selDesde = document.getElementById('f-dia-desde')
-  const selHasta = document.getElementById('f-dia-hasta')
+  // Poblar selectores (se hace una sola vez al primer render)
+  const selDesde  = document.getElementById('f-dia-desde')
+  const selHasta  = document.getElementById('f-dia-hasta')
+  const selSemana = document.getElementById('f-semana')
+  const selFinca  = document.getElementById('f-finca')
+
   const diasDisp = [...new Set(bolValidas.map(b=>parseFloat(b.dia_z)).filter(d=>d>0))].sort((a,b)=>a-b)
   if(selDesde.options.length<=1){
     diasDisp.forEach(d=>{ selDesde.add(new Option('Día '+d,d)); selHasta.add(new Option('Día '+d,d)) })
   }
-  const dDesde = selDesde.value ? parseFloat(selDesde.value) : null
-  const dHasta = selHasta.value ? parseFloat(selHasta.value) : null
+  if(selSemana.options.length<=1){
+    const semsDisp = [...new Set(diasDisp.map(diaALSemana))].sort((a,b)=>a-b)
+    semsDisp.forEach(s=>{ selSemana.add(new Option('Sem '+s, s)) })
+  }
+  if(selFinca.options.length<=1){
+    const fincasDisp = [...new Set(bolValidas.map(b=>b.cod_finca).filter(Boolean))].sort()
+    fincasDisp.forEach(cf=>{
+      const label = FINCA_DESC[cf] ? `${FINCA_DESC[cf]} (${cf})` : cf
+      selFinca.add(new Option(label, cf))
+    })
+  }
+
+  const dDesde   = selDesde.value  ? parseFloat(selDesde.value)  : null
+  const dHasta   = selHasta.value  ? parseFloat(selHasta.value)  : null
+  const semFilt  = selSemana.value ? parseFloat(selSemana.value) : null
+  const ocFilt   = document.getElementById('f-origen').value || null   // 'CAÑA CRUDA' | 'CAÑA QUEMADA' | null
+  const fincaFilt = selFinca.value || null
 
   const bolFilt = bolValidas.filter(b=>{
     const d=parseFloat(b.dia_z)
     if(dDesde && d<dDesde) return false
     if(dHasta && d>dHasta) return false
+    if(semFilt && diaALSemana(d)!==semFilt) return false
+    if(ocFilt && (b.origen_corte||'').toUpperCase()!==ocFilt) return false
+    if(fincaFilt && b.cod_finca!==fincaFilt) return false
     return true
   })
 
@@ -1433,25 +1586,39 @@ async function cargarFrescura() {
   document.getElementById('frescura-global').textContent = fmt(frescGlob,2)
 
   // ── RANGOS POR FRENTE + frescura ponderada por frente
+  // Incluye boletas sin frente (fte_corte=0) — se agrupan en una fila "Sin Frente"
   const frentes={}
   bolFilt.forEach(b=>{
-    const k=parseFloat(b.fte_corte); if(!k||k<=0)return
+    const k = (parseFloat(b.fte_corte) > 0) ? parseFloat(b.fte_corte) : 0
     if(!frentes[k]) frentes[k]={tm:0,r0:0,r37:0,r49:0,fpond:0}
     const f=parseFloat(b.frescura)||0, p=parseFloat(b.peso_ton)||0
     frentes[k].tm += p
     frentes[k].fpond += f*p
-    if(f<=36)        frentes[k].r0  += p
-    else if(f<=48)   frentes[k].r37 += p
-    else             frentes[k].r49 += p
+    // Rangos enteros (igual que Power BI): 0-36 / 37-48 / 49+
+    // Solo categorizar si hay frescura registrada (evita meter f=null en "0-36 hrs")
+    if(f>0) {
+      if(f<37)         frentes[k].r0  += p   // 0-36 hrs (incluye decimales tipo 36.5)
+      else if(f<49)    frentes[k].r37 += p   // 37-48 hrs (incluye 48.5)
+      else             frentes[k].r49 += p   // 49+ hrs
+    }
   })
   let html='',tTm=0,tR0=0,tR37=0,tR49=0,tFpond=0
   let mejorFte=null, mejorFteVal=Infinity
-  Object.keys(frentes).sort((a,b)=>a-b).forEach(k=>{
+  // Orden: frentes reales por número ascendente, "Sin Frente" (k=0) al final
+  const sortedKeys = Object.keys(frentes).sort((a,b)=>{
+    const na=Number(a), nb=Number(b)
+    if(na===0) return 1
+    if(nb===0) return -1
+    return na-nb
+  })
+  sortedKeys.forEach(k=>{
+    const kNum=Number(k)
     const g=frentes[k]; tTm+=g.tm;tR0+=g.r0;tR37+=g.r37;tR49+=g.r49;tFpond+=g.fpond
     const p0=g.tm>0?g.r0/g.tm*100:0,p37=g.tm>0?g.r37/g.tm*100:0,p49=g.tm>0?g.r49/g.tm*100:0
     const fpAvg = g.tm>0 ? g.fpond/g.tm : 0
-    if(g.tm>0 && fpAvg<mejorFteVal){ mejorFteVal=fpAvg; mejorFte={k:Number(k),tm:g.tm} }
-    html+=`<tr><td style="font-weight:700">${nomFte(Number(k))}</td><td>${fmt(g.tm,2)}</td>
+    // KPI mejor frente: ignorar "Sin Frente" (no es un frente real)
+    if(kNum>0 && g.tm>0 && fpAvg<mejorFteVal){ mejorFteVal=fpAvg; mejorFte={k:kNum,tm:g.tm} }
+    html+=`<tr><td style="font-weight:700">${nomFte(kNum)}</td><td>${fmt(g.tm,2)}</td>
       <td style="font-weight:700;color:var(--brand)">${fmt(fpAvg,2)}</td>
       <td><span class="badge badge-verde">${fmt(p0,2)}%</span></td>
       <td><span class="badge badge-amarillo">${fmt(p37,2)}%</span></td>
@@ -1524,20 +1691,25 @@ async function cargarFrescura() {
     options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,title:{display:true,text:'Horas'}}}}
   })
 
-  // ── POR TIPO DE QUEMA (desde BOLETAS)
-  const fQuema={}
+  // ── POR TIPO DE QUEMA (solo CAÑA QUEMADA, clasificada por zag061.observacion vía o_pegue)
+  // Quema Criminal: zag061.observacion === 'QUEMA CRIMINAL' (match exacto, ya viene uppercase+trim)
+  // Quema Programada: cualquier otra observación (incluye null y boletas sin match en zag061)
+  const fQuema = {'Quema Criminal':{sw:0,sp:0}, 'Quema Programada':{sw:0,sp:0}}
   bolFilt.forEach(b=>{
     const oc=(b.origen_corte||'').toUpperCase()
-    const k=oc==='CAÑA QUEMADA'?'Quemada':(oc==='CAÑA CRUDA'?'Cruda':'N/D')
-    if(!fQuema[k]) fQuema[k]={sw:0,sp:0}
+    if(oc!=='CAÑA QUEMADA') return
+    const obs = ZAG061_OBS[b.o_pegue] || ''
+    const k = (obs === 'QUEMA CRIMINAL') ? 'Quema Criminal' : 'Quema Programada'
     const f=parseFloat(b.frescura)||0, p=parseFloat(b.peso_ton)||0
     fQuema[k].sw += p
     fQuema[k].sp += f*p
   })
   let hQ='', totQsw=0, totQsp=0
-  Object.entries(fQuema).forEach(([k,v])=>{
+  ;['Quema Criminal','Quema Programada'].forEach(k=>{
+    const v=fQuema[k]
     totQsw+=v.sw; totQsp+=v.sp
-    hQ+=`<tr><td style="text-align:left;font-weight:600">${k}</td><td>${fmt(v.sw,2)}</td><td>${fmt(v.sw>0?v.sp/v.sw:0,2)}</td></tr>`
+    const color = k==='Quema Criminal' ? 'color:var(--rojo);' : ''
+    hQ+=`<tr><td style="text-align:left;font-weight:600;${color}">${k}</td><td>${fmt(v.sw,2)}</td><td>${fmt(v.sw>0?v.sp/v.sw:0,2)}</td></tr>`
   })
   hQ+=`<tr class="total-row"><td>TOTAL</td><td>${fmt(totQsw,2)}</td><td>${fmt(totQsw>0?totQsp/totQsw:0,2)}</td></tr>`
   document.querySelector('#tbl-fresc-quema tbody').innerHTML=hQ||'<tr><td colspan="3">Sin datos</td></tr>'
@@ -1597,12 +1769,32 @@ async function calcularEscenario() {
   const molienda=parseFloat(document.getElementById('molienda-input').value)||6800
   document.getElementById('esc-titulo-molienda').textContent=fmt(molienda,0)
 
-  const tmEst = PLAN.reduce((s,r)=>s+(parseFloat(r.ton_estimadas)||0),0)
-  const tmCos = parseFloat(TOTALES.tm_cosechado)||0
-  const tmPend= Math.max(0,tmEst-tmCos)
-  const avance= tmEst>0?tmCos/tmEst*100:0
-  const dias  = molienda>0?tmPend/molienda:0
-  const fechaFin=new Date(Date.now()+dias*864e5)
+  // ── Cosechado por lote (desde BOLETAS, ya filtrado caña cruda/quemada) — fuente de verdad
+  const cosPorLote = {}
+  BOLETAS.forEach(b => {
+    cosPorLote[b.finca_lote] = (cosPorLote[b.finca_lote]||0) + b.peso_ton
+  })
+
+  // ── TM Cosechado total = suma BOLETAS (= 660,799 TM, coincide con módulo Frescura)
+  const tmCos = BOLETAS.reduce((s,b)=>s+b.peso_ton, 0)
+
+  // ── TM Estimado = SUM(ton_estimadas) sólo de PRODUCCION (excluye semilleros)
+  const tmEst = PLAN.reduce((s,r)=>s+(parseFloat(r.ton_estimadas)||0), 0)
+
+  // ── TM Pendiente: suma per-lote
+  //    CERRADO (lote en zag225) → 0
+  //    ABIERTO (no en zag225)   → max(0, ton_estimadas − cosechado)
+  let tmPend = 0
+  PLAN.forEach(r => {
+    if(ZAG225_SET.has(r.codigo_plantio)) return  // cerrado, aporta 0
+    const est = parseFloat(r.ton_estimadas)||0
+    const cos = cosPorLote[r.codigo_plantio]||0
+    tmPend += Math.max(0, est - cos)
+  })
+
+  const avance  = tmEst>0 ? tmCos/tmEst*100 : 0
+  const dias    = molienda>0 ? tmPend/molienda : 0
+  const fechaFin= new Date(Date.now()+dias*864e5)
 
   document.getElementById('esc-kpi-est').textContent   = fmt(tmEst,0)
   document.getElementById('esc-kpi-cos').textContent   = fmt(tmCos,0)
@@ -1616,6 +1808,8 @@ async function calcularEscenario() {
   document.getElementById('gauge-valor').textContent   = fmt(tmCos,0)
   const gSub=document.getElementById('gauge-sub')
   if(gSub) gSub.textContent = fmt(avance,1)+'% del estimado'
+  const gPend=document.getElementById('gauge-pend')
+  if(gPend) gPend.textContent = fmt(tmPend,0)
 
   // Gauge (donut) con colores marca
   if(chartGauge) chartGauge.destroy()
@@ -1630,45 +1824,64 @@ async function calcularEscenario() {
     }}}
   })
 
-  // Tabla frentes con frente real desde boletas + nombre
-  const porFrenteEst={}, porFrenteCos={}, porFrenteDist={}
+  // ── Tabla frentes — agrupa por frente real (mayor TM en boletas), igual que en DAX
+  // Estimated: PLAN.ton_estimadas
+  // Cosechado: directo de BOLETAS.fte_corte (refleja frente real de cada boleta)
+  // Pendiente: por lote → CERRADO=0 / ABIERTO=max(0, est-cos)
+  const porFrenteEst={}, porFrenteCos={}, porFrenteDist={}, porFrentePend={}
   PLAN.forEach(r=>{
     const fteReal = frenteRealPorLote(r.codigo_plantio) || parseFloat(r.frente_cosecha)
     if(!fteReal) return
-    const est=parseFloat(r.ton_estimadas)||0
-    const dist=parseFloat(r.distancia)||0
-    if(!porFrenteEst[fteReal]) {porFrenteEst[fteReal]=0; porFrenteDist[fteReal]=0}
-    porFrenteEst[fteReal]+=est
-    if(dist) porFrenteDist[fteReal]=dist
+    const est  = parseFloat(r.ton_estimadas)||0
+    const dist = parseFloat(r.distancia)||0
+    const cos  = cosPorLote[r.codigo_plantio]||0
+    const pend = ZAG225_SET.has(r.codigo_plantio) ? 0 : Math.max(0, est-cos)
+    porFrenteEst[fteReal]  = (porFrenteEst[fteReal]||0) + est
+    porFrentePend[fteReal] = (porFrentePend[fteReal]||0) + pend
+    if(dist) porFrenteDist[fteReal] = dist
   })
   BOLETAS.forEach(b=>{ const k=b.fte_corte; if(!k)return; porFrenteCos[k]=(porFrenteCos[k]||0)+b.peso_ton })
 
   const ftes=[...new Set([...Object.keys(porFrenteEst),...Object.keys(porFrenteCos)].map(Number))].sort((a,b)=>a-b)
-  let html='', tE=0,tC=0,tP=0
-  // Para chart apilado: % cosechado vs % pendiente por frente + cuota
+
+  // Pass 1: armar registros por frente — pend viene de la lógica DAX per-lote (no max(est-cos))
+  const fteData = ftes.map(k => ({
+    k,
+    est:  porFrenteEst[k]||0,
+    cos:  porFrenteCos[k]||0,
+    pend: porFrentePend[k]||0,
+    dist: porFrenteDist[k]||0
+  }))
+  const tE = fteData.reduce((s,d)=>s+d.est, 0)
+  const tC = fteData.reduce((s,d)=>s+d.cos, 0)
+  const tP = fteData.reduce((s,d)=>s+d.pend, 0)
+
+  // Pass 2: % = pend_frente / pend_total · cuota = % × molienda  (las 6 cuotas suman exacto la molienda)
+  let html=''
   const labFr=[], dPctCos=[], dPctPend=[], dCuota=[]
-  ftes.forEach(k=>{
-    const est=porFrenteEst[k]||0, cos=porFrenteCos[k]||0
-    const pend=Math.max(0,est-cos), cuota=molienda*(tmEst>0?est/tmEst:0)
-    const av=est>0?cos/est*100:0, dist=porFrenteDist[k]||0
-    tE+=est;tC+=cos;tP+=pend
-    labFr.push(nomFte(k))
-    dPctCos.push((est>0?cos/est*100:0).toFixed(2))
-    dPctPend.push((est>0?pend/est*100:0).toFixed(2))
+  let cuotaManual = 0, cuotaMec = 0
+  fteData.forEach(d => {
+    const pctPend = tP>0 ? d.pend/tP*100 : 0
+    const cuota   = tP>0 ? molienda*d.pend/tP : 0
+    if(esMecanizado(d.k)) cuotaMec += cuota
+    else cuotaManual += cuota
+    labFr.push(nomFte(d.k))
+    dPctCos.push((d.est>0?d.cos/d.est*100:0).toFixed(2))
+    dPctPend.push((d.est>0?d.pend/d.est*100:0).toFixed(2))
     dCuota.push(cuota.toFixed(0))
-    html+=`<tr><td style="text-align:left;font-weight:600">${nomFte(k)}</td><td>${fmt(dist,2)}</td><td>${fmt(est,0)}</td><td>${fmt(cos,0)}</td><td>${fmt(pend,0)}</td><td>${fmt(cuota,0)}</td><td><span class="badge ${av>=90?'badge-verde':av>=70?'badge-amarillo':'badge-rojo'}">${fmt(av,1)}%</span></td></tr>`
+    html+=`<tr><td style="text-align:left;font-weight:600">${nomFte(d.k)}</td><td>${fmt(d.dist,2)}</td><td>${fmt(d.est,0)}</td><td>${fmt(d.cos,0)}</td><td>${fmt(d.pend,0)}</td><td>${fmt(cuota,0)}</td><td style="font-weight:700;color:var(--brand)">${fmt(pctPend,1)}%</td></tr>`
   })
-  const distProm = ftes.length>0 ? Object.values(porFrenteDist).reduce((s,v)=>s+v,0)/ftes.length : 0
-  html+=`<tr class="total-row"><td>TOTAL</td><td>${fmt(distProm,2)}</td><td>${fmt(tE,0)}</td><td>${fmt(tC,0)}</td><td>${fmt(tP,0)}</td><td>${fmt(molienda,0)}</td><td>${fmt(tE>0?tC/tE*100:0,1)}%</td></tr>`
+  const distProm = fteData.length>0 ? fteData.reduce((s,d)=>s+d.dist,0)/fteData.length : 0
+  html+=`<tr class="total-row"><td>TOTAL</td><td>${fmt(distProm,2)}</td><td>${fmt(tE,0)}</td><td>${fmt(tC,0)}</td><td>${fmt(tP,0)}</td><td>${fmt(molienda,0)}</td><td>100.0%</td></tr>`
   document.querySelector('#tbl-escenario-frentes tbody').innerHTML=html
 
-  // Gráfica barras apiladas: % cosechado | % pendiente con cuota como anotación
+  // Gráfica barras apiladas: % cosechado | % pendiente (amarillo) con etiquetas %
   if(chartEscBarras) chartEscBarras.destroy()
   chartEscBarras=new Chart(document.getElementById('chart-esc-barras').getContext('2d'),{
     type:'bar',
     data:{labels:labFr,datasets:[
       {label:'% Cosechado',data:dPctCos,backgroundColor:'#2d6e3e',borderRadius:3,stack:'pct'},
-      {label:'% Pendiente',data:dPctPend,backgroundColor:'#dde7f5',borderRadius:3,stack:'pct'}
+      {label:'% Pendiente',data:dPctPend,backgroundColor:'#f5c542',borderRadius:3,stack:'pct'}
     ]},
     options:{
       indexAxis:'y',responsive:true,
@@ -1689,49 +1902,131 @@ async function calcularEscenario() {
     }
   })
 
-  // Tabla zonas
-  const zonaEst={}, zonaCos={}, zonaDist={}
+  // ── Gráfico cuota Manual (frentes 1,2,3,6) vs Mecanizado (frentes 4,5)
+  if(chartCuotaCorte) chartCuotaCorte.destroy()
+  chartCuotaCorte = new Chart(document.getElementById('chart-cuota-corte').getContext('2d'),{
+    type:'bar',
+    data:{
+      labels:['Manual','Mecanizado'],
+      datasets:[{
+        data:[Math.round(cuotaManual), Math.round(cuotaMec)],
+        backgroundColor:['#1e3f7a','#2d6e3e'],
+        borderRadius:4,
+        barThickness:22
+      }]
+    },
+    options:{
+      indexAxis:'y',
+      responsive:true,
+      layout:{padding:{right:50}},
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{
+          label:(ctx)=>`${fmt(ctx.parsed.x,0)} TM/día (${molienda>0?fmt(ctx.parsed.x/molienda*100,1):0}%)`
+        }},
+        datalabels:{
+          anchor:'end',align:'right',
+          color:'#1e3f7a',font:{size:10,weight:'700'},
+          formatter:(v)=>fmt(v,0)+' TM'
+        }
+      },
+      scales:{
+        x:{beginAtZero:true,ticks:{callback:(v)=>fmt(v,0),font:{size:9}}},
+        y:{ticks:{font:{size:11,weight:'600'}}}
+      }
+    },
+    plugins:[ChartDataLabels]
+  })
+
+  // ── Tabla zonas — misma lógica simplificada: est = PLAN.ton_estimadas, pend = CERRADO?0 : max(0, est-cos)
+  const zonaEst={}, zonaCos={}, zonaDist={}, zonaPend={}
   PLAN.forEach(r=>{
-    const z=r.zona_geo||'N/D', est=parseFloat(r.ton_estimadas)||0, dist=parseFloat(r.distancia)||0
-    zonaEst[z]=(zonaEst[z]||0)+est
-    if(dist) zonaDist[z]=Math.max(zonaDist[z]||0,dist)
+    const z = r.zona_geo||'N/D'
+    if(z==='N/D') return
+    const est  = parseFloat(r.ton_estimadas)||0
+    const dist = parseFloat(r.distancia)||0
+    const cos  = cosPorLote[r.codigo_plantio]||0
+    const pend = ZAG225_SET.has(r.codigo_plantio) ? 0 : Math.max(0, est-cos)
+    zonaEst[z]  = (zonaEst[z]||0) + est
+    zonaPend[z] = (zonaPend[z]||0) + pend
+    if(dist) zonaDist[z] = Math.max(zonaDist[z]||0, dist)
   })
+  // Cosechado por zona: directo de BOLETAS via match contra PLAN por finca_lote
   BOLETAS.forEach(b=>{
-    const planR=PLAN.find(p=>p.codigo_plantio===b.finca_lote)
-    const z=planR?planR.zona_geo||'N/D':'N/D'
-    zonaCos[z]=(zonaCos[z]||0)+b.peso_ton
+    const planR = PLAN.find(p=>p.codigo_plantio===b.finca_lote)
+    const z = planR ? (planR.zona_geo||'N/D') : 'N/D'
+    if(z==='N/D') return
+    zonaCos[z] = (zonaCos[z]||0) + b.peso_ton
   })
-  const zonas=[...new Set(Object.keys(zonaEst))].filter(z=>z!=='N/D').sort()
-  let hZ='',tzE=0,tzC=0,tzP=0,sumDist=0
-  zonas.forEach(z=>{
-    const est=zonaEst[z]||0, cos=zonaCos[z]||0, pend=Math.max(0,est-cos), av=est>0?cos/est*100:0
-    tzE+=est;tzC+=cos;tzP+=pend; sumDist+=zonaDist[z]||0
-    hZ+=`<tr><td style="text-align:left;font-weight:600">${z}</td><td>${fmt(zonaDist[z]||0,2)}</td><td>${fmt(est,0)}</td><td>${fmt(cos,0)}</td><td>${fmt(pend,0)}</td><td><span class="badge ${av>=90?'badge-verde':av>=70?'badge-amarillo':'badge-rojo'}">${fmt(av,1)}%</span></td></tr>`
+
+  // Armar registros y ordenar por %pend desc (mayor pendiente arriba)
+  // Total pendiente sobre todas las zonas (denominador del % Pendiente)
+  const totalPendZonas = Object.values(zonaPend).reduce((s,v)=>s+v, 0)
+  const zonaRows = Object.keys(zonaEst).filter(z=>z!=='N/D').map(z=>{
+    const est=zonaEst[z]||0, cos=zonaCos[z]||0, pend=zonaPend[z]||0, dist=zonaDist[z]||0
+    const pctPend = totalPendZonas>0 ? pend/totalPendZonas*100 : 0   // % del pendiente total que tiene esta zona
+    return { z, est, cos, pend, dist, pctPend }
+  }).sort((a,b)=>b.pctPend - a.pctPend)
+
+  let hZ='', tzE=0, tzC=0, tzP=0, sumDist=0
+  zonaRows.forEach(row=>{
+    tzE+=row.est; tzC+=row.cos; tzP+=row.pend; sumDist+=row.dist
+    const cls = row.pctPend>=20 ? 'badge-rojo' : row.pctPend>=10 ? 'badge-amarillo' : 'badge-verde'
+    hZ+=`<tr><td style="text-align:left;font-weight:600">${row.z}</td><td>${fmt(row.dist,2)}</td><td>${fmt(row.est,0)}</td><td>${fmt(row.cos,0)}</td><td>${fmt(row.pend,0)}</td><td><span class="badge ${cls}">${fmt(row.pctPend,1)}%</span></td></tr>`
   })
-  const distZProm = zonas.length>0 ? sumDist/zonas.length : 0
-  hZ+=`<tr class="total-row"><td>TOTAL</td><td>${fmt(distZProm,2)}</td><td>${fmt(tzE,0)}</td><td>${fmt(tzC,0)}</td><td>${fmt(tzP,0)}</td><td>${fmt(tzE>0?tzC/tzE*100:0,1)}%</td></tr>`
+  const distZProm = zonaRows.length>0 ? sumDist/zonaRows.length : 0
+  hZ+=`<tr class="total-row"><td>TOTAL</td><td>${fmt(distZProm,2)}</td><td>${fmt(tzE,0)}</td><td>${fmt(tzC,0)}</td><td>${fmt(tzP,0)}</td><td>100.0%</td></tr>`
   document.querySelector('#tbl-esc-zonas tbody').innerHTML=hZ
 }
 
 // ── FRENTES ────────────────────────────────────────────────
 async function cargarFrente() {
-  const porFrenteEst={}, porFrenteCos={}, porFrenteDist={}
+  // Misma lógica que Escenarios: agrupar por frente REAL (mayor TM en boletas), pendiente per-lote con status zag225, distancia ponderada por TM.
+  const cosPorLote = {}
+  BOLETAS.forEach(b => { cosPorLote[b.finca_lote] = (cosPorLote[b.finca_lote]||0) + b.peso_ton })
+
+  const porFrenteEst={}, porFrenteCos={}, porFrentePend={}, distNum={}, distDen={}
   PLAN.forEach(r=>{
-    const k=parseFloat(r.frente_cosecha); if(!k)return
-    porFrenteEst[k]=(porFrenteEst[k]||0)+(parseFloat(r.ton_estimadas)||0)
-    const d=parseFloat(r.distancia); if(d) porFrenteDist[k]=d
+    const fteReal = frenteRealPorLote(r.codigo_plantio) || parseFloat(r.frente_cosecha)
+    if(!fteReal) return
+    const est  = parseFloat(r.ton_estimadas)||0
+    const dist = parseFloat(r.distancia)||0
+    const cos  = cosPorLote[r.codigo_plantio]||0
+    const pend = ZAG225_SET.has(r.codigo_plantio) ? 0 : Math.max(0, est-cos)
+    porFrenteEst[fteReal]  = (porFrenteEst[fteReal]||0) + est
+    porFrentePend[fteReal] = (porFrentePend[fteReal]||0) + pend
+    if(dist>0 && est>0){
+      distNum[fteReal] = (distNum[fteReal]||0) + dist*est
+      distDen[fteReal] = (distDen[fteReal]||0) + est
+    }
   })
-  BOLETAS.forEach(b=>{ const k=b.fte_corte; if(!k)return; porFrenteCos[k]=(porFrenteCos[k]||0)+b.peso_ton })
+  // Frescura ponderada por frente real (b.fte_corte) — misma fórmula que módulo Frescura: Σ(f×p)/Σ(p)
+  const frescNum={}, frescDen={}
+  BOLETAS.forEach(b=>{
+    const k=b.fte_corte; if(!k)return
+    porFrenteCos[k]=(porFrenteCos[k]||0)+b.peso_ton
+    const f=parseFloat(b.frescura)||0, p=b.peso_ton||0
+    frescNum[k]=(frescNum[k]||0)+f*p
+    frescDen[k]=(frescDen[k]||0)+p
+  })
+
   const ftes=[...new Set([...Object.keys(porFrenteEst),...Object.keys(porFrenteCos)].map(Number))].sort((a,b)=>a-b)
-  let html='',tE=0,tC=0,tP=0, labFr=[],dEst=[],dCos=[],dPend=[]
+  let html='', tE=0, tC=0, tP=0, totDistNum=0, totDistDen=0, totFrescNum=0, totFrescDen=0
+  const labFr=[], dEst=[], dCos=[], dPend=[]
   ftes.forEach(k=>{
-    const est=porFrenteEst[k]||0,cos=porFrenteCos[k]||0,pend=Math.max(0,est-cos)
-    const av=est>0?cos/est*100:0,dist=porFrenteDist[k]||0
-    tE+=est;tC+=cos;tP+=pend
-    labFr.push(nomFte(k));dEst.push(est.toFixed(0));dCos.push(cos.toFixed(0));dPend.push(pend.toFixed(0))
-    html+=`<tr><td style="font-weight:700">${nomFte(k)}</td><td>${fmt(est,2)}</td><td>${fmt(cos,2)}</td><td>${fmt(pend,2)}</td><td><span class="badge ${av>=90?'badge-verde':av>=70?'badge-amarillo':'badge-rojo'}">${fmt(av,1)}%</span></td><td>${fmt(dist,2)}</td></tr>`
+    const est=porFrenteEst[k]||0, cos=porFrenteCos[k]||0, pend=porFrentePend[k]||0
+    const av=est>0?cos/est*100:0
+    const dist = distDen[k]>0 ? distNum[k]/distDen[k] : 0
+    const fresc = frescDen[k]>0 ? frescNum[k]/frescDen[k] : 0
+    totDistNum += distNum[k]||0; totDistDen += distDen[k]||0
+    totFrescNum+= frescNum[k]||0; totFrescDen+= frescDen[k]||0
+    tE+=est; tC+=cos; tP+=pend
+    labFr.push(nomFte(k)); dEst.push(est.toFixed(0)); dCos.push(cos.toFixed(0)); dPend.push(pend.toFixed(0))
+    html+=`<tr><td style="font-weight:700">${nomFte(k)}</td><td>${fmt(est,2)}</td><td>${fmt(cos,2)}</td><td>${fmt(pend,2)}</td><td><span class="badge ${av>=90?'badge-verde':av>=70?'badge-amarillo':'badge-rojo'}">${fmt(av,1)}%</span></td><td>${fmt(dist,2)}</td><td style="font-weight:700;color:var(--brand)">${fmt(fresc,2)}</td></tr>`
   })
-  html+=`<tr class="total-row"><td>TOTAL</td><td>${fmt(tE,2)}</td><td>${fmt(tC,2)}</td><td>${fmt(tP,2)}</td><td>${fmt(tE>0?tC/tE*100:0,1)}%</td><td>—</td></tr>`
+  const distGlobal  = totDistDen>0  ? totDistNum/totDistDen   : 0
+  const frescGlobal = totFrescDen>0 ? totFrescNum/totFrescDen : 0
+  html+=`<tr class="total-row"><td>TOTAL</td><td>${fmt(tE,2)}</td><td>${fmt(tC,2)}</td><td>${fmt(tP,2)}</td><td>${fmt(tE>0?tC/tE*100:0,1)}%</td><td>${fmt(distGlobal,2)}</td><td>${fmt(frescGlobal,2)}</td></tr>`
   document.querySelector('#tbl-frentes-detalle tbody').innerHTML=html
   if(chartFrente) chartFrente.destroy()
   chartFrente=new Chart(document.getElementById('chart-frentes').getContext('2d'),{
@@ -1746,24 +2041,47 @@ async function cargarFrente() {
 
 // ── ZONAS ──────────────────────────────────────────────────
 async function cargarZonas() {
-  const zonaEst={},zonaDist={},zonaCos={}
+  // Misma lógica que Escenarios: pendiente per-lote con status zag225, distancia ponderada por TM
+  const cosPorLote = {}
+  BOLETAS.forEach(b => { cosPorLote[b.finca_lote] = (cosPorLote[b.finca_lote]||0) + b.peso_ton })
+
+  const zonaEst={}, zonaCos={}, zonaPend={}, distNum={}, distDen={}
   PLAN.forEach(r=>{
-    const z=r.zona_geo||'N/D',est=parseFloat(r.ton_estimadas)||0,dist=parseFloat(r.distancia)||0
-    zonaEst[z]=(zonaEst[z]||0)+est; if(dist) zonaDist[z]=dist
+    const z = r.zona_geo||'N/D'; if(z==='N/D') return
+    const est  = parseFloat(r.ton_estimadas)||0
+    const dist = parseFloat(r.distancia)||0
+    const cos  = cosPorLote[r.codigo_plantio]||0
+    const pend = ZAG225_SET.has(r.codigo_plantio) ? 0 : Math.max(0, est-cos)
+    zonaEst[z]  = (zonaEst[z]||0) + est
+    zonaPend[z] = (zonaPend[z]||0) + pend
+    if(dist>0 && est>0){
+      distNum[z] = (distNum[z]||0) + dist*est
+      distDen[z] = (distDen[z]||0) + est
+    }
   })
   BOLETAS.forEach(b=>{
-    const planR=PLAN.find(p=>p.codigo_plantio===b.finca_lote)
-    const z=planR?planR.zona_geo||'N/D':'N/D'
-    zonaCos[z]=(zonaCos[z]||0)+b.peso_ton
+    const planR = PLAN.find(p=>p.codigo_plantio===b.finca_lote)
+    const z = planR ? (planR.zona_geo||'N/D') : 'N/D'
+    if(z==='N/D') return
+    zonaCos[z] = (zonaCos[z]||0) + b.peso_ton
   })
-  const zonas=[...new Set(Object.keys(zonaEst))].filter(z=>z!=='N/D').sort()
-  let html='',tE=0,tC=0,tP=0
-  zonas.forEach(z=>{
-    const est=zonaEst[z]||0,cos=zonaCos[z]||0,pend=Math.max(0,est-cos),av=est>0?cos/est*100:0
-    tE+=est;tC+=cos;tP+=pend
-    html+=`<tr><td style="text-align:left;font-weight:600">${z}</td><td>${fmt(zonaDist[z]||0,2)}</td><td>${fmt(est,2)}</td><td>${fmt(cos,2)}</td><td>${fmt(pend,2)}</td><td><span class="badge ${av>=90?'badge-verde':av>=70?'badge-amarillo':'badge-rojo'}">${fmt(av,1)}%</span></td></tr>`
+
+  // Pre-calcular distancia ponderada por zona y ordenar de menor a mayor distancia
+  const zonaRows = Object.keys(zonaEst).map(z=>{
+    const est=zonaEst[z]||0, cos=zonaCos[z]||0, pend=zonaPend[z]||0
+    const dist = distDen[z]>0 ? distNum[z]/distDen[z] : 0
+    return { z, est, cos, pend, dist }
+  }).sort((a,b)=>a.dist - b.dist)
+
+  let html='', tE=0, tC=0, tP=0, totDistNum=0, totDistDen=0
+  zonaRows.forEach(row=>{
+    const av = row.est>0 ? row.cos/row.est*100 : 0
+    totDistNum += distNum[row.z]||0; totDistDen += distDen[row.z]||0
+    tE+=row.est; tC+=row.cos; tP+=row.pend
+    html+=`<tr><td style="text-align:left;font-weight:600">${row.z}</td><td>${fmt(row.dist,2)}</td><td>${fmt(row.est,2)}</td><td>${fmt(row.cos,2)}</td><td>${fmt(row.pend,2)}</td><td><span class="badge ${av>=90?'badge-verde':av>=70?'badge-amarillo':'badge-rojo'}">${fmt(av,1)}%</span></td></tr>`
   })
-  html+=`<tr class="total-row"><td>TOTAL</td><td>—</td><td>${fmt(tE,2)}</td><td>${fmt(tC,2)}</td><td>${fmt(tP,2)}</td><td>${fmt(tE>0?tC/tE*100:0,1)}%</td></tr>`
+  const distGlobal = totDistDen>0 ? totDistNum/totDistDen : 0
+  html+=`<tr class="total-row"><td>TOTAL</td><td>${fmt(distGlobal,2)}</td><td>${fmt(tE,2)}</td><td>${fmt(tC,2)}</td><td>${fmt(tP,2)}</td><td>${fmt(tE>0?tC/tE*100:0,1)}%</td></tr>`
   document.querySelector('#tbl-zonas tbody').innerHTML=html
 }
 
@@ -1836,7 +2154,7 @@ async function cargarQuemas() {
       btn.textContent=r.zafra
       btn.dataset.z=r.zafra
       btn.className='chip-zafra'
-      btn.style.cssText='font-size:11.5px;padding:5px 11px;border:1px solid #ccd3e0;border-radius:18px;background:white;cursor:pointer;color:#1e3f7a;font-weight:600;transition:all 0.15s;white-space:nowrap;flex-shrink:0;'
+      btn.style.cssText='font-size:10px;padding:3px 8px;border:1px solid #ccd3e0;border-radius:14px;background:white;cursor:pointer;color:#1e3f7a;font-weight:600;transition:all 0.15s;white-space:nowrap;flex-shrink:0;line-height:1.3;'
       btn.onclick=()=>{
         btn.classList.toggle('activo')
         btn.style.background=btn.classList.contains('activo')?'#1e3f7a':'white'
@@ -1886,12 +2204,15 @@ async function cargarQuemas() {
   let hR=''
   allSort.forEach(r=>{
     const p=(parseFloat(r.pct_quema)||0)*100
+    const cos=parseFloat(r.tm_cosechadas)||0
+    const que=parseFloat(r.tm_quema)||0
     const color=p>6?'var(--rojo)':p>3?'var(--naranja)':'#27ae60'
     const isCurr=r.zafra==='2025-2026'
-    hR+=`<tr${isCurr?' style="font-weight:700;background:#fff8f0"':''}>
-      <td style="text-align:left;font-weight:600">${r.zafra}${isCurr?' 🔴':''}</td>
-      <td>${fmt(parseFloat(r.tm_quema),2)}</td>
-      <td style="color:${color};font-weight:700">${fmt(p,2)}%</td></tr>`
+    hR+=`<tr style="font-size:11px;${isCurr?'font-weight:700;background:#fff8f0':''}">
+      <td style="text-align:left;font-weight:600;white-space:nowrap;padding:4px 8px;">${r.zafra}${isCurr?' 🔴':''}</td>
+      <td style="padding:4px 8px;">${fmt(cos,0)}</td>
+      <td style="padding:4px 8px;">${fmt(que,2)}</td>
+      <td style="color:${color};font-weight:700;padding:4px 8px;">${fmt(p,2)}%</td></tr>`
   })
   document.querySelector('#tbl-quemas-resumen tbody').innerHTML=hR
 
@@ -1902,16 +2223,20 @@ async function cargarQuemas() {
   chartQPct=new Chart(document.getElementById('chart-quemas-pct').getContext('2d'),{
     type:'line',
     data:{labels:labelsAll,datasets:[{data:pctsAll.map(v=>parseFloat(v.toFixed(2))),borderColor:'#c0392b',backgroundColor:'rgba(192,57,43,0.08)',borderWidth:2,pointRadius:3,fill:true,tension:0.3}]},
-    options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.y.toFixed(2)+'%'}}},
-      scales:{x:{ticks:{font:{size:9},maxRotation:45}},y:{beginAtZero:true,ticks:{callback:v=>v+'%',font:{size:9}}}}}
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.y.toFixed(2)+'%'}}},
+      scales:{x:{ticks:{maxRotation:45}},y:{beginAtZero:true,ticks:{callback:v=>v+'%'}}}}
   })
 
-  // Gráfica TM — estática, siempre todas las zafras
+  // Gráfica TM — estática, siempre todas las zafras (autoSkip:false fuerza mostrar TODAS las labels Y)
   if(chartQTm) chartQTm.destroy()
   chartQTm=new Chart(document.getElementById('chart-quemas-tm').getContext('2d'),{
     type:'bar',
     data:{labels:allSort.map(r=>r.zafra.replace('-20','-')),datasets:[{data:allSort.map(r=>parseFloat(r.tm_quema)||0),backgroundColor:allSort.map(r=>r.zafra==='2025-2026'?'#e8a020':'#2a5298'),borderRadius:3}]},
-    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{font:{size:9}}},y:{ticks:{font:{size:9}}}}}
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{
+        x:{beginAtZero:true,ticks:{callback:v=>fmt(v,0)}},
+        y:{ticks:{autoSkip:false,font:{size:9}}}
+      }}
   })
 
   // Zonas geográficas (detalle filtrado, desde desc_finca → planificacion)
@@ -1925,7 +2250,8 @@ async function cargarQuemas() {
   chartQZonas=new Chart(document.getElementById('chart-quemas-zonas').getContext('2d'),{
     type:'bar',
     data:{labels:zonasSort.map(z=>z[0]),datasets:[{data:zonasSort.map(z=>parseFloat(z[1].toFixed(2))),backgroundColor:'#c0392b',borderRadius:3}]},
-    options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{font:{size:9}}},y:{ticks:{font:{size:9}}}}}
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmt(c.parsed.x,2)+' TM'}}},
+      scales:{x:{beginAtZero:true,ticks:{callback:v=>fmt(v,0)}},y:{}}}
   })
 
   // HA por mes: usar area_aprox si existe, sino calcular neto/tch
@@ -1942,7 +2268,7 @@ async function cargarQuemas() {
   chartQMes=new Chart(document.getElementById('chart-quemas-mes').getContext('2d'),{
     type:'bar',
     data:{labels:mesesConDatos.map(m=>MESES_Q[m]),datasets:[{data:mesesConDatos.map(m=>parseFloat(porMes[m].toFixed(2))),backgroundColor:'#c0392b',borderRadius:3}]},
-    options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{font:{size:9}}},x:{ticks:{font:{size:9}}}}}
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true},x:{}}}
   })
 
   // Tabla mes × semana: semana del mes (1-4) calculada desde fecha_zafra
@@ -1960,22 +2286,34 @@ async function cargarQuemas() {
   })
   const semanas=['Sem 1','Sem 2','Sem 3','Sem 4','Sem 5']
   const thead=document.getElementById('thead-mes-sem')
-  thead.innerHTML='<th>Mes</th>'+semanas.map(s=>`<th style="font-size:10px">${s}</th>`).join('')+'<th>Total</th>'
+  thead.innerHTML='<th style="font-size:9px;padding:3px 6px;">Mes</th>'+semanas.map(s=>`<th style="font-size:9px;padding:3px 6px;">${s}</th>`).join('')+'<th style="font-size:9px;padding:3px 6px;">Total</th>'
+  // Calcular min/max sobre celdas con valor>0 para escala de color suave (amarillo→rojo)
+  const allCellVals = []
+  mesesConDatos.forEach(m=>{ semanas.forEach(s=>{ const v=mesSemMap[m]?.[s]||0; if(v>0) allCellVals.push(v) }) })
+  const minV = allCellVals.length ? Math.min(...allCellVals) : 0
+  const maxV = allCellVals.length ? Math.max(...allCellVals) : 0
+  const heatColor = (v) => {
+    if(v<=0 || maxV<=minV) return ''
+    const t = (v - minV) / (maxV - minV)
+    const hue = 55 - t*55
+    return `background:hsl(${hue}, 75%, 86%);`
+  }
   let hM='', totSem={}
   semanas.forEach(s=>totSem[s]=0)
   mesesConDatos.forEach(m=>{
     const totM=semanas.reduce((s,sem)=>s+(mesSemMap[m]?.[sem]||0),0)
     if(totM===0) return
-    hM+=`<tr><td style="text-align:left;font-weight:600;font-size:11px">${MESES_Q[m]}</td>`
+    hM+=`<tr><td style="text-align:left;font-weight:600;font-size:10px;padding:3px 6px;">${MESES_Q[m]}</td>`
     semanas.forEach(s=>{
       const v=mesSemMap[m]?.[s]||0
       totSem[s]+=v
-      hM+=`<td style="font-size:11px">${v>0?fmt(v,2):'—'}</td>`
+      const bg = heatColor(v)
+      hM+=`<td style="font-size:10px;padding:3px 6px;${bg}">${v>0?fmt(v,2):'—'}</td>`
     })
-    hM+=`<td style="font-weight:700;font-size:11px">${fmt(totM,2)}</td></tr>`
+    hM+=`<td style="font-weight:700;font-size:10px;padding:3px 6px;">${fmt(totM,2)}</td></tr>`
   })
   const totTotal=Object.values(totSem).reduce((s,v)=>s+v,0)
-  if(totTotal>0) hM+=`<tr class="total-row"><td>Total</td>${semanas.map(s=>`<td>${fmt(totSem[s],2)}</td>`).join('')}<td>${fmt(totTotal,2)}</td></tr>`
+  if(totTotal>0) hM+=`<tr class="total-row" style="font-size:10px;"><td style="padding:3px 6px;">Total</td>${semanas.map(s=>`<td style="padding:3px 6px;">${fmt(totSem[s],2)}</td>`).join('')}<td style="padding:3px 6px;">${fmt(totTotal,2)}</td></tr>`
   document.querySelector('#tbl-quemas-mes-sem tbody').innerHTML = hM||'<tr><td colspan="7">Sin datos</td></tr>'
 
   // MAPA — colorear polígonos según quemas criminales
@@ -2068,7 +2406,12 @@ async function actualizarMapaQuemas(detFilt) {
       }
     })
     heat._isQuemaLayer = true
-    heat.addTo(mapaQ)
+    // Diferir hasta el siguiente frame para que el canvas del mapa ya tenga ancho > 0
+    // (evita IndexSizeError de getImageData cuando la pestaña recién se hizo visible)
+    requestAnimationFrame(() => {
+      mapaQ.invalidateSize()
+      heat.addTo(mapaQ)
+    })
   }
 }
 

@@ -267,13 +267,15 @@
     white-space:nowrap;font-family:'Geist Mono',monospace;letter-spacing:0.2px;
   }
 
-  /* Pie de página */
+  /* Pie de página - estilo unificado con index.html y cosecha.html */
   .pie-pagina{
-    text-align:center;font-size:11px;color:var(--texto-muted);
+    text-align:center;font-size:12px;color:var(--texto-soft);
     padding:18px 0 10px;margin-top:22px;
     border-top:1px solid var(--gris-borde-soft);
-    font-family:'Geist Mono',monospace;letter-spacing:0.3px;
+    font-family:'Geist',sans-serif;letter-spacing:0;font-style:normal;
   }
+  .pie-pagina strong{color:var(--brand);font-weight:600}
+  .pie-pagina .sep{color:var(--texto-muted);margin:0 8px}
 
 /* FILTROS */
   .filtros { display:flex; gap:14px; flex-wrap:wrap; margin-bottom:16px; background:#fff; padding:12px 16px; border-radius:8px; border:1px solid #e0e4ec; align-items:flex-end; }
@@ -345,7 +347,6 @@
   .chart-canvas-wrap.tall { height:380px; }
 
   .loading { text-align:center; padding:28px; color:#bbb; font-size:13px; }
-  .pie-pagina { text-align:right; font-size:11px; color:#bbb; font-style:italic; margin-top:14px; }
 </style>
 </head>
 <body>
@@ -420,7 +421,7 @@
         <span class="menu-btn-arrow">Abrir módulo</span>
       </button>
     </div>
-    <p class="pie-pagina">by Departamento de Estadística Agrícola · Compañía Azucarera Chumbagua · Zafra 2025–2026</p>
+    <p class="pie-pagina">by <strong>Departamento de Estadística Agrícola</strong><span class="sep">|</span>Compañía Azucarera Chumbagua<span class="sep">|</span>Zafra 2025–2026</p>
   </div>
 </div>
 
@@ -483,7 +484,7 @@
     </table>
   </div>
 
-  <p class="pie-pagina">Depto. de Estadística Agrícola | Zafra 2025-2026</p>
+  <p class="pie-pagina">by <strong>Departamento de Estadística Agrícola</strong><span class="sep">|</span>Compañía Azucarera Chumbagua<span class="sep">|</span>Zafra 2025–2026</p>
 </div>
 
 <!-- ════════════════════════════════════════════════════════════════ -->
@@ -539,7 +540,7 @@
     </table>
   </div>
 
-  <p class="pie-pagina">Depto. de Estadística Agrícola | Zafra 2025-2026</p>
+  <p class="pie-pagina">by <strong>Departamento de Estadística Agrícola</strong><span class="sep">|</span>Compañía Azucarera Chumbagua<span class="sep">|</span>Zafra 2025–2026</p>
 </div>
 
 <!-- ════════════════════════════════════════════════════════════════ -->
@@ -579,7 +580,7 @@
     <div class="chart-canvas-wrap tall"><canvas id="chart-tch-has"></canvas></div>
   </div>
 
-  <p class="pie-pagina">Depto. de Estadística Agrícola | Zafra 2025-2026</p>
+  <p class="pie-pagina">by <strong>Departamento de Estadística Agrícola</strong><span class="sep">|</span>Compañía Azucarera Chumbagua<span class="sep">|</span>Zafra 2025–2026</p>
 </div>
 
 <!-- ════════════════════════════════════════════════════════════════ -->
@@ -627,7 +628,7 @@
     <div class="chart-canvas-wrap tall"><canvas id="chart-comparativo"></canvas></div>
   </div>
 
-  <p class="pie-pagina">Depto. de Estadística Agrícola | Zafra 2025-2026</p>
+  <p class="pie-pagina">by <strong>Departamento de Estadística Agrícola</strong><span class="sep">|</span>Compañía Azucarera Chumbagua<span class="sep">|</span>Zafra 2025–2026</p>
 </div>
 
 <!-- ════════════════════════════════════════════════════════════════ -->
@@ -673,7 +674,7 @@
     <div class="chart-canvas-wrap tall"><canvas id="chart-zafravar"></canvas></div>
   </div>
 
-  <p class="pie-pagina">Depto. de Estadística Agrícola | Zafra 2025-2026</p>
+  <p class="pie-pagina">by <strong>Departamento de Estadística Agrícola</strong><span class="sep">|</span>Compañía Azucarera Chumbagua<span class="sep">|</span>Zafra 2025–2026</p>
 </div>
 
 <!-- ════════════════════════════════════════════════════════════════ -->
@@ -727,7 +728,7 @@
     </div>
   </div>
 
-  <p class="pie-pagina">Depto. de Estadística Agrícola | Zafra 2025-2026</p>
+  <p class="pie-pagina">by <strong>Departamento de Estadística Agrícola</strong><span class="sep">|</span>Compañía Azucarera Chumbagua<span class="sep">|</span>Zafra 2025–2026</p>
 </div>
 
 <!-- ════════════════════════════════════════════════════════════════ -->

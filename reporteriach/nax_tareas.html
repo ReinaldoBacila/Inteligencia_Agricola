@@ -1,0 +1,2033 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inspección NAX | Chumbagua</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased}
+  :root{
+    --brand:        #1e3f7a;
+    --brand-dark:   #162e5a;
+    --brand-2:      #2d6e3e;
+    --brand-2-dark: #1e5028;
+    --brand-soft:   #dde7f5;
+    --brand-2-soft: #dcebe0;
+    --brand-bg:     #f5f8fc;
+    --brand-2-bg:   #f4faf6;
+    --accent-1:     #e8a020;
+    --accent-2:     #a85d2c;
+    --accent-3:     #7d4ea8;
+    --accent-4:     #0d8a9c;
+    --accent-5:     #c0594d;
+    --pos:          #16a34a;
+    --pos-bg:       #f0fdf4;
+    --neg:          #dc2626;
+    --neg-bg:       #fef2f2;
+    --warn:         #f59e0b;
+    --warn-bg:      #fffbeb;
+    --info:         #3b82f6;
+    --info-bg:      #eff6ff;
+    --gris-fondo:   #fafafa;
+    --gris-borde:   #ededed;
+    --gris-borde-soft:#f4f4f5;
+    --texto:        #0a0a0a;
+    --texto-soft:   #666;
+    --texto-muted:  #999;
+    --azul: #1e3f7a;
+    --verde: #2d6e3e;
+    --rojo: #dc2626;
+    --blanco: #ffffff;
+  }
+  body{
+    font-family:'Geist',-apple-system,BlinkMacSystemFont,sans-serif;
+    background:var(--gris-fondo);
+    color:var(--texto);
+    min-height:100vh;
+    font-size:14px;
+  }
+
+  /* ────────────────────── LOGIN ────────────────────── */
+  #pag-login{
+    position:fixed;inset:0;z-index:9999;
+    background:linear-gradient(135deg,var(--brand) 0%,var(--brand-2) 100%);
+    display:flex;align-items:center;justify-content:center;padding:20px;
+  }
+  #pag-login.oculto{display:none}
+  #pag-login::before{
+    content:'';position:absolute;top:-100px;right:-100px;
+    width:400px;height:400px;
+    background:radial-gradient(circle,rgba(255,255,255,0.1),transparent 70%);border-radius:50%;
+  }
+  #pag-login::after{
+    content:'';position:absolute;bottom:-150px;left:-150px;
+    width:500px;height:500px;
+    background:radial-gradient(circle,rgba(255,255,255,0.08),transparent 70%);border-radius:50%;
+  }
+  .login-box{
+    background:white;border-radius:16px;padding:40px 44px;
+    width:100%;max-width:400px;text-align:center;
+    box-shadow:0 20px 60px rgba(0,0,0,0.3);position:relative;z-index:1;
+  }
+  .login-logo-wrap{
+    width:56px;height:56px;
+    background:linear-gradient(135deg,var(--brand),var(--brand-2));
+    border-radius:14px;display:flex;align-items:center;justify-content:center;
+    color:white;font-weight:700;font-size:22px;margin:0 auto 18px;
+    box-shadow:0 6px 20px rgba(30,63,122,0.3);
+  }
+  .login-logo{font-size:24px;font-weight:600;color:var(--texto);letter-spacing:-0.5px}
+  .login-sub{font-size:11px;color:var(--brand-2);font-weight:600;margin-top:4px;margin-bottom:28px;letter-spacing:1.5px;text-transform:uppercase;font-family:'Geist Mono',monospace}
+  .login-titulo{font-size:13px;color:var(--texto-soft);margin-bottom:18px;text-align:left;font-weight:500}
+  .login-input{
+    width:100%;padding:11px 14px;border:1px solid var(--gris-borde);border-radius:8px;
+    font-size:14px;margin-bottom:10px;outline:none;font-family:inherit;
+    transition:border-color .15s, box-shadow .15s;
+  }
+  .login-input:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+  .login-btn{
+    width:100%;padding:12px;background:linear-gradient(135deg,var(--brand),var(--brand-2));
+    color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;
+    cursor:pointer;margin-top:8px;transition:transform .1s, box-shadow .15s;
+  }
+  .login-btn:hover{box-shadow:0 4px 14px rgba(30,63,122,0.3)}
+  .login-btn:active{transform:scale(0.98)}
+  .login-btn:disabled{opacity:0.6;cursor:not-allowed}
+  .login-error{margin-top:14px;color:var(--neg);font-size:12px;min-height:16px}
+
+  /* ────────────────────── HEADER ────────────────────── */
+  .header{
+    background:white;border-bottom:1px solid var(--gris-borde);
+    padding:12px 28px;display:flex;align-items:center;justify-content:space-between;
+    position:sticky;top:0;z-index:100;gap:18px;min-height:62px;
+  }
+  .brand-blk{display:flex;align-items:center;gap:12px;flex-shrink:0}
+  .brand-logo{
+    width:36px;height:36px;
+    background:linear-gradient(135deg,var(--brand),var(--brand-2));
+    border-radius:9px;display:flex;align-items:center;justify-content:center;
+    color:white;font-weight:700;font-size:14px;letter-spacing:-0.5px;
+    box-shadow:0 2px 6px rgba(30,63,122,0.25);
+  }
+  .brand-name{font-size:15px;font-weight:600;letter-spacing:-0.3px;color:var(--texto)}
+  .brand-name span{color:var(--texto-soft);font-weight:400;margin-left:6px;font-size:13px}
+
+  .header-pagina{flex:1;text-align:center;min-width:0}
+  .header-pagina-titulo{
+    font-size:20px;font-weight:600;color:var(--texto);
+    letter-spacing:-0.5px;line-height:1.15;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .header-pagina-sub{font-size:11.5px;color:var(--texto-soft);margin-top:2px;line-height:1;font-weight:500}
+
+  .header-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;position:relative}
+  .btn-portal-icon{
+    width:34px;height:34px;border-radius:8px;
+    border:1px solid var(--gris-borde);background:white;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;color:var(--texto-soft);transition:all .15s;
+    padding:0;
+  }
+  .btn-portal-icon:hover{background:var(--brand-bg);color:var(--brand);border-color:var(--brand-soft)}
+  .btn-atras-hdr{
+    display:flex;align-items:center;gap:5px;
+    padding:6px 12px 6px 9px;
+    border:1px solid var(--gris-borde);border-radius:7px;background:white;
+    font-family:inherit;font-size:12px;font-weight:600;
+    color:var(--brand);cursor:pointer;transition:all .15s;
+    flex-shrink:0;
+  }
+  .btn-atras-hdr:hover{background:var(--brand-bg);border-color:var(--brand);color:var(--brand-dark)}
+  .btn-atras-hdr svg{flex-shrink:0}
+  .avatar{
+    width:34px;height:34px;border-radius:9px;
+    background:linear-gradient(135deg,var(--brand-2),#4a8e5d);
+    color:white;display:flex;align-items:center;justify-content:center;
+    font-weight:600;font-size:12px;cursor:pointer;
+    box-shadow:0 2px 6px rgba(45,110,62,0.25);user-select:none;
+  }
+  .user-dropdown{
+    position:absolute;top:42px;right:0;
+    background:white;border:1px solid var(--gris-borde);border-radius:10px;
+    box-shadow:0 8px 24px rgba(0,0,0,0.1);
+    padding:14px 16px 10px;min-width:240px;z-index:200;display:none;
+  }
+  .user-dropdown.abierto{display:block}
+  .udd-header{padding-bottom:10px;border-bottom:1px solid var(--gris-borde-soft);margin-bottom:8px}
+  .udd-nombre{font-size:14px;font-weight:600;color:var(--texto);letter-spacing:-0.2px}
+  .udd-cargo{font-size:11px;color:var(--texto-soft);margin-top:2px}
+  .udd-email{font-size:10px;color:var(--texto-muted);margin-top:3px;font-family:'Geist Mono',monospace;word-break:break-all}
+  .udd-btn{
+    display:block;width:100%;padding:8px 10px;
+    background:none;border:1px solid var(--neg-bg);color:var(--neg);
+    border-radius:7px;font-family:inherit;font-size:12px;font-weight:600;
+    cursor:pointer;text-align:center;transition:all .15s;
+  }
+  .udd-btn:hover{background:var(--neg-bg);border-color:var(--neg)}
+
+  /* ────────────────────── PÁGINAS ────────────────────── */
+  .page{display:none;padding:20px 32px 24px}
+  .page.active{display:block}
+
+  /* ────────────────────── MENÚ ────────────────────── */
+  .menu-page{max-width:1400px;margin:0 auto;padding:0}
+  .menu-hero{
+    padding:32px 36px 30px;
+    background:linear-gradient(135deg,#fafafa,var(--brand-bg) 50%, var(--brand-2-bg));
+    border-radius:16px;margin-bottom:24px;
+    position:relative;overflow:hidden;text-align:left;
+    border:1px solid var(--gris-borde);
+  }
+  .menu-hero-zafra{
+    display:inline-block;font-family:'Geist Mono',monospace;
+    font-size:12px;color:var(--brand);background:white;
+    padding:5px 12px;border:1px solid var(--brand-soft);border-radius:100px;
+    margin-top:8px;font-weight:600;letter-spacing:0.5px;
+    position:relative;z-index:1;
+  }
+  .menu-hero::before{
+    content:'';position:absolute;top:-50px;right:-50px;width:300px;height:300px;
+    background:radial-gradient(circle,var(--brand-2-soft),transparent 70%);opacity:0.5;
+  }
+  .menu-hero::after{
+    content:'';position:absolute;bottom:-80px;left:-80px;width:300px;height:300px;
+    background:radial-gradient(circle,var(--brand-soft),transparent 70%);opacity:0.5;
+  }
+  .menu-hero h1{
+    font-size:48px;font-weight:600;letter-spacing:-2px;line-height:1.05;
+    color:var(--texto);position:relative;z-index:1;
+  }
+  .menu-hero h1 .grad{
+    background:linear-gradient(90deg,var(--brand),var(--brand-2));
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  }
+  .menu-hero p{
+    font-size:13px;color:var(--texto-soft);margin-top:14px;
+    max-width:600px;line-height:1.5;position:relative;z-index:1;
+  }
+
+  .menu-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:28px}
+  .menu-btn{
+    background:white;border:1px solid #e0e4ec;border-radius:12px;
+    padding:24px;text-align:left;cursor:pointer;
+    transition:all .2s;font-family:inherit;color:var(--texto);
+    position:relative;overflow:hidden;display:flex;flex-direction:column;gap:6px;
+    box-shadow:0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03);
+  }
+  .menu-btn::before{
+    content:'';position:absolute;left:0;top:0;bottom:0;width:4px;
+    background:var(--brand);opacity:0.7;transition:all .2s;
+  }
+  .menu-btn::after{
+    content:'';position:absolute;inset:0;border-radius:12px;
+    background:linear-gradient(135deg,transparent 60%,rgba(30,63,122,0.025));
+    pointer-events:none;
+  }
+  .menu-btn:hover{
+    transform:translateY(-3px);border-color:var(--brand);
+    box-shadow:0 8px 20px rgba(30,63,122,0.12), 0 2px 4px rgba(0,0,0,0.05);
+  }
+  .menu-btn:hover::before{opacity:1;width:5px}
+  .menu-btn-icon{
+    width:38px;height:38px;border-radius:10px;
+    display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:6px;
+  }
+  .menu-btn-titulo{font-size:16px;font-weight:600;letter-spacing:-0.3px}
+  .menu-btn .sub{font-size:13px;color:var(--texto-soft);font-weight:400;line-height:1.4}
+  .menu-btn-arrow{
+    margin-top:8px;font-size:12px;font-weight:600;color:var(--brand);
+    display:flex;align-items:center;gap:4px;
+  }
+  .menu-btn-arrow::after{content:'→';transition:transform .15s}
+  .menu-btn:hover .menu-btn-arrow::after{transform:translateX(3px)}
+  /* Variantes color */
+  .menu-btn.azul::before{background:var(--brand);opacity:0.7}
+  .menu-btn.azul .menu-btn-icon{background:var(--brand-soft);color:var(--brand)}
+  .menu-btn.azul .menu-btn-arrow{color:var(--brand)}
+  .menu-btn.verde::before{background:var(--brand-2);opacity:0.7}
+  .menu-btn.verde .menu-btn-icon{background:var(--brand-2-soft);color:var(--brand-2)}
+  .menu-btn.verde .menu-btn-arrow{color:var(--brand-2)}
+  .menu-btn.verde:hover{border-color:var(--brand-2-soft)}
+  .menu-btn.naranja::before{background:var(--accent-1);opacity:0.7}
+  .menu-btn.naranja .menu-btn-icon{background:#fcefd8;color:var(--accent-1)}
+  .menu-btn.naranja .menu-btn-arrow{color:var(--accent-1)}
+  .menu-btn.naranja:hover{border-color:#fcefd8}
+  .menu-btn.morado::before{background:var(--accent-3);opacity:0.7}
+  .menu-btn.morado .menu-btn-icon{background:#e8dff0;color:var(--accent-3)}
+  .menu-btn.morado .menu-btn-arrow{color:var(--accent-3)}
+  .menu-btn.morado:hover{border-color:#e8dff0}
+  .menu-btn.rojo::before{background:var(--accent-5);opacity:0.7}
+  .menu-btn.rojo .menu-btn-icon{background:#fce8e4;color:var(--accent-5)}
+  .menu-btn.rojo .menu-btn-arrow{color:var(--accent-5)}
+  .menu-btn.rojo:hover{border-color:#fce8e4}
+
+  /* Pie de página - estilo unificado con index.html */
+  .pie-pagina{
+    text-align:center;font-size:12px;color:var(--texto-soft);
+    padding:18px 0 10px;margin-top:22px;
+    border-top:1px solid var(--gris-borde-soft);
+    font-family:'Geist',sans-serif;letter-spacing:0;font-style:normal;
+  }
+  .pie-pagina strong{color:var(--brand);font-weight:600}
+  .pie-pagina .sep{color:var(--texto-muted);margin:0 8px}
+
+  /* ────────────────────── FILTROS ────────────────────── */
+  .filtros{
+    display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;
+    background:white;padding:12px 16px;border-radius:10px;
+    border:1px solid var(--gris-borde);align-items:flex-end;
+  }
+  .filtro-grupo{display:flex;flex-direction:column;gap:4px}
+  .filtro-grupo label{font-size:11px;font-weight:600;color:var(--texto-soft);letter-spacing:0.3px}
+  .filtro-grupo select, .filtro-grupo input{
+    border:1px solid var(--gris-borde);border-radius:7px;padding:7px 11px;
+    font-size:13px;min-width:140px;background:white;color:var(--texto);
+    font-family:inherit;font-weight:500;outline:none;
+    transition:border-color .15s, box-shadow .15s;
+  }
+  .filtro-grupo select:focus, .filtro-grupo input:focus{
+    border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft);
+  }
+
+  /* ────────────────────── KPI CARDS ────────────────────── */
+  .kpi-grid{display:grid;gap:12px;margin-bottom:18px}
+  .kpi-grid.k3{grid-template-columns:repeat(3,1fr)}
+  .kpi-grid.k4{grid-template-columns:repeat(4,1fr)}
+  .kpi-card{
+    background:white;border-radius:10px;padding:14px 16px;
+    border:1px solid #e0e4ec;border-top:3px solid var(--brand);
+    transition:transform .15s, box-shadow .15s;
+    box-shadow:0 1px 3px rgba(0,0,0,0.04);
+    display:flex;flex-direction:column;justify-content:space-between;
+    min-height:108px;
+  }
+  .kpi-card:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,0.06)}
+  .kpi-card.verde{border-top-color:var(--brand-2)}
+  .kpi-card.rojo{border-top-color:var(--accent-5)}
+  .kpi-card.azul{border-top-color:var(--brand)}
+  .kpi-card.amarillo{border-top-color:var(--accent-1)}
+  .kpi-card.gris{border-top-color:#999}
+  .kpi-card.morado{border-top-color:var(--accent-3)}
+  .kpi-card.cyan{border-top-color:var(--accent-4)}
+  .kpi-label{
+    font-size:11px;font-weight:600;color:var(--brand);
+    letter-spacing:0.4px;margin-bottom:0;text-transform:uppercase;
+  }
+  .kpi-card.verde .kpi-label{color:var(--brand-2)}
+  .kpi-card.rojo .kpi-label{color:var(--accent-5)}
+  .kpi-card.azul .kpi-label{color:var(--brand)}
+  .kpi-card.amarillo .kpi-label{color:var(--accent-1)}
+  .kpi-card.gris .kpi-label{color:var(--texto-soft)}
+  .kpi-card.morado .kpi-label{color:var(--accent-3)}
+  .kpi-card.cyan .kpi-label{color:var(--accent-4)}
+  .kpi-valor{
+    font-size:30px;font-weight:700;color:var(--texto);
+    letter-spacing:-1.2px;line-height:1;font-variant-numeric:tabular-nums;
+    margin-top:8px;
+  }
+  .kpi-sub{font-size:11.5px;color:var(--texto-soft);margin-top:6px;display:flex;align-items:center;gap:6px;font-weight:500}
+
+  /* ────────────────────── PANEL / CARD ────────────────────── */
+  /* Panel = contenedor transparente. Título OUT del recuadro, body es la tarjeta blanca. */
+  .panel{
+    background:transparent;border:none;border-radius:0;
+    overflow:visible;display:flex;flex-direction:column;
+  }
+  .panel-header{
+    padding:0 0 0 10px;
+    font-size:11px;font-weight:600;color:var(--texto-soft);
+    letter-spacing:1.2px;text-transform:uppercase;
+    display:flex;align-items:center;gap:8px;text-align:left;
+    background:transparent;
+    border-left:3px solid var(--brand);
+    margin:0 0 10px;
+    flex-shrink:0;
+  }
+  .panel-header::before{display:none}
+  .panel-body{
+    background:transparent;border:none;border-radius:0;
+    padding:0;overflow:visible;flex:1;min-height:0;
+  }
+  .panel-body.compacto{padding:0}
+  .panel-body.no-pad{padding:0}
+  /* Modificador: vuelve a poner tarjeta blanca con borde y redondeado (para tablas/listas) */
+  .panel-body.con-borde{
+    background:white;border:1px solid var(--gris-borde);border-radius:10px;
+    overflow:hidden;
+  }
+
+  /* Grid combinado del módulo Cumplimiento:
+       lista (col1, span 2 filas) | rangos (col2 fila1) | usuario (col3 fila1)
+                                  | urgencia (col2 fila2) | promedio (col3 fila2) */
+  .grid-cumpl-resumen{
+    display:grid;grid-template-columns:1fr 1fr 1fr;
+    grid-template-areas:
+      "lista rangos usuario"
+      "lista urgencia promedio";
+    gap:12px;margin-bottom:12px;
+  }
+  .area-lista{grid-area:lista}
+  .area-rangos{grid-area:rangos}
+  .area-usuario{grid-area:usuario}
+  .area-urgencia{grid-area:urgencia}
+  .area-promedio{grid-area:promedio}
+  /* Lista llena el alto del panel (que mide la suma de las dos filas) */
+  .panel-lista-body{display:flex;flex-direction:column}
+  .lista-usuario.lista-fill{max-height:none;height:100%;overflow-y:auto;flex:1}
+
+  /* Ranking de áreas */
+  .ranking-list{padding:6px 0}
+  .ranking-row{
+    display:grid;grid-template-columns:18px 80px 1fr 48px;
+    gap:10px;align-items:center;padding:7px 16px;
+    font-size:12.5px;
+  }
+  .ranking-row .num{color:var(--texto-muted);font-weight:600;text-align:right}
+  .ranking-row .nombre{color:var(--texto);font-weight:500;display:flex;align-items:center;gap:6px}
+  .ranking-row.destacado .nombre{font-weight:700;color:var(--brand)}
+  .ranking-row.destacado .nombre::after{
+    content:'';width:6px;height:6px;border-radius:50%;background:var(--brand);display:inline-block;
+  }
+  .ranking-row .barra{
+    height:8px;background:#eef0f4;border-radius:4px;overflow:hidden;
+  }
+  .ranking-row .barra > span{
+    display:block;height:100%;border-radius:4px;
+    background:linear-gradient(90deg,var(--brand),var(--brand-2));
+  }
+  .ranking-row .pct{text-align:right;font-weight:700;color:var(--texto);font-variant-numeric:tabular-nums}
+
+  /* Personal en alarma */
+  .alarma-list{padding:4px 0}
+  .alarma-row{
+    display:grid;grid-template-columns:30px 1fr 50px;
+    gap:12px;align-items:center;padding:9px 16px;
+    border-bottom:1px solid var(--gris-borde-soft);
+    font-size:12.5px;
+  }
+  .alarma-row:last-child{border-bottom:none}
+  .alarma-num{
+    width:24px;height:24px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:11px;font-weight:700;color:white;
+  }
+  .alarma-num.r1{background:#dc2626}
+  .alarma-num.r2{background:#f59e0b}
+  .alarma-num.r3{background:#eab308}
+  .alarma-info .nombre{font-weight:600;color:var(--texto)}
+  .alarma-info .meta{font-size:11px;color:var(--texto-soft);margin-top:2px}
+  .alarma-info .meta .pen{color:var(--neg);font-weight:600}
+  .alarma-pct{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+  .alarma-pct.r1{color:var(--neg)}
+  .alarma-pct.r2{color:#f59e0b}
+  .alarma-pct.r3{color:#a16207}
+
+  /* ────────────────────── GRID DASHBOARD ────────────────────── */
+  .grid{display:grid;gap:12px;margin-bottom:12px}
+  .grid-2{grid-template-columns:1fr 1fr}
+  .grid-3{grid-template-columns:1fr 1fr 1fr}
+  .grid-4{grid-template-columns:repeat(4,1fr)}
+  .grid-23{grid-template-columns:2fr 3fr}
+  .grid-31{grid-template-columns:3fr 1fr}
+  .grid-12{grid-template-columns:1fr 2fr}
+
+  /* ────────────────────── TABLAS ────────────────────── */
+  .tabla{width:100%;border-collapse:collapse;font-size:13px;background:white}
+  .tabla thead tr{
+    background:linear-gradient(90deg,var(--brand-soft),var(--brand-2-soft));
+    border-bottom:2px solid var(--brand);
+  }
+  .tabla thead th{
+    font-size:11px;font-weight:700;padding:10px 12px;text-align:center;
+    color:var(--brand);letter-spacing:0.6px;text-transform:uppercase;
+    background:transparent;white-space:nowrap;
+  }
+  .tabla thead th:first-child{text-align:left;padding-left:14px}
+  .tabla thead th:last-child{padding-right:14px}
+  .tabla tbody tr{border-bottom:1px solid #eef0f4;background:white;transition:background .12s}
+  .tabla tbody tr:nth-child(even){background:#fbfcfd}
+  .tabla tbody tr:hover{background:var(--brand-bg) !important}
+  .tabla tbody td{
+    padding:8px 12px;text-align:center;color:var(--texto);
+    font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap;
+  }
+  .tabla tbody td:first-child{text-align:left;padding-left:14px;font-weight:500}
+  .tabla tbody td:last-child{padding-right:14px}
+  .tabla td.num{text-align:right;font-variant-numeric:tabular-nums}
+  .tabla td.center{text-align:center}
+  .tabla tfoot td{
+    background:#eef2f8;color:var(--brand);font-weight:700;font-size:13.5px;
+    border-top:2px solid var(--brand);padding:8px 12px;text-align:center;
+    font-variant-numeric:tabular-nums;
+  }
+  .tabla tfoot td:first-child{text-align:left;padding-left:14px;font-weight:800}
+  .tabla tfoot td:last-child{padding-right:14px}
+
+  /* Cuadro detallado: solo color de texto en celdas (sin fondos pastel) */
+  .tabla.detallado td.col-pendiente{color:var(--neg);text-align:right;font-weight:600}
+  .tabla.detallado td.col-finalizada{color:var(--pos);text-align:right;font-weight:600}
+  .tabla.detallado td.col-verificada{color:var(--info);text-align:right;font-weight:600}
+  .tabla.detallado td.col-total{text-align:right;font-weight:700}
+  .tabla.detallado tfoot td.col-pendiente{color:var(--neg)}
+  .tabla.detallado tfoot td.col-finalizada{color:var(--pos)}
+  .tabla.detallado tfoot td.col-verificada{color:var(--info)}
+
+  /* Variante compacta */
+  .tabla.compacta{font-size:12px}
+  .tabla.compacta thead th{padding:7px 10px;font-size:10.5px}
+  .tabla.compacta tbody td{padding:5px 10px}
+  .tabla.compacta tfoot td{padding:5px 10px;font-size:12.5px}
+
+  /* Tabla de seguimiento */
+  .tabla.seguimiento{font-size:11.5px}
+  .tabla.seguimiento td{padding:5px 8px;white-space:nowrap}
+  .tabla.seguimiento th{padding:6px 8px;font-size:10px}
+  .badge-urg{
+    display:inline-block;padding:2px 8px;border-radius:4px;
+    font-weight:600;font-size:10.5px;letter-spacing:0.3px;text-align:center;min-width:54px;
+  }
+  .badge-urg.alta{background:#fecaca;color:#991b1b}
+  .badge-urg.media{background:#fef08a;color:#854d0e}
+  .badge-urg.baja{background:#bbf7d0;color:#166534}
+  .badge-cond{
+    display:inline-block;padding:2px 8px;border-radius:4px;
+    font-weight:600;font-size:10.5px;letter-spacing:0.3px;
+  }
+  .badge-cond.en-tiempo{background:#dbeafe;color:#1e40af}
+  .badge-cond.proxima{background:#fef3c7;color:#92400e}
+  .badge-cond.hoy{background:#fed7aa;color:#9a3412}
+  .badge-cond.vencida{background:#fecaca;color:#991b1b}
+  .badge-cond.sin-cat{background:#f3f4f6;color:#6b7280}
+
+  /* Lista usuario con barras */
+  .lista-usuario{max-height:380px;overflow-y:auto}
+  .lista-usuario .row{
+    display:grid;grid-template-columns:1fr 80px;gap:8px;align-items:center;
+    padding:5px 12px;border-bottom:1px solid var(--gris-borde-soft);font-size:11.5px;
+  }
+  .lista-usuario .row:hover{background:var(--brand-bg)}
+  .lista-usuario .nombre{font-weight:500;color:var(--texto);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .lista-usuario .pct{
+    text-align:right;font-weight:600;font-size:11.5px;font-variant-numeric:tabular-nums;
+    padding:2px 6px;border-radius:4px;
+  }
+
+  /* Mapa */
+  #mapa-tareas{height:280px;border-radius:6px;border:1px solid var(--gris-borde)}
+  .leyenda-mapa{
+    display:flex;justify-content:center;gap:14px;margin-top:8px;font-size:11px;
+    color:var(--texto-soft);
+  }
+  .leyenda-mapa .item{display:flex;align-items:center;gap:4px}
+  .leyenda-mapa .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+
+  /* Loading */
+  .cargando{
+    text-align:center;padding:40px;color:var(--texto-muted);font-size:13px;
+  }
+
+  /* Chart wrappers */
+  .chart-wrap{position:relative;width:100%}
+  .chart-wrap.h170{height:170px}
+  .chart-wrap.h180{height:180px}
+  .chart-wrap.h220{height:220px}
+  .chart-wrap.h260{height:260px}
+  .chart-wrap.h280{height:280px}
+  .chart-wrap.h340{height:340px}
+  .chart-wrap.h400{height:400px}
+
+  /* Scroll en panels altos */
+  .panel-scroll{max-height:420px;overflow-y:auto}
+
+  @media(max-width:1100px){
+    .menu-grid{grid-template-columns:repeat(2,1fr)}
+    .grid-23, .grid-31, .grid-12{grid-template-columns:1fr}
+    .grid-3, .grid-4{grid-template-columns:repeat(2,1fr)}
+  }
+  @media(max-width:700px){
+    .menu-grid, .grid-2, .grid-3, .grid-4, .kpi-grid.k3, .kpi-grid.k4{grid-template-columns:1fr}
+    .header-pagina{display:none}
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="pag-login">
+  <div class="login-box">
+    <div class="login-logo-wrap">CH</div>
+    <div class="login-logo">Chumbagua</div>
+    <div class="login-sub">Inteligencia Agrícola</div>
+    <div class="login-titulo">Acceso al sistema de inspección</div>
+    <input class="login-input" type="email" id="login-email" placeholder="Correo electrónico"/>
+    <input class="login-input" type="password" id="login-pass" placeholder="Contraseña" onkeydown="if(event.key==='Enter')doLogin()"/>
+    <button class="login-btn" id="login-btn" onclick="doLogin()">Ingresar</button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<div class="header" id="hdr">
+  <div class="brand-blk">
+    <div class="brand-logo">CH</div>
+    <div class="brand-name">Chumbagua <span>· Inteligencia Agrícola</span></div>
+  </div>
+  <div class="header-pagina">
+    <div class="header-pagina-titulo" id="hdr-titulo">Inspección NAX</div>
+    <div class="header-pagina-sub" id="hdr-subtitulo">Compañía Azucarera Chumbagua</div>
+  </div>
+  <div class="header-actions">
+    <button class="btn-atras-hdr" id="btn-atras-hdr" onclick="irA('pag-menu')" title="Volver al menú" style="display:none">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      <span>Atrás</span>
+    </button>
+    <button class="btn-portal-icon" onclick="window.location.href='index.html'" title="Ir al portal">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    </button>
+    <div class="avatar" id="user-avatar" onclick="toggleUserDropdown()" title="Mi sesión">RB</div>
+    <div class="user-dropdown" id="user-dropdown">
+      <div class="udd-header">
+        <div class="udd-nombre" id="udd-nombre">Cargando...</div>
+        <div class="udd-cargo" id="udd-cargo">—</div>
+        <div class="udd-email" id="udd-email">—</div>
+      </div>
+      <button class="udd-btn" onclick="doLogout()">Cerrar sesión</button>
+    </div>
+  </div>
+</div>
+
+<!-- MENÚ -->
+<div id="pag-menu" class="page active">
+  <div class="menu-page">
+    <div class="menu-hero">
+      <h1>Inspección de <span class="grad">Tareas NAX</span></h1>
+      <div class="menu-hero-zafra">Zafra 2025–2026</div>
+      <p>Dashboard integral de seguimiento del trabajo de campo: cumplimiento por usuario y distrito, detección de anomalías por tipo y área afectada, y seguimiento de revisiones programadas.</p>
+    </div>
+    <div class="menu-grid">
+      <button class="menu-btn azul" onclick="irA('pag-cumplimiento')">
+        <div class="menu-btn-icon">✅</div>
+        <div class="menu-btn-titulo">Cumplimiento</div>
+        <span class="sub">Inspección de tareas por distrito, usuario y rango de días</span>
+        <span class="menu-btn-arrow">Abrir módulo</span>
+      </button>
+      <button class="menu-btn verde" onclick="irA('pag-anomalias')">
+        <div class="menu-btn-icon">🔍</div>
+        <div class="menu-btn-titulo">Detección de Anomalías</div>
+        <span class="sub">Distribución de anomalías por tipo, distrito y HA afectadas</span>
+        <span class="menu-btn-arrow">Abrir módulo</span>
+      </button>
+      <button class="menu-btn rojo" onclick="irA('pag-seguimiento')">
+        <div class="menu-btn-icon">📅</div>
+        <div class="menu-btn-titulo">Seguimiento</div>
+        <span class="sub">Próximas revisiones programadas según tipo de anomalía</span>
+        <span class="menu-btn-arrow">Abrir módulo</span>
+      </button>
+    </div>
+    <p class="pie-pagina">by <strong>Departamento de Estadística Agrícola</strong><span class="sep">|</span>Compañía Azucarera Chumbagua<span class="sep">|</span>Zafra 2025–2026</p>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════ -->
+<!-- DASHBOARD 1: CUMPLIMIENTO                         -->
+<!-- ════════════════════════════════════════════════ -->
+<div id="pag-cumplimiento" class="page">
+
+  <!-- Filtros -->
+  <div class="filtros">
+    <div class="filtro-grupo">
+      <label>Distrito</label>
+      <select id="f1-distrito" onchange="renderCumplimiento()"><option value="">Todos</option></select>
+    </div>
+    <div class="filtro-grupo">
+      <label>Estatus</label>
+      <select id="f1-estatus" onchange="renderCumplimiento()">
+        <option value="">Todos</option>
+        <option value="Pendiente">Pendiente</option>
+        <option value="Finalizada">Finalizada</option>
+        <option value="Verificada">Verificada</option>
+      </select>
+    </div>
+    <div class="filtro-grupo">
+      <label>Usuario responsable</label>
+      <select id="f1-usuario" onchange="renderCumplimiento()"><option value="">Todos</option></select>
+    </div>
+    <div class="filtro-grupo">
+      <label>Lote / Finca</label>
+      <select id="f1-lote" onchange="renderCumplimiento()"><option value="">Todas</option></select>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-grid k3">
+    <div class="kpi-card verde">
+      <div class="kpi-label">% Cumplimiento</div>
+      <div class="kpi-valor" id="kpi1-cumpl">—</div>
+      <div class="kpi-sub" id="kpi1-cumpl-sub">—</div>
+    </div>
+    <div class="kpi-card rojo">
+      <div class="kpi-label">% Pendiente</div>
+      <div class="kpi-valor" id="kpi1-pend">—</div>
+      <div class="kpi-sub" id="kpi1-pend-sub">—</div>
+    </div>
+    <div class="kpi-card gris">
+      <div class="kpi-label">Total tareas</div>
+      <div class="kpi-valor" id="kpi1-total">—</div>
+    </div>
+  </div>
+
+  <!-- Cuadro detallado + mapa + dona -->
+  <div class="grid grid-3">
+    <div class="panel">
+      <div class="panel-header">Tareas por distrito</div>
+      <div class="panel-body no-pad con-borde" style="overflow-y:auto">
+        <table class="tabla detallado compacta" id="tbl1-detallado">
+          <thead>
+            <tr>
+              <th>Distrito</th>
+              <th class="col-pendiente">Pendiente</th>
+              <th class="col-finalizada">Finalizada</th>
+              <th class="col-verificada">Verificada</th>
+              <th class="col-total" style="text-align:right">Total</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+          <tfoot>
+            <tr>
+              <td>Total</td>
+              <td class="col-pendiente"></td>
+              <td class="col-finalizada"></td>
+              <td class="col-verificada"></td>
+              <td class="col-total"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-header">Distribución espacial de tareas</div>
+      <div class="panel-body">
+        <div id="mapa-tareas"></div>
+        <div class="leyenda-mapa">
+          <span class="item"><span class="dot" style="background:#16a34a"></span>Finalizada</span>
+          <span class="item"><span class="dot" style="background:#dc2626"></span>Pendiente</span>
+          <span class="item"><span class="dot" style="background:#2563eb"></span>Verificada</span>
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-header">Estatus de tareas</div>
+      <div class="panel-body">
+        <div class="chart-wrap h280"><canvas id="chart1-dona" role="img" aria-label="Distribución de tareas por estatus"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Segunda + tercera fila combinadas: lista (izq, doble alto) | barras arriba | líneas abajo -->
+  <div class="grid-cumpl-resumen">
+    <div class="panel area-lista">
+      <div class="panel-header">Lista de usuarios (% cumplimiento)</div>
+      <div class="panel-body no-pad con-borde panel-lista-body">
+        <div class="lista-usuario lista-fill" id="lista1-usuarios"></div>
+      </div>
+    </div>
+    <div class="panel area-rangos">
+      <div class="panel-header">Cumplimiento por rangos de días</div>
+      <div class="panel-body">
+        <div class="chart-wrap h260"><canvas id="chart1-rangos" role="img" aria-label="Cumplimiento por rangos de días"></canvas></div>
+      </div>
+    </div>
+    <div class="panel area-usuario">
+      <div class="panel-header">Cumplimiento por usuario</div>
+      <div class="panel-body" style="max-height:300px;overflow-y:auto">
+        <div class="chart-wrap" id="chart1-usuario-wrap"><canvas id="chart1-usuario" role="img" aria-label="Cumplimiento por usuario"></canvas></div>
+      </div>
+    </div>
+    <div class="panel area-urgencia">
+      <div class="panel-header">Tareas por nivel de urgencia</div>
+      <div class="panel-body">
+        <div class="chart-wrap h170"><canvas id="chart1-urgencia" role="img" aria-label="Tareas por nivel de urgencia"></canvas></div>
+      </div>
+    </div>
+    <div class="panel area-promedio">
+      <div class="panel-header">Promedio de días por estatus</div>
+      <div class="panel-body">
+        <div class="chart-wrap h170"><canvas id="chart1-promdias" role="img" aria-label="Promedio de días por estatus"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ────────────── Tableros accionables ────────────── -->
+  <div class="grid grid-2" style="margin-top:8px">
+    <div class="panel">
+      <div class="panel-header">Ranking de áreas</div>
+      <div class="panel-body no-pad con-borde">
+        <div class="ranking-list" id="ranking-areas-list"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-header">Personal en alarma · Acción esta semana</div>
+      <div class="panel-body no-pad con-borde">
+        <div class="alarma-list" id="alarma-personal-list"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════ -->
+<!-- DASHBOARD 2: ANOMALÍAS                            -->
+<!-- ════════════════════════════════════════════════ -->
+<div id="pag-anomalias" class="page">
+
+  <!-- Filtros -->
+  <div class="filtros">
+    <div class="filtro-grupo">
+      <label>Distrito</label>
+      <select id="f2-distrito" onchange="renderAnomalias()"><option value="">Todos</option></select>
+    </div>
+    <div class="filtro-grupo">
+      <label>Tipo anomalía</label>
+      <select id="f2-tipo" onchange="renderAnomalias()"><option value="">Todos</option></select>
+    </div>
+    <div class="filtro-grupo">
+      <label>Anomalía</label>
+      <select id="f2-anom" onchange="renderAnomalias()"><option value="">Todas</option></select>
+    </div>
+    <div class="filtro-grupo">
+      <label>Urgencia</label>
+      <select id="f2-urg" onchange="renderAnomalias()">
+        <option value="">Todas</option>
+        <option>ALTA</option><option>MEDIA</option><option>BAJA</option>
+      </select>
+    </div>
+    <div class="filtro-grupo">
+      <label>Lote / Finca</label>
+      <select id="f2-lote" onchange="renderAnomalias()"><option value="">Todas</option></select>
+    </div>
+  </div>
+
+  <!-- KPIs principales -->
+  <div class="kpi-grid k3">
+    <div class="kpi-card morado">
+      <div class="kpi-label">Principal anomalía</div>
+      <div class="kpi-valor" id="kpi2-anom-top" style="font-size:18px;letter-spacing:-0.5px">—</div>
+      <div class="kpi-sub" id="kpi2-anom-top-sub">—</div>
+    </div>
+    <div class="kpi-card azul">
+      <div class="kpi-label">Distrito con más anomalías</div>
+      <div class="kpi-valor" id="kpi2-dist-top" style="font-size:22px;letter-spacing:-0.5px">—</div>
+      <div class="kpi-sub" id="kpi2-dist-top-sub">—</div>
+    </div>
+    <div class="kpi-card amarillo">
+      <div class="kpi-label">HA afectadas (aprox.)</div>
+      <div class="kpi-valor" id="kpi2-ha">—</div>
+      <div class="kpi-sub">Hectáreas estimadas con anomalía</div>
+    </div>
+  </div>
+
+  <!-- Primera fila: pie + barras por distrito -->
+  <div class="grid grid-2">
+    <div class="panel">
+      <div class="panel-header">Detección de anomalías</div>
+      <div class="panel-body">
+        <div class="chart-wrap h400"><canvas id="chart2-pie" role="img" aria-label="Distribución de anomalías"></canvas></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-header">Detección de anomalías por distrito</div>
+      <div class="panel-body">
+        <div class="chart-wrap h400"><canvas id="chart2-distrito" role="img" aria-label="Anomalías por distrito"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Segunda fila: HA por tipo + HA por anomalía -->
+  <div class="grid grid-2">
+    <div class="panel">
+      <div class="panel-header">HA afectadas por tipo de anomalía</div>
+      <div class="panel-body">
+        <div class="chart-wrap h220"><canvas id="chart2-tipo" role="img" aria-label="HA por tipo de anomalía"></canvas></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-header">HA por anomalía</div>
+      <div class="panel-body">
+        <div class="chart-wrap h280"><canvas id="chart2-anom" role="img" aria-label="HA por anomalía individual"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tercera fila: HA por urgencia + tabla finca -->
+  <div class="grid grid-2">
+    <div class="panel">
+      <div class="panel-header">HA por urgencia</div>
+      <div class="panel-body">
+        <div class="chart-wrap h280"><canvas id="chart2-urg" role="img" aria-label="HA por urgencia"></canvas></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-header">Resumen por finca / lote</div>
+      <div class="panel-body no-pad panel-scroll">
+        <table class="tabla" id="tbl2-finca">
+          <thead>
+            <tr>
+              <th>Lote / Finca</th>
+              <th class="num">Total tareas</th>
+              <th class="num">HA aprox.</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+          <tfoot>
+            <tr>
+              <td>Total</td>
+              <td class="num"></td>
+              <td class="num"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════ -->
+<!-- DASHBOARD 3: SEGUIMIENTO                          -->
+<!-- ════════════════════════════════════════════════ -->
+<div id="pag-seguimiento" class="page">
+
+  <!-- Filtros -->
+  <div class="filtros">
+    <div class="filtro-grupo">
+      <label>Distrito</label>
+      <select id="f3-distrito" onchange="renderSeguimiento()"><option value="">Todos</option></select>
+    </div>
+    <div class="filtro-grupo">
+      <label>Lote / Finca</label>
+      <select id="f3-finca" onchange="renderSeguimiento()"><option value="">Todas</option></select>
+    </div>
+    <div class="filtro-grupo">
+      <label>Condición</label>
+      <select id="f3-cond" onchange="renderSeguimiento()">
+        <option value="">Todas</option>
+        <option>EN TIEMPO</option>
+        <option>PROXIMA REVISION</option>
+        <option>VISITAR HOY</option>
+        <option>VENCIDA</option>
+      </select>
+    </div>
+    <div class="filtro-grupo">
+      <label>Anomalía</label>
+      <select id="f3-anom" onchange="renderSeguimiento()"><option value="">Todas</option></select>
+    </div>
+    <div class="filtro-grupo">
+      <label>Urgencia</label>
+      <select id="f3-urg" onchange="renderSeguimiento()">
+        <option value="">Todas</option>
+        <option>ALTA</option><option>MEDIA</option><option>BAJA</option>
+      </select>
+    </div>
+    <div class="filtro-grupo">
+      <label>Usuario</label>
+      <select id="f3-usuario" onchange="renderSeguimiento()"><option value="">Todos</option></select>
+    </div>
+  </div>
+
+  <!-- KPIs de condición -->
+  <div class="kpi-grid k4">
+    <div class="kpi-card azul">
+      <div class="kpi-label">En tiempo</div>
+      <div class="kpi-valor" id="kpi3-tiempo">—</div>
+    </div>
+    <div class="kpi-card amarillo">
+      <div class="kpi-label">Próxima a revisión</div>
+      <div class="kpi-valor" id="kpi3-proxima">—</div>
+    </div>
+    <div class="kpi-card amarillo" style="border-top-color:#9a3412">
+      <div class="kpi-label" style="color:#9a3412">Visitar hoy</div>
+      <div class="kpi-valor" id="kpi3-hoy">—</div>
+    </div>
+    <div class="kpi-card rojo">
+      <div class="kpi-label">Vencida</div>
+      <div class="kpi-valor" id="kpi3-vencida">—</div>
+    </div>
+  </div>
+
+  <!-- Tabla detallada -->
+  <div class="panel">
+    <div class="panel-header">
+      <span id="seg-titulo">Detalle de seguimiento</span>
+    </div>
+    <div class="panel-body no-pad" style="overflow-x:auto;max-height:600px;overflow-y:auto">
+      <table class="tabla seguimiento" id="tbl3-seguimiento">
+        <thead>
+          <tr>
+            <th>COD.</th>
+            <th>FINCA</th>
+            <th>LOTE</th>
+            <th>ANOMALÍA</th>
+            <th>RECOMENDACIÓN</th>
+            <th>NIVEL URGENCIA</th>
+            <th class="center">SEM. TAREA</th>
+            <th class="center">SEM. INSP.</th>
+            <th>FECHA CREACIÓN</th>
+            <th>FECHA PRÓX. INSPECCIÓN</th>
+            <th class="center">DÍAS VISITA</th>
+            <th class="center">DÍAS TRANSCURRIDOS</th>
+            <th class="center">DÍAS FALTANTES</th>
+            <th>CONDICIÓN</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Pie con fecha y semana -->
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding:0 10px;font-size:12px;color:var(--texto-soft)">
+    <div id="seg-fecha-hoy"></div>
+    <div><strong>Semana actual:</strong> <span id="seg-semana"></span></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  CONFIGURACIÓN SUPABASE
+// ═══════════════════════════════════════════════════════════════
+const SUPABASE_URL = 'https://dhbyjqmdcezdiucxeqpp.supabase.co'
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRoYnlqcW1kY2V6ZGl1Y3hlcXBwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMzI2NjEsImV4cCI6MjA5MjcwODY2MX0.TwRDctpOab02EsGo6q6-Zx0vtdLPlxn_mhowxu93EF0'
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+// ── Defaults globales de Chart.js: texto más oscuro, font de marca, anti-aliasing ──
+if(window.Chart){
+  Chart.defaults.font.family   = "'Geist', -apple-system, BlinkMacSystemFont, sans-serif"
+  Chart.defaults.font.size     = 12
+  Chart.defaults.font.weight   = '500'
+  Chart.defaults.color         = '#0a0a0a'
+  Chart.defaults.devicePixelRatio = Math.max(window.devicePixelRatio || 1, 2)
+  Chart.defaults.scale.ticks.color  = '#374151'
+  Chart.defaults.plugins.legend.labels.color = '#0a0a0a'
+}
+
+// ── Utilidades ──
+const COLOR = {
+  finalizada: '#16a34a',
+  pendiente:  '#dc2626',
+  verificada: '#2563eb',
+  alta:       '#dc2626',
+  media:      '#f59e0b',
+  baja:       '#16a34a',
+  brand:      '#1e3f7a',
+  brand2:     '#2d6e3e',
+  amber:      '#e8a020'
+}
+
+// Paleta categórica para anomalías
+const PALETA = ['#3b82f6','#1e40af','#f97316','#7c3aed','#ec4899','#a855f7','#eab308','#ef4444','#10b981','#06b6d4','#84cc16','#f59e0b','#0ea5e9','#dc2626','#22c55e','#a3a3a3','#fb923c','#8b5cf6']
+
+const fmtNum = (n)=> Number(n||0).toLocaleString('es-HN', {maximumFractionDigits:2})
+const fmtPct = (n)=> Number(n||0).toFixed(2).replace('.',',') + ' %'
+// Extrae el nombre dentro de paréntesis (ej: "PUESTO (Juan Perez)" -> "Juan Perez").
+// Si no hay paréntesis, devuelve el valor original.
+const extraerNombreParens = (s)=>{
+  if(!s) return s
+  const m = String(s).match(/\(([^)]+)\)/)
+  return m ? m[1].trim() : s
+}
+// Días de la tarea:
+//   - Pendiente   → hoy - created_at
+//   - Finalizada/Verificada → finished_at - created_at
+//   Devuelve null si faltan datos para calcular.
+const MS_DIA = 1000*60*60*24
+function diasTareaCalc(t){
+  if(!t || !t.created_at) return null
+  const created = new Date(t.created_at)
+  if(isNaN(created)) return null
+  if(t.estatus_es === 'Pendiente'){
+    return Math.floor((Date.now() - created) / MS_DIA)
+  }
+  if(!t.finished_at) return null
+  const finished = new Date(t.finished_at)
+  if(isNaN(finished)) return null
+  return Math.floor((finished - created) / MS_DIA)
+}
+const fmtFecha = (d)=>{
+  if(!d) return '—'
+  const dt = new Date(d)
+  return dt.toLocaleDateString('es-HN',{weekday:'long',day:'numeric',month:'long',year:'numeric'})
+}
+const fmtFechaCorta = (d)=>{
+  if(!d) return '—'
+  const dt = new Date(d)
+  return dt.toLocaleDateString('es-HN',{day:'2-digit',month:'2-digit',year:'numeric'})
+}
+
+// ── Estado global ──
+let DATA = {
+  tareas: [],          // v_nax_tareas
+  marcadores: [],      // v_nax_mapa_marcadores
+  marcadoresTipo: [],  // v_nax_marcadores_tipo (con tipo + ha_aprox)
+  seguimiento: [],     // v_nax_seguimiento
+}
+let CHARTS = {}
+let MAPA = null
+let mapaCapa = null
+let datosListos = false
+
+// ═══════════════════════════════════════════════════════════════
+//  CARGA DE DATOS
+// ═══════════════════════════════════════════════════════════════
+async function cargarDatos(){
+  try{
+    const [tareasRes, usuariosRes] = await Promise.all([
+      sb.from('nax_tareas').select('*'),
+      sb.from('usuarios_nax').select('usuario_completo, nombre_completo, area_responsable'),
+    ])
+    if(tareasRes.error){
+      console.error('[NAX] Error cargando nax_tareas:', tareasRes.error)
+      alert('Error cargando nax_tareas: ' + tareasRes.error.message)
+      return
+    }
+    if(usuariosRes.error){
+      console.warn('[NAX] No se pudo cargar usuarios_nax:', usuariosRes.error.message)
+    }
+    const raw = tareasRes.data || []
+    const usuarios = usuariosRes.data || []
+
+    // Mapa: usuario_completo (= columna users de nax_tareas) -> {distrito, nombre}
+    const userMap = {}
+    usuarios.forEach(u => {
+      if(!u.usuario_completo) return
+      userMap[u.usuario_completo] = {
+        distrito: u.area_responsable || '',
+        nombre:   u.nombre_completo  || extraerNombreParens(u.usuario_completo) || '',
+      }
+    })
+
+    console.log('[NAX] nax_tareas:', raw.length, 'filas | usuarios_nax:', usuarios.length, 'filas')
+    if(raw.length) console.log('[NAX] Columnas tareas:', Object.keys(raw[0]))
+
+    // Normalizar cada fila de nax_tareas usando el lookup de usuarios
+    const filas = raw.map(r => {
+      const st = (r.status || '').toString().toLowerCase().trim()
+      let estatus_es = r.status || ''
+      if(st === 'pending')  estatus_es = 'Pendiente'
+      if(st === 'finished') estatus_es = 'Finalizada'
+      if(st === 'verified') estatus_es = 'Verificada'
+      const u = userMap[r.users] || {}
+      return {
+        ...r,
+        estatus_es,
+        responsable_nombre: u.nombre || extraerNombreParens(r.users) || r.users || '',
+        distrito: u.distrito || r.distrito || '',
+        lot:      r.lot ?? r.lote ?? r.finca ?? '',
+      }
+    })
+
+    // Una sola tabla → el mismo dataset alimenta los 3 dashboards
+    DATA.tareas         = filas
+    DATA.marcadores     = filas
+    DATA.marcadoresTipo = filas
+    DATA.seguimiento    = filas
+
+    if(filas.length) console.log('[NAX] Ejemplo fila normalizada:', filas[0])
+    poblarFiltros()
+    datosListos = true
+  } catch(e){
+    console.error('Error cargando datos:', e)
+    alert('Error cargando datos desde Supabase. Revisa la consola.')
+  }
+}
+
+function poblarFiltros(){
+  // Distritos del filtro: solo DISTRITO N (excluye vacíos, COSECHA, RIEGOS, SOLUTIONS, etc.)
+  const esDistritoNum = (d)=> /^DISTRITO\s*\d+/i.test((d||'').trim())
+  const distritos = [...new Set(DATA.tareas.map(t=>t.distrito).filter(esDistritoNum))]
+    .sort((a,b)=>{
+      const na = parseInt(a.match(/\d+/)?.[0] || 0)
+      const nb = parseInt(b.match(/\d+/)?.[0] || 0)
+      return na - nb
+    })
+  const usuarios  = [...new Set(DATA.tareas.map(t=>t.responsable_nombre).filter(Boolean))].sort()
+  const lotesT    = [...new Set(DATA.marcadores.map(m=>m.lot).filter(Boolean))].sort()
+  const tipos     = [...new Set(DATA.marcadoresTipo.map(m=>m.tipo_anomalia).filter(Boolean))].sort()
+  const anoms     = [...new Set(DATA.marcadoresTipo.map(m=>m.anomalia).filter(Boolean))].sort()
+  const fincasS   = [...new Set(DATA.seguimiento.map(s=>s.finca).filter(Boolean))].sort()
+  const anomsS    = [...new Set(DATA.seguimiento.map(s=>s.anomalia).filter(Boolean))].sort()
+  const usuariosS = [...new Set(DATA.seguimiento.map(s=>s.responsable_nombre).filter(Boolean))].sort()
+
+  // Dashboard 1
+  llenarSelect('f1-distrito', distritos)
+  llenarSelect('f1-usuario',  usuarios)
+  llenarSelect('f1-lote',     lotesT)
+
+  // Dashboard 2
+  llenarSelect('f2-distrito', distritos)
+  llenarSelect('f2-tipo',     tipos)
+  llenarSelect('f2-anom',     anoms)
+  llenarSelect('f2-lote',     lotesT)
+
+  // Dashboard 3
+  llenarSelect('f3-distrito', distritos)
+  llenarSelect('f3-finca',    fincasS)
+  llenarSelect('f3-anom',     anomsS)
+  llenarSelect('f3-usuario',  usuariosS)
+}
+
+function llenarSelect(id, valores){
+  const sel = document.getElementById(id)
+  if(!sel) return
+  const actual = sel.value
+  // Conservar la primera opción (Todos/Todas)
+  const primera = sel.querySelector('option')
+  sel.innerHTML = ''
+  if(primera) sel.appendChild(primera)
+  valores.forEach(v=>{
+    const opt = document.createElement('option')
+    opt.value = v; opt.textContent = v
+    sel.appendChild(opt)
+  })
+  sel.value = actual
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  DASHBOARD 1: CUMPLIMIENTO
+// ═══════════════════════════════════════════════════════════════
+function renderCumplimiento(){
+  if(!datosListos) return
+  const fDistrito = document.getElementById('f1-distrito').value
+  const fEstatus  = document.getElementById('f1-estatus').value
+  const fUsuario  = document.getElementById('f1-usuario').value
+  const fLote     = document.getElementById('f1-lote').value
+
+  // Filtrar tareas
+  let tareas = DATA.tareas
+  if(fDistrito) tareas = tareas.filter(t=>t.distrito === fDistrito)
+  if(fEstatus)  tareas = tareas.filter(t=>t.estatus_es === fEstatus)
+  if(fUsuario)  tareas = tareas.filter(t=>t.responsable_nombre === fUsuario)
+
+  // Filtrar marcadores (para mapa) por mismas reglas
+  let mks = DATA.marcadores
+  if(fDistrito) mks = mks.filter(m=>m.distrito === fDistrito)
+  if(fEstatus)  mks = mks.filter(m=>m.estatus_es === fEstatus)
+  if(fLote)     mks = mks.filter(m=>m.lot === fLote)
+  if(fUsuario)  mks = mks.filter(m=>m.responsable_nombre === fUsuario)
+
+  // KPIs
+  // Porcentajes: sobre el total de filas por estatus
+  const totalRows = tareas.length
+  const finalizadas = tareas.filter(t=>['Finalizada','Verificada'].includes(t.estatus_es)).length
+  const pendientes  = tareas.filter(t=>t.estatus_es === 'Pendiente').length
+  const pctCumpl = totalRows ? (finalizadas/totalRows*100) : 0
+  const pctPend  = totalRows ? (pendientes/totalRows*100)  : 0
+  // Total tareas: conteo distintivo de la columna `name`
+  const totalDistinto = new Set(tareas.map(t=>t.name).filter(Boolean)).size
+  document.getElementById('kpi1-cumpl').textContent = fmtPct(pctCumpl)
+  document.getElementById('kpi1-pend').textContent  = fmtPct(pctPend)
+  document.getElementById('kpi1-total').textContent = totalDistinto
+  document.getElementById('kpi1-cumpl-sub').textContent = `${fmtNum(finalizadas)} tareas finalizadas + verificadas`
+  document.getElementById('kpi1-pend-sub').textContent  = `${fmtNum(pendientes)} tareas pendientes`
+
+  // Cuadro detallado: solo distritos reales (DISTRITO 1, 2, ...). Excluye vacíos, COSECHA, RIEGOS, SOLUTIONS, etc.
+  const esDistrito = (d)=> /^DISTRITO\s*\d+/i.test((d||'').trim())
+  const distritos = [...new Set(tareas.map(t=>t.distrito).filter(esDistrito))]
+    .sort((a,b)=>{
+      const na = parseInt(a.match(/\d+/)?.[0] || 0)
+      const nb = parseInt(b.match(/\d+/)?.[0] || 0)
+      return na - nb
+    })
+  const tbody = document.querySelector('#tbl1-detallado tbody')
+  tbody.innerHTML = ''
+  let totP=0, totF=0, totV=0
+  distritos.forEach(d=>{
+    const sub = tareas.filter(t=>t.distrito === d)
+    const p = sub.filter(t=>t.estatus_es==='Pendiente').length
+    const f = sub.filter(t=>t.estatus_es==='Finalizada').length
+    const v = sub.filter(t=>t.estatus_es==='Verificada').length
+    totP+=p; totF+=f; totV+=v
+    const tr = document.createElement('tr')
+    tr.innerHTML = `<td><strong>${d}</strong></td>
+      <td class="col-pendiente">${p||''}</td>
+      <td class="col-finalizada">${f||''}</td>
+      <td class="col-verificada">${v||''}</td>
+      <td class="col-total">${p+f+v}</td>`
+    tbody.appendChild(tr)
+  })
+  const tfoot = document.querySelector('#tbl1-detallado tfoot tr')
+  tfoot.children[1].textContent = totP || ''
+  tfoot.children[2].textContent = totF || ''
+  tfoot.children[3].textContent = totV || ''
+  tfoot.children[4].textContent = totP+totF+totV
+
+  // Mapa
+  renderMapa(mks)
+
+  // Dona de estatus
+  const dataDona = [
+    tareas.filter(t=>t.estatus_es==='Finalizada').length,
+    tareas.filter(t=>t.estatus_es==='Pendiente').length,
+    tareas.filter(t=>t.estatus_es==='Verificada').length,
+  ]
+  const colorsDona = [COLOR.finalizada, COLOR.pendiente, COLOR.verificada]
+  destruirChart('chart1-dona')
+  CHARTS['chart1-dona'] = new Chart(document.getElementById('chart1-dona'), {
+    type:'doughnut',
+    data:{
+      labels:['Finalizada','Pendiente','Verificada'],
+      datasets:[{
+        data:dataDona,
+        backgroundColor:colorsDona,
+        borderWidth:2, borderColor:'#fff',
+        hoverOffset:6
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      cutout:'62%',
+      layout:{ padding:{ top:6, bottom:6, left:6, right:6 } },
+      plugins:{
+        legend:{
+          position:'right',
+          align:'center',
+          title:{ display:true, text:'ESTATUS', font:{size:12, weight:'bold'}, color:'#0a0a0a', padding:{bottom:8} },
+          labels:{ font:{size:12}, boxWidth:10, boxHeight:10, usePointStyle:true, pointStyle:'circle', padding:8 }
+        },
+        datalabels:{display:false}
+      }
+    },
+    plugins:[ChartDataLabels]
+  })
+
+  // Lista usuarios %  — agrupado por el nombre dentro de paréntesis de la columna `users`
+  const grupos = {}
+  tareas.forEach(t=>{
+    const nombre = extraerNombreParens(t.responsable_nombre)
+    if(!nombre) return
+    if(!grupos[nombre]) grupos[nombre] = {usuario:nombre, total:0, fin:0}
+    grupos[nombre].total++
+    if(['Finalizada','Verificada'].includes(t.estatus_es)) grupos[nombre].fin++
+  })
+  const filas = Object.values(grupos)
+    .map(g=>({...g, pct: g.total ? (g.fin/g.total*100) : 0}))
+    .sort((a,b)=>a.pct - b.pct)
+
+  const lista = document.getElementById('lista1-usuarios')
+  lista.innerHTML = ''
+  filas.forEach(r=>{
+    const colorPct = colorPorPct(r.pct)
+    const div = document.createElement('div')
+    div.className = 'row'
+    div.innerHTML = `<div class="nombre">${r.usuario}</div>
+      <div class="pct" style="background:${colorPct.bg};color:${colorPct.tx}">${fmtPct(r.pct)}</div>`
+    lista.appendChild(div)
+  })
+
+  // Cumplimiento por rangos de días
+  // Días: Pendiente = hoy - created_at; Finalizada/Verificada = finished_at - created_at
+  const rangos = ['00 - 05','05 - 10','10 - 20','20 - 30','30 +']
+  const dataR_fin = rangos.map(r=>{
+    return tareas.filter(t=>{
+      if(!['Finalizada','Verificada'].includes(t.estatus_es)) return false
+      return clasificarRango(diasTareaCalc(t)) === r
+    }).length
+  })
+  const dataR_pen = rangos.map(r=>{
+    return tareas.filter(t=>{
+      if(t.estatus_es !== 'Pendiente') return false
+      return clasificarRango(diasTareaCalc(t)) === r
+    }).length
+  })
+  destruirChart('chart1-rangos')
+  CHARTS['chart1-rangos'] = new Chart(document.getElementById('chart1-rangos'), {
+    type:'bar',
+    data:{
+      labels:rangos,
+      datasets:[
+        {label:'Finalizada', data:dataR_fin, backgroundColor:COLOR.finalizada, borderRadius:2, barPercentage:0.7, categoryPercentage:0.75},
+        {label:'Pendiente',  data:dataR_pen, backgroundColor:COLOR.pendiente,  borderRadius:2, barPercentage:0.7, categoryPercentage:0.75},
+      ]
+    },
+    options:{
+      indexAxis:'y',
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{position:'bottom', labels:{font:{size:11}, boxWidth:10, boxHeight:10, usePointStyle:true, pointStyle:'circle', padding:12}},
+        datalabels:{display:false},
+        tooltip:{enabled:true}
+      },
+      scales:{
+        x:{stacked:true, beginAtZero:true, ticks:{font:{size:10}, color:'#374151'}, grid:{color:'#eef0f4', drawBorder:false}},
+        y:{stacked:true, ticks:{font:{size:11}, color:'#0a0a0a'}, grid:{display:false, drawBorder:false}}
+      }
+    }
+  })
+
+  // Cumplimiento por usuario — TODOS los usuarios, ordenados por cantidad de tareas desc
+  const top = filas.slice().sort((a,b)=>b.total - a.total)
+  // Altura dinámica: 22px por usuario, mínimo 320px (para que la leyenda no se aplaste)
+  const wrapU = document.getElementById('chart1-usuario-wrap')
+  if(wrapU) wrapU.style.height = Math.max(320, top.length * 22 + 40) + 'px'
+  destruirChart('chart1-usuario')
+  CHARTS['chart1-usuario'] = new Chart(document.getElementById('chart1-usuario'), {
+    type:'bar',
+    data:{
+      labels:top.map(t=>t.usuario.length>22 ? t.usuario.substring(0,20)+'…' : t.usuario),
+      datasets:[
+        {label:'Finalizada', data:top.map(t=>t.fin), backgroundColor:COLOR.finalizada, borderRadius:2, barPercentage:0.65, categoryPercentage:0.8},
+        {label:'Pendiente',  data:top.map(t=>t.total - t.fin), backgroundColor:COLOR.pendiente, borderRadius:2, barPercentage:0.65, categoryPercentage:0.8},
+      ]
+    },
+    options:{
+      indexAxis:'y',
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{position:'bottom', labels:{font:{size:10}, boxWidth:10, boxHeight:10, usePointStyle:true, pointStyle:'circle', padding:12}},
+        datalabels:{display:false},
+        tooltip:{enabled:true}
+      },
+      scales:{
+        x:{stacked:true, beginAtZero:true, ticks:{font:{size:10}, color:'#374151'}, grid:{color:'#eef0f4', drawBorder:false}},
+        y:{stacked:true, ticks:{font:{size:9}, color:'#0a0a0a', autoSkip:false}, grid:{display:false, drawBorder:false}}
+      }
+    }
+  })
+
+  // Tareas por nivel de urgencia — SOLO Finalizada + Verificada (ignora el filtro global de estatus)
+  const niveles = ['ALTA','MEDIA','BAJA']
+  let mksUrg = DATA.marcadores.filter(m=>['Finalizada','Verificada'].includes(m.estatus_es))
+  if(fDistrito) mksUrg = mksUrg.filter(m=>m.distrito === fDistrito)
+  if(fLote)     mksUrg = mksUrg.filter(m=>m.lot === fLote)
+  if(fUsuario)  mksUrg = mksUrg.filter(m=>m.responsable_nombre === fUsuario)
+  const dataUrg = niveles.map(n=> mksUrg.filter(m=> (m.nivel_de_urgencia||'').toUpperCase() === n).length)
+  destruirChart('chart1-urgencia')
+  CHARTS['chart1-urgencia'] = new Chart(document.getElementById('chart1-urgencia'), {
+    type:'line',
+    data:{
+      labels:niveles,
+      datasets:[{
+        data:dataUrg,
+        borderColor:COLOR.pendiente,
+        backgroundColor:'rgba(220,38,38,0.10)',
+        borderWidth:2,
+        fill:true, tension:0.35,
+        pointBackgroundColor:COLOR.pendiente,
+        pointBorderColor:COLOR.pendiente,
+        pointRadius:4, pointHoverRadius:6
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        datalabels:{display:false},
+        tooltip:{enabled:true}
+      },
+      scales:{
+        y:{beginAtZero:true, ticks:{font:{size:10}, color:'#374151'}, grid:{color:'#eef0f4', drawBorder:false}},
+        x:{ticks:{font:{size:11, weight:'600'}, color:'#0a0a0a'}, grid:{display:false, drawBorder:false}}
+      }
+    }
+  })
+
+  // Promedio de días por estatus
+  // Misma lógica que rangos: Pendiente = hoy - created_at; Finalizada/Verificada = finished_at - created_at
+  const estatusList = ['Pendiente','Finalizada','Verificada']
+  const dataProm = estatusList.map(e=>{
+    const sub = tareas.filter(t=>t.estatus_es === e)
+    const dias = sub.map(diasTareaCalc).filter(d=>d != null && !isNaN(d))
+    if(!dias.length) return 0
+    return dias.reduce((a,b)=>a+b, 0) / dias.length
+  })
+  destruirChart('chart1-promdias')
+  CHARTS['chart1-promdias'] = new Chart(document.getElementById('chart1-promdias'), {
+    type:'line',
+    data:{
+      labels:['Pendiente','Finalizada','Verificada'],
+      datasets:[{
+        data:dataProm,
+        borderColor:COLOR.pendiente,
+        backgroundColor:'rgba(220,38,38,0.10)',
+        borderWidth:2,
+        fill:true, tension:0.35,
+        pointBackgroundColor:COLOR.pendiente,
+        pointBorderColor:COLOR.pendiente,
+        pointRadius:4, pointHoverRadius:6
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        datalabels:{display:false},
+        tooltip:{enabled:true}
+      },
+      scales:{
+        y:{beginAtZero:true, ticks:{font:{size:10}, color:'#374151'}, grid:{color:'#eef0f4', drawBorder:false}},
+        x:{ticks:{font:{size:11, weight:'600'}, color:'#0a0a0a'}, grid:{display:false, drawBorder:false}}
+      }
+    }
+  })
+
+  // ─── Tableros accionables ───
+  renderRankingAreas(tareas)
+  renderPersonalAlarma(filas)
+}
+
+function renderRankingAreas(tareas){
+  // % cumplimiento por distrito (solo DISTRITO N)
+  const esDist = d => /^DISTRITO\s*\d+/i.test((d||'').trim())
+  const distritos = [...new Set(tareas.map(t=>t.distrito).filter(esDist))]
+    .sort((a,b)=>{
+      const na=parseInt(a.match(/\d+/)?.[0]||0), nb=parseInt(b.match(/\d+/)?.[0]||0)
+      return na-nb
+    })
+  const datos = distritos.map(d => {
+    const sub = tareas.filter(t => t.distrito === d)
+    const fin = sub.filter(t => ['Finalizada','Verificada'].includes(t.estatus_es)).length
+    return { distrito:d, total:sub.length, fin, pct: sub.length ? fin/sub.length*100 : 0 }
+  }).sort((a,b) => b.pct - a.pct)
+
+  // Distrito destacado: el primero <100% (el primer "no perfecto")
+  const idxDestacado = datos.findIndex(d => d.pct < 100)
+
+  const cont = document.getElementById('ranking-areas-list')
+  cont.innerHTML = ''
+  datos.forEach((d, i) => {
+    const row = document.createElement('div')
+    row.className = 'ranking-row' + (i === idxDestacado ? ' destacado' : '')
+    row.innerHTML = `
+      <div class="num">${i+1}</div>
+      <div class="nombre">${d.distrito}</div>
+      <div class="barra"><span style="width:${d.pct.toFixed(0)}%"></span></div>
+      <div class="pct">${d.pct.toFixed(0)}%</div>
+    `
+    cont.appendChild(row)
+  })
+}
+
+function renderPersonalAlarma(filasUsuarios){
+  // Top 3 con peor cumplimiento (que tengan al menos 1 tarea pendiente)
+  const conPendientes = filasUsuarios
+    .map(u => ({...u, pendientes: u.total - u.fin}))
+    .filter(u => u.pendientes > 0)
+    .sort((a,b) => a.pct - b.pct || b.pendientes - a.pendientes)
+    .slice(0, 3)
+
+  const cont = document.getElementById('alarma-personal-list')
+  cont.innerHTML = ''
+  if(!conPendientes.length){
+    cont.innerHTML = `<div style="padding:18px;text-align:center;color:var(--texto-muted);font-size:12.5px">Sin alarmas esta semana</div>`
+    return
+  }
+  conPendientes.forEach((u, i) => {
+    const rank = i+1
+    const row = document.createElement('div')
+    row.className = 'alarma-row'
+    row.innerHTML = `
+      <div class="alarma-num r${rank}">${rank}</div>
+      <div class="alarma-info">
+        <div class="nombre">${u.usuario}</div>
+        <div class="meta"><span class="pen">${u.pendientes} pendientes</span> · ${u.pct.toFixed(0)}% cumplimiento</div>
+      </div>
+      <div class="alarma-pct r${rank}">${u.pct.toFixed(0)}%</div>
+    `
+    cont.appendChild(row)
+  })
+}
+
+function clasificarRango(d){
+  if(d == null) return null
+  if(d<=5) return '00 - 05'
+  if(d<=10) return '05 - 10'
+  if(d<=20) return '10 - 20'
+  if(d<=30) return '20 - 30'
+  return '30 +'
+}
+
+function colorPorPct(pct){
+  if(pct >= 100) return {bg:'#bbf7d0', tx:'#166534'}
+  if(pct >= 80)  return {bg:'#d9f99d', tx:'#3f6212'}
+  if(pct >= 50)  return {bg:'#fef08a', tx:'#854d0e'}
+  if(pct >= 30)  return {bg:'#fed7aa', tx:'#9a3412'}
+  return {bg:'#fecaca', tx:'#991b1b'}
+}
+
+// ── MAPA ──
+function renderMapa(marcadores){
+  if(!MAPA){
+    MAPA = L.map('mapa-tareas').setView([15.10, -88.75], 11)
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      attribution: 'EarthStar Geographics'
+    }).addTo(MAPA)
+  }
+  if(mapaCapa) MAPA.removeLayer(mapaCapa)
+  const layer = L.layerGroup()
+  marcadores.forEach(m=>{
+    if(!m.latitude || !m.longitude) return
+    const color = m.estatus_es === 'Finalizada' ? COLOR.finalizada
+                : m.estatus_es === 'Pendiente'  ? COLOR.pendiente
+                : COLOR.verificada
+    L.circleMarker([m.latitude, m.longitude], {
+      radius: 6, color: color, fillColor: color, fillOpacity: 0.85, weight: 1.5
+    }).bindPopup(`<strong>${m.name}</strong><br/>
+      ${m.distrito}<br/>
+      Estatus: ${m.estatus_es}<br/>
+      ${m.anomalia ? 'Anomalía: '+m.anomalia : ''}`)
+     .addTo(layer)
+  })
+  layer.addTo(MAPA)
+  mapaCapa = layer
+
+  // Ajustar bounds
+  if(marcadores.length){
+    const coords = marcadores.filter(m=>m.latitude&&m.longitude).map(m=>[m.latitude,m.longitude])
+    if(coords.length) MAPA.fitBounds(coords, {padding:[20,20], maxZoom:14})
+  }
+  setTimeout(()=>MAPA.invalidateSize(), 100)
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  DASHBOARD 2: ANOMALÍAS
+// ═══════════════════════════════════════════════════════════════
+function renderAnomalias(){
+  if(!datosListos) return
+  const fD = document.getElementById('f2-distrito').value
+  const fT = document.getElementById('f2-tipo').value
+  const fA = document.getElementById('f2-anom').value
+  const fU = document.getElementById('f2-urg').value
+  const fL = document.getElementById('f2-lote').value
+
+  let mks = DATA.marcadoresTipo
+  if(fD) mks = mks.filter(m=>m.distrito === fD)
+  if(fT) mks = mks.filter(m=>m.tipo_anomalia === fT)
+  if(fA) mks = mks.filter(m=>m.anomalia === fA)
+  if(fU) mks = mks.filter(m=>m.nivel_urgencia === fU)
+  if(fL) mks = mks.filter(m=>m.lot === fL)
+
+  // KPI HA afectadas
+  const haTot = mks.reduce((a,m)=>a + Number(m.ha_aprox||0), 0)
+  document.getElementById('kpi2-ha').textContent = fmtNum(haTot)
+
+  // Pie de anomalías — filtra SIN DATO y vacíos
+  const SIN_DATO = (v)=> {
+    const s = String(v||'').trim().toUpperCase()
+    return !s || s === 'SIN DATO' || s === 'NULL' || s === 'NINGUNA' || s === 'N/A'
+  }
+  const mksAnom = mks.filter(m => !SIN_DATO(m.anomalia))
+  const porAnom = agruparContar(mksAnom, 'anomalia')
+  const labelsP = Object.keys(porAnom).sort((a,b)=> porAnom[b] - porAnom[a])
+  const dataP   = labelsP.map(k=>porAnom[k])
+
+  // KPI Principal anomalía
+  if(labelsP.length){
+    const top = labelsP[0]
+    const cnt = porAnom[top]
+    const pctTop = mksAnom.length ? (cnt/mksAnom.length*100) : 0
+    document.getElementById('kpi2-anom-top').textContent = top
+    document.getElementById('kpi2-anom-top-sub').textContent =
+      `${fmtNum(cnt)} ocurrencias · ${pctTop.toFixed(1).replace('.',',')}% del total`
+  } else {
+    document.getElementById('kpi2-anom-top').textContent = '—'
+    document.getElementById('kpi2-anom-top-sub').textContent = 'Sin datos'
+  }
+
+  // KPI Distrito con más anomalías (solo DISTRITO N)
+  const esDist = d => /^DISTRITO\s*\d+/i.test((d||'').trim())
+  const porDist = {}
+  mksAnom.forEach(m => {
+    if(!esDist(m.distrito)) return
+    porDist[m.distrito] = (porDist[m.distrito]||0) + 1
+  })
+  const distOrdenados = Object.keys(porDist).sort((a,b)=> porDist[b] - porDist[a])
+  if(distOrdenados.length){
+    const distTop = distOrdenados[0]
+    document.getElementById('kpi2-dist-top').textContent = distTop
+    document.getElementById('kpi2-dist-top-sub').textContent =
+      `${fmtNum(porDist[distTop])} anomalías reportadas`
+  } else {
+    document.getElementById('kpi2-dist-top').textContent = '—'
+    document.getElementById('kpi2-dist-top-sub').textContent = 'Sin datos'
+  }
+
+  destruirChart('chart2-pie')
+  CHARTS['chart2-pie'] = new Chart(document.getElementById('chart2-pie'), {
+    type:'pie',
+    data:{
+      labels:labelsP,
+      datasets:[{
+        data:dataP,
+        backgroundColor:labelsP.map((_,i)=>PALETA[i % PALETA.length]),
+        borderWidth:1, borderColor:'#fff'
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{position:'right',labels:{font:{size:10}, boxWidth:12}},
+        datalabels:{display:false},
+        tooltip:{
+          callbacks:{
+            label:(ctx)=>{
+              const tot = ctx.dataset.data.reduce((a,b)=>a+b,0)
+              const v = ctx.parsed
+              const pct = tot ? (v/tot*100).toFixed(2).replace('.',',') : '0,00'
+              return ` ${ctx.label}: ${v} (${pct}%)`
+            }
+          }
+        }
+      }
+    }
+  })
+
+  // Anomalías por distrito (barras agrupadas por tipo)
+  const distritos = [...new Set(mks.map(m=>m.distrito))].sort()
+  const tipos     = [...new Set(mks.map(m=>m.tipo_anomalia))].sort()
+  // Para emular el diseño: cada distrito tiene barras por tipo
+  // Usamos una barra apilada simple por tipo, agrupadas por distrito.
+  const datasets = tipos.map((t,i)=>({
+    label: t,
+    data: distritos.map(d=>{
+      return mks.filter(m=>m.distrito===d && m.tipo_anomalia===t).length
+    }),
+    backgroundColor: PALETA[i % PALETA.length]
+  }))
+  destruirChart('chart2-distrito')
+  CHARTS['chart2-distrito'] = new Chart(document.getElementById('chart2-distrito'), {
+    type:'bar',
+    data:{ labels:distritos, datasets },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{position:'bottom',labels:{font:{size:9},boxWidth:10}},
+        datalabels:{
+          anchor:'end',align:'top',
+          font:{size:9,weight:600},color:'#1f2937',
+          formatter:v=>v||''
+        }
+      },
+      scales:{
+        x:{ticks:{font:{size:10}}},
+        y:{beginAtZero:true, ticks:{font:{size:10}}}
+      }
+    },
+    plugins:[ChartDataLabels]
+  })
+
+  // HA por TIPO de anomalía
+  const haPorTipo = {}
+  mks.forEach(m=>{
+    const t = m.tipo_anomalia
+    haPorTipo[t] = (haPorTipo[t]||0) + Number(m.ha_aprox||0)
+  })
+  const tiposOrden = Object.keys(haPorTipo).sort((a,b)=>haPorTipo[b] - haPorTipo[a])
+  const dataT = tiposOrden.map(t=>haPorTipo[t])
+  const colorTipos = tiposOrden.map((t,i)=>{
+    if(t === 'MALEZAS') return COLOR.brand2
+    if(t === 'DESPOBLACION') return COLOR.amber
+    return COLOR.brand2
+  })
+  destruirChart('chart2-tipo')
+  CHARTS['chart2-tipo'] = new Chart(document.getElementById('chart2-tipo'), {
+    type:'bar',
+    data:{
+      labels:tiposOrden,
+      datasets:[{
+        data:dataT,
+        backgroundColor:colorTipos
+      }]
+    },
+    options:{
+      indexAxis:'y',
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        datalabels:{
+          anchor:'end',align:'right',
+          font:{size:10,weight:600},color:'#1f2937',
+          formatter:v=>fmtNum(v)
+        }
+      },
+      scales:{
+        x:{beginAtZero:true, ticks:{font:{size:10}}},
+        y:{ticks:{font:{size:11,weight:'600'}}}
+      }
+    },
+    plugins:[ChartDataLabels]
+  })
+
+  // HA por anomalía individual (top 16)
+  const haPorA = {}
+  mks.forEach(m=>{ haPorA[m.anomalia] = (haPorA[m.anomalia]||0) + Number(m.ha_aprox||0) })
+  const anomOrden = Object.keys(haPorA).sort((a,b)=>haPorA[b] - haPorA[a]).slice(0,16)
+  const dataA = anomOrden.map(a=>haPorA[a])
+  destruirChart('chart2-anom')
+  CHARTS['chart2-anom'] = new Chart(document.getElementById('chart2-anom'), {
+    type:'bar',
+    data:{
+      labels:anomOrden.map(a=>a.length>10 ? a.substring(0,10)+'…' : a),
+      datasets:[{ data:dataA, backgroundColor:COLOR.brand2 }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        datalabels:{
+          anchor:'end',align:'top',
+          font:{size:9,weight:600},color:'#1f2937',
+          formatter:v=>fmtNum(v)
+        }
+      },
+      scales:{
+        x:{ticks:{font:{size:9},maxRotation:60,minRotation:45}},
+        y:{beginAtZero:true, ticks:{font:{size:10}}}
+      }
+    },
+    plugins:[ChartDataLabels]
+  })
+
+  // HA por urgencia
+  const haUrg = {}
+  mks.forEach(m=>{
+    const u = m.nivel_urgencia || 'SIN URGENCIA'
+    haUrg[u] = (haUrg[u]||0) + Number(m.ha_aprox||0)
+  })
+  const ordenUrg = ['ALTA','MEDIA','BAJA','SIN URGENCIA'].filter(u=>haUrg[u])
+  const dataU = ordenUrg.map(u=>haUrg[u])
+  const colorU = ordenUrg.map(u=>{
+    if(u==='ALTA') return COLOR.brand2
+    if(u==='MEDIA') return COLOR.brand2
+    if(u==='BAJA') return COLOR.brand2
+    return '#9ca3af'
+  })
+  destruirChart('chart2-urg')
+  CHARTS['chart2-urg'] = new Chart(document.getElementById('chart2-urg'), {
+    type:'bar',
+    data:{ labels:ordenUrg, datasets:[{data:dataU, backgroundColor:colorU}] },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        datalabels:{
+          anchor:'end',align:'top',
+          font:{size:11,weight:600},color:'#1f2937',
+          formatter:v=>fmtNum(v)
+        }
+      },
+      scales:{
+        x:{ticks:{font:{size:11,weight:'600'}}},
+        y:{beginAtZero:true, ticks:{font:{size:10}}}
+      }
+    },
+    plugins:[ChartDataLabels]
+  })
+
+  // Tabla finca
+  const fincas = {}
+  mks.forEach(m=>{
+    const k = m.lot || 'SIN LOTE'
+    if(!fincas[k]) fincas[k] = {tareas: new Set(), ha:0}
+    fincas[k].tareas.add(m.tarea)
+    fincas[k].ha += Number(m.ha_aprox||0)
+  })
+  const fincasArr = Object.entries(fincas)
+    .map(([k,v])=>({finca:k, tareas:v.tareas.size, ha:v.ha}))
+    .sort((a,b)=>b.ha - a.ha)
+
+  const tbody = document.querySelector('#tbl2-finca tbody')
+  tbody.innerHTML = ''
+  let totT=0, totH=0
+  fincasArr.forEach(r=>{
+    totT += r.tareas; totH += r.ha
+    const tr = document.createElement('tr')
+    tr.innerHTML = `<td>${r.finca}</td>
+      <td class="num">${r.tareas}</td>
+      <td class="num">${fmtNum(r.ha)}</td>`
+    tbody.appendChild(tr)
+  })
+  const tfoot = document.querySelector('#tbl2-finca tfoot tr')
+  tfoot.children[1].textContent = totT
+  tfoot.children[2].textContent = fmtNum(totH)
+}
+
+function agruparContar(arr, key){
+  return arr.reduce((acc, x)=>{
+    const v = x[key] || 'SIN DATO'
+    acc[v] = (acc[v]||0) + 1
+    return acc
+  }, {})
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  DASHBOARD 3: SEGUIMIENTO
+// ═══════════════════════════════════════════════════════════════
+function renderSeguimiento(){
+  if(!datosListos) return
+  const fD = document.getElementById('f3-distrito').value
+  const fF = document.getElementById('f3-finca').value
+  const fC = document.getElementById('f3-cond').value
+  const fA = document.getElementById('f3-anom').value
+  const fU = document.getElementById('f3-urg').value
+  const fUs= document.getElementById('f3-usuario').value
+
+  let s = DATA.seguimiento
+  if(fD)  s = s.filter(x=>x.distrito === fD)
+  if(fF)  s = s.filter(x=>x.finca === fF)
+  if(fC)  s = s.filter(x=>x.condicion_tarea === fC)
+  if(fA)  s = s.filter(x=>x.anomalia === fA)
+  if(fU)  s = s.filter(x=>x.nivel_urgencia === fU)
+  if(fUs) s = s.filter(x=>x.responsable_nombre === fUs)
+
+  // KPIs
+  const tiempo  = s.filter(x=>x.condicion_tarea === 'EN TIEMPO').length
+  const proxima = s.filter(x=>x.condicion_tarea === 'PROXIMA REVISION').length
+  const hoy     = s.filter(x=>x.condicion_tarea === 'VISITAR HOY').length
+  const vencida = s.filter(x=>x.condicion_tarea === 'VENCIDA').length
+  document.getElementById('kpi3-tiempo').textContent  = tiempo  || '(En blanco)'
+  document.getElementById('kpi3-proxima').textContent = proxima || '(En blanco)'
+  document.getElementById('kpi3-hoy').textContent     = hoy     || '(En blanco)'
+  document.getElementById('kpi3-vencida').textContent = vencida || '(En blanco)'
+
+  // Tabla
+  const tbody = document.querySelector('#tbl3-seguimiento tbody')
+  tbody.innerHTML = ''
+  s.sort((a,b)=> (a.cod_tarea||'').localeCompare(b.cod_tarea||''))
+   .forEach(r=>{
+    const tr = document.createElement('tr')
+    const urg = (r.nivel_urgencia||'').toLowerCase()
+    const urgClase = urg === 'alta' ? 'alta' : urg === 'media' ? 'media' : urg === 'baja' ? 'baja' : ''
+    const cond = r.condicion_tarea || ''
+    const condClase = cond === 'EN TIEMPO' ? 'en-tiempo'
+                    : cond === 'PROXIMA REVISION' ? 'proxima'
+                    : cond === 'VISITAR HOY' ? 'hoy'
+                    : cond === 'VENCIDA' ? 'vencida'
+                    : 'sin-cat'
+    tr.innerHTML = `
+      <td>${r.cod_tarea||''}</td>
+      <td>${r.finca||''}</td>
+      <td>${r.lote||''}</td>
+      <td>${r.anomalia||''}</td>
+      <td>${r.recomendacion||''}</td>
+      <td>${urgClase ? `<span class="badge-urg ${urgClase}">${r.nivel_urgencia}</span>` : ''}</td>
+      <td class="center">${r.semana_tarea ?? ''}</td>
+      <td class="center">${r.semana_inspeccion ?? ''}</td>
+      <td>${fmtFecha(r.fecha_creacion)}</td>
+      <td>${fmtFecha(r.fecha_prox_inspeccion)}</td>
+      <td class="center">${r.dias_visita ?? ''}</td>
+      <td class="center">${r.dias_transcurridos ?? ''}</td>
+      <td class="center">${r.dias_faltantes ?? ''}</td>
+      <td>${cond ? `<span class="badge-cond ${condClase}">${cond}</span>` : ''}</td>
+    `
+    tbody.appendChild(tr)
+  })
+
+  // Pie de fecha y semana
+  const hoyDate = new Date()
+  document.getElementById('seg-fecha-hoy').innerHTML =
+    `<strong>Hoy:</strong> ${fmtFecha(hoyDate)}`
+  const semana = Math.ceil(((hoyDate - new Date(hoyDate.getFullYear(),0,1))/86400000 + 1)/7)
+  document.getElementById('seg-semana').textContent = semana
+
+  document.getElementById('seg-titulo').textContent =
+    `Detalle de seguimiento (${s.length} ${s.length===1?'registro':'registros'})`
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════════════════
+function destruirChart(id){
+  if(CHARTS[id]) { CHARTS[id].destroy(); delete CHARTS[id] }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  NAVEGACIÓN
+// ═══════════════════════════════════════════════════════════════
+const TITULOS_PAGS = {
+  'pag-menu':         ['Inspección NAX',           'Compañía Azucarera Chumbagua'],
+  'pag-cumplimiento': ['Cumplimiento Inspección',  'Tareas finalizadas, pendientes y verificadas'],
+  'pag-anomalias':    ['Detección de Anomalías',   'Distribución por tipo, distrito y HA afectadas'],
+  'pag-seguimiento':  ['Seguimiento de Anomalías', 'Próximas revisiones programadas'],
+}
+
+function irA(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'))
+  const target = document.getElementById(id)
+  if(target) target.classList.add('active')
+  // Header dinámico
+  const t = TITULOS_PAGS[id] || ['Inspección NAX','Compañía Azucarera Chumbagua']
+  document.getElementById('hdr-titulo').textContent = t[0]
+  document.getElementById('hdr-subtitulo').textContent = t[1]
+  // Botón atrás
+  document.getElementById('btn-atras-hdr').style.display = (id === 'pag-menu') ? 'none' : 'flex'
+  // Renderizar al cambiar
+  if(id === 'pag-cumplimiento') renderCumplimiento()
+  if(id === 'pag-anomalias')    renderAnomalias()
+  if(id === 'pag-seguimiento')  renderSeguimiento()
+  window.scrollTo(0,0)
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  AUTH
+// ═══════════════════════════════════════════════════════════════
+async function doLogin(){
+  const email=document.getElementById('login-email').value.trim()
+  const pass=document.getElementById('login-pass').value
+  const btn=document.getElementById('login-btn')
+  const err=document.getElementById('login-error')
+  if(!email||!pass){err.textContent='Ingresa tu correo y contraseña.';return}
+  btn.disabled=true; btn.textContent='Ingresando...'; err.textContent=''
+  const {error}=await sb.auth.signInWithPassword({email,password:pass})
+  if(error){err.textContent='Credenciales incorrectas.';btn.disabled=false;btn.textContent='Ingresar'}
+  else mostrarApp()
+}
+async function doLogout(){
+  await sb.auth.signOut()
+  location.reload()
+}
+async function cargarPerfilUsuario(email){
+  document.getElementById('udd-email').textContent = email
+  try{
+    const {data} = await sb.from('user_perfiles').select('*').eq('email', email).maybeSingle()
+    if(data){
+      document.getElementById('user-avatar').textContent = data.iniciales || email.substring(0,2).toUpperCase()
+      if(data.color_avatar) document.getElementById('user-avatar').style.background = data.color_avatar
+      document.getElementById('udd-nombre').textContent = data.nombre_completo || email
+      document.getElementById('udd-cargo').textContent  = data.cargo || '—'
+    } else {
+      const ini = email.substring(0,2).toUpperCase()
+      document.getElementById('user-avatar').textContent = ini
+      document.getElementById('udd-nombre').textContent  = email.split('@')[0]
+      document.getElementById('udd-cargo').textContent   = '—'
+    }
+  } catch(e){
+    document.getElementById('udd-nombre').textContent = email.split('@')[0]
+  }
+}
+function toggleUserDropdown(){
+  document.getElementById('user-dropdown').classList.toggle('abierto')
+}
+document.addEventListener('click',(e)=>{
+  const w = document.querySelector('.header-actions')
+  if(w && !w.contains(e.target)){
+    document.getElementById('user-dropdown').classList.remove('abierto')
+  }
+})
+
+async function mostrarApp(){
+  document.getElementById('pag-login').classList.add('oculto')
+  const {data:{session}} = await sb.auth.getSession()
+  if(session) await cargarPerfilUsuario(session.user.email)
+  await cargarDatos()
+}
+async function init(){
+  const {data:{session}} = await sb.auth.getSession()
+  if(session) mostrarApp()
+}
+init()
+</script>
+</body>
+</html>
